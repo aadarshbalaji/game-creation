@@ -20,8 +20,8 @@ class Graph:
         self.adjacency_list = {}
         self.id_to_node = {}
     def add_node(self, node):
-        if node.id not in self.node_map:
-            self.node_map[node.id] = node
+        if node.id not in self.id_to_node:
+            self.id_to_node[node.id] = node
             self.adjacency_list[node] = {'parents': set(), 'children': set()}
     
     def add_edge(self, parent, child):
@@ -46,9 +46,11 @@ class Graph:
             return self.adjacency_list[node]['children']
         return None
     
+    def _build_json_structure(self, node):
+        return {str(node): {"children": [self._build_json_structure(child) for child in self.adjacency_list[node]['children']]}}
     def __repr__(self):
-        return json.dumps({str(node): {'parents': list(map(str, data['parents'])), 'children': list(map(str, data['children']))} for node, data in self.adjacency_list.items()}, indent=4)
-
+        root_nodes = [node for node in self.adjacency_list if not self.adjacency_list[node]['parents']]
+        return json.dumps({str(node): self._build_json_structure(node)[str(node)] for node in root_nodes}, indent=4)
 
 #Example Usage:
 node1 = Node('Once upon a time...')

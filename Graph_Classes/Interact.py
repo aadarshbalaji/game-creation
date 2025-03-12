@@ -56,7 +56,7 @@ class Player:
 node1 = Node('Once upon a time...')
 node2 = Node('There was a princess...')
 node3 = Node('She lived in a castle...', is_end=True)
-
+node4 = Node('The castle was guarded by a dragon...')
 graph = Graph()
 graph.add_node(node1)
 graph.add_node(node2)
@@ -64,6 +64,7 @@ graph.add_node(node3)
 
 graph.add_edge(node1, node2)
 graph.add_edge(node1, node3)
+graph.add_edge(node3, node4)
 p1 = Player('Alice',  node1)
 #p1.move(graph, node2)
-p1.show_choices(graph)
+print(graph)
