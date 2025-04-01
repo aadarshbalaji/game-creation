@@ -1,4 +1,4 @@
-from Structure import Graph, Node
+from Graph_Classes.Structure import Graph, Node
 
 
 class Player:
