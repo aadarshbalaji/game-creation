@@ -41,7 +41,7 @@ def generate_story_node(context, story_state):
     Current Location: {context['current_location']}
     Time of Day: {context['time_of_day']}
     Weather: {context['weather']}
-    Story Theme: {story_state.theme}  # Theme stored in story_state
+    Story Theme: {story_state.theme}  
     
     Player Status:
     - Health: {context['player_status']['health']}

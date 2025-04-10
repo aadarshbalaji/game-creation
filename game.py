@@ -81,7 +81,6 @@ def print_state(title, data, indent=2):
                 print(f"\n► {char_name.upper()}")
     
     elif title == "CURRENT SCENE":
-        # Format scene information
         print(f"\n🌍 Location: {data.get('location', 'Unknown')}")
         print(f"🕒 Time: {data.get('time_of_day', 'Unknown')}")
         print(f"🌤️  Weather: {data.get('weather', 'Unknown')}")
@@ -212,22 +211,17 @@ def main():
                         choice = int(input(f"\nEnter your choice (1-{len(choices)}): "))
                         if 1 <= choice <= len(choices):
                             chosen_node = choices[choice - 1]
-                            
-                            # Apply consequences
                             if hasattr(chosen_node, 'consequences'):
                                 health_change = chosen_node.consequences.get('health_change', 0)
                                 if health_change < 0:
                                     print(f"\nYou took {abs(health_change)} damage!")
                                 player.health += health_change
-                                
-                                # Check for death
                                 if player.health <= 0:
                                     player.is_dead = True
                                     player.health = 0
                                     death_reason = chosen_node.story
                                     break
-                                
-                                # Handle items
+
                                 for item in chosen_node.consequences.get('item_changes', []):
                                     if item.startswith('add_'):
                                         player.inventory.append(item[4:])
