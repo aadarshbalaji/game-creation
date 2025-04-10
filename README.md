@@ -6,7 +6,7 @@ An interactive text-based adventure game that generates unique stories based on 
 
 1. Install required dependencies:
 ```bash
-pip install google
+pip install google-genai
 ```
 
 2. Add your Google API key in `storygen.py`:
