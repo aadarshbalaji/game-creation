@@ -92,7 +92,7 @@ def print_state(title, data, indent=2):
 
 def main():
     clear_screen()
-    print("Welcome to the AI-Generated Story Adventure!")
+    print("Welcome to Netflix's AI-Generated CYOA!")
     print("=" * 50)
     
     player_name = input("\nEnter your name: ")
@@ -204,7 +204,8 @@ def main():
                                     continue
                                     # print(f"║    ❌ Lose: {item[7:]:<56} ║")
                     if getattr(choice, 'backtrack', False):
-                        print(f"║    🔙 Can backtrack{' '*52} ║")
+                        continue
+                        # print(f"║    🔙 Can backtrack{' '*52} ║")
                     print(f"║{'-'*68}║")
                 print(f"╚{'═'*68}╝")
         
