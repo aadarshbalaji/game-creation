@@ -3,7 +3,7 @@ from Graph_Classes.Structure import Node, Graph
 import json
 import os
 
-GOOGLE_API_KEY = "" 
+GOOGLE_API_KEY = "AIzaSyDHWjekElvSIgMNF80w6eEvit1L9m6eZmY" 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -12,13 +12,15 @@ class StoryState:
         self.current_scene = {}
         self.inventory = []
         self.visited_nodes = set()
+        self.theme = ""  
 
     def to_dict(self):
         return {
             "characters": self.characters,
             "current_scene": self.current_scene,
             "inventory": self.inventory,
-            "visited_nodes": list(self.visited_nodes)
+            "visited_nodes": list(self.visited_nodes),
+            "theme": self.theme  
         }
 
     @classmethod
@@ -28,38 +30,48 @@ class StoryState:
         state.current_scene = data["current_scene"]
         state.inventory = data["inventory"]
         state.visited_nodes = set(data["visited_nodes"])
+        state.theme = data.get("theme", "")  
         return state
 
 def generate_story_node(context, story_state):
     """Generate a story node with rich content based on current context"""
     prompt = f"""
-    Based on this story context and state:
-    Context: {context}
-    Current Scene: {json.dumps(story_state.current_scene)}
-    Characters: {json.dumps(story_state.characters)}
-    Inventory: {story_state.inventory}
-    Previous Locations: {list(story_state.visited_nodes)}
+    Based on this detailed story context:
+    Previous Scene: {context['previous_scene']}
+    Current Location: {context['current_location']}
+    Time of Day: {context['time_of_day']}
+    Weather: {context['weather']}
+    Story Theme: {story_state.theme}  # Theme stored in story_state
+    
+    Player Status:
+    - Health: {context['player_status']['health']}
+    - Inventory: {', '.join(context['player_status']['inventory'])}
+    - Recent Actions: {', '.join(context['recent_events'])}
+    
+    Characters Present: {json.dumps(context['characters'], indent=2)}
 
-    Generate a story continuation that includes:
-    1. Rich scene description
-    2. Character states and interactions
-    3. Exactly 4 distinct choice paths
-    4. Consequences for each choice
-    5. Whether this could be an ending
+    Generate a vivid story continuation that fits the {story_state.theme} theme and includes:
+    1. Rich, detailed description of what happens next
+    2. Character reactions and development
+    3. Environmental changes and atmosphere
+    4. Four distinct choice paths that maintain story consistency
+    5. Meaningful consequences for each choice
+    
+    Keep the style and elements consistent with {story_state.theme} setting.
 
     Return ONLY valid JSON in this exact format:
     {{
-        "story": "detailed scene description",
+        "story": "detailed scene description maintaining the theme",
         "scene_state": {{
-            "location": "specific location",
+            "location": "specific location fitting the theme",
             "time_of_day": "time period",
             "weather": "conditions",
-            "ambient": "mood"
+            "ambient": "thematic mood"
         }},
         "characters": {{
             "player": {{
                 "health": number,
-                "mood": "state",
+                "mood": "state fitting the scene",
                 "status_effects": [],
                 "relationships": {{}}
             }},
@@ -72,7 +84,7 @@ def generate_story_node(context, story_state):
         }},
         "choices": [
             {{
-                "text": "choice description",
+                "text": "choice description fitting the theme",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -92,14 +104,23 @@ def generate_story_node(context, story_state):
 
         if not response.text:
             raise Exception("Empty response from API")
-
-        json_text = response.text.strip()
-        start_idx = json_text.find('{')
-        end_idx = json_text.rfind('}') + 1
+        raw_text = response.text.strip()
+        
+        if raw_text.startswith("```"):
+            lines = raw_text.split('\n')
+            if lines[0].startswith("```") and lines[-1].startswith("```"):
+                raw_text = '\n'.join(lines[1:-1])
+            elif lines[0].startswith("```"):
+                raw_text = '\n'.join(lines[1:])
+        
+        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+        
+        start_idx = raw_text.find('{')
+        end_idx = raw_text.rfind('}') + 1
         if start_idx < 0 or end_idx <= 0:
             raise Exception("Invalid JSON format")
 
-        json_text = json_text[start_idx:end_idx]
+        json_text = raw_text[start_idx:end_idx]
         story_data = json.loads(json_text)
 
         required_fields = ["story", "scene_state", "characters", "choices"]
@@ -116,50 +137,56 @@ def generate_story_node(context, story_state):
         print(f"\nError generating story: {e}")
         raise
 
-def generate_initial_story():
+def generate_initial_story(ip):
+
     """Generate the starting point of the story"""
-    prompt = """
-    Create an engaging opening scene for a fantasy adventure with:
-    1. Rich initial scene description
-    2. Initial character setup (player and other characters)
-    3. Clear starting location
-    4. Four distinct paths to begin the adventure
+    prompt = f"""
+    Create an engaging opening scene for a {ip} story with:
+    1. Rich initial scene description that fits the {ip} theme
+    2. Initial character setup including the player and characters relevant to {ip}
+    3. Clear starting location that matches the {ip} setting
+    4. Four distinct paths to begin the adventure in the {ip} world
+    
+    For example, if this is a Dracula story, include gothic elements, vampires, and Victorian era details.
+    If this is a sci-fi story, include futuristic elements, technology, and space-related details.
     
     Return as valid JSON in this format:
-    {
-        "story": "detailed opening scene description",
-        "scene_state": {
-            "location": "starting location name",
+    {{
+        "story": "detailed opening scene description fitting the {ip} theme",
+        "scene_state": {{
+            "location": "thematic location name",
             "time_of_day": "time period",
-            "weather": "conditions",
-            "ambient": "mood"
-        },
-        "characters": {
-            "player": {
+            "weather": "atmospheric conditions",
+            "ambient": "mood fitting the theme"
+        }},
+        "characters": {{
+            "player": {{
                 "health": 100,
                 "mood": "initial state",
                 "status_effects": [],
-                "relationships": {}
-            },
-            "other_characters": {
-                "name": "character name",
+                "relationships": {{}}
+            }},
+            "other_characters": {{
+                "name": "character fitting the {ip} theme",
                 "health": number,
-                "mood": "state",
-                "relationships": {"player": "initial relationship"}
-            }
-        },
+                "mood": "thematic state",
+                "relationships": {{"player": "initial relationship"}}
+            }}
+        }},
         "choices": [
-            {
-                "text": "choice description",
-                "consequences": {
+            {{
+                "text": "choice description fitting the theme",
+                "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
-                },
+                }},
                 "can_backtrack": boolean
-            }
+            }}
         ],
         "is_ending": false
-    }
+    }}
+    
+    Make sure all elements (story, characters, choices, items) fit the {ip} theme and setting.
     """
     
     try:
@@ -168,28 +195,18 @@ def generate_initial_story():
             model="gemini-2.0-flash",
         )
         
-        # Get raw response and clean it
         raw_text = response.text.strip()
 
-        
-        # Remove markdown code block if present
         if raw_text.startswith("```"):
             lines = raw_text.split('\n')
-            # Remove first and last lines if they're markdown markers
             if lines[0].startswith("```") and lines[-1].startswith("```"):
                 raw_text = '\n'.join(lines[1:-1])
-            # Remove just the first line if it's a markdown marker
             elif lines[0].startswith("```"):
                 raw_text = '\n'.join(lines[1:])
                 
-        # Clean up any remaining markdown markers
         raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-        
-        # Parse JSON
         story_data = json.loads(raw_text)
         print("Story data parsed successfully")
-        
-        # Validate required fields
         required_fields = ["story", "scene_state", "characters", "choices"]
         if not all(field in story_data for field in required_fields):
             raise Exception("Missing required fields in initial story")
@@ -230,34 +247,31 @@ def save_game_state(graph, story_state, filepath="game_save.json"):
     with open(filepath, 'w') as f:
         json.dump(save_data, f, indent=2)
 
-def load_game_state(filepath="game_save.json"):
+def load_game_state(filepath="game_save.json", theme=None):
     """Load game state from file or create initial state if empty"""
     try:
-        # Check if file exists and is empty
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
             print("\nCreating new game state...")
             
-            # Generate initial story
-            initial_data = generate_initial_story()
-            print("test")
+            if not theme:
+                raise Exception("Theme required for new game")
+            
+            initial_data = generate_initial_story(theme)
             if not initial_data:
                 raise Exception("Failed to generate initial story")
-            
-            # Create new graph and state
+        
             graph = Graph()
             story_state = StoryState()
             
-            # Create start node
             start_node = Node(initial_data["story"], initial_data["is_ending"])
             start_node.scene_state = initial_data["scene_state"]
             start_node.characters = initial_data["characters"]
             graph.add_node(start_node)
             
-            # Update story state
             story_state.current_scene = initial_data["scene_state"]
             story_state.characters = initial_data["characters"]
+            story_state.theme = theme  
             
-            # Generate initial choices
             for choice in initial_data["choices"]:
                 choice_node = Node(choice["text"], False)
                 choice_node.scene_state = initial_data["scene_state"]
@@ -267,11 +281,9 @@ def load_game_state(filepath="game_save.json"):
                 graph.add_node(choice_node)
                 graph.add_edge(start_node, choice_node)
             
-            # Save initial state
             save_game_state(graph, story_state, filepath)
             return graph, story_state
             
-        # Load existing save file
         with open(filepath, 'r') as f:
             try:
                 save_data = json.load(f)
@@ -280,11 +292,9 @@ def load_game_state(filepath="game_save.json"):
                 os.remove(filepath)
                 return load_game_state(filepath)
             
-        # Create graph and state from save data
         graph = Graph()
         story_state = StoryState.from_dict(save_data["story_state"])
-        
-        # Load nodes and edges
+
         for node_id, node_data in save_data["graph"]["nodes"].items():
             node = Node(node_data["story"], node_data["is_end"])
             node.scene_state = node_data["scene_state"]
