@@ -198,8 +198,10 @@ def main():
                         if consequences.get('item_changes'):
                             for item in consequences['item_changes']:
                                 if item.startswith('add_'):
+                                    continue
                                     # print(f"║    📦 Get: {item[4:]:<57} ║")
                                 elif item.startswith('remove_'):
+                                    continue
                                     # print(f"║    ❌ Lose: {item[7:]:<56} ║")
                     if getattr(choice, 'backtrack', False):
                         print(f"║    🔙 Can backtrack{' '*52} ║")
