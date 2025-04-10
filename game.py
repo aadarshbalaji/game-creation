@@ -1,175 +1,293 @@
+import time
+import json
+import os
+from storygen import StoryState, generate_initial_story, generate_story_node, save_game_state, load_game_state
 from Graph_Classes.Structure import Node, Graph
 from Graph_Classes.Interact import Player
-import os
-import time
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def print_story(node):
-    print("\n" + "="*50)
-    print(node.story)
-    print("="*50 + "\n")
+def wrap_text(text, width=70):
+    """Wrap text to specified width while preserving words"""
+    words = text.split()
+    lines = []
+    current_line = []
+    current_length = 0
 
-def create_story_graph():
-    # Create nodes for our story
-    start = Node("You wake up in a mysterious room. The air is thick with anticipation. The room is dimly lit by a single candle on a wooden desk. You notice a dusty book on the desk and a strange symbol carved into the wall.")
-    
-    # First set of choices
-    examine_book = Node("You carefully open the dusty book. It's written in an ancient language, but you can make out some words about a hidden treasure and a powerful artifact.")
-    examine_symbol = Node("The symbol on the wall seems to glow faintly as you touch it. It looks like a combination of a dragon and a key.")
-    look_around = Node("Looking around the room more carefully, you notice a loose floorboard near the desk and a small keyhole in the wall.")
-    sit_and_think = Node("You sit down and try to remember how you got here. Your mind is foggy, but you recall a strange dream about a dragon.")
-    
-    # Second set of choices
-    read_book = Node("As you read more of the book, you discover it's a diary of an ancient wizard who hid a powerful artifact in this very castle.")
-    touch_symbol = Node("When you touch the glowing symbol, it begins to shift and change, revealing a hidden compartment in the wall.")
-    check_floorboard = Node("You carefully lift the floorboard and find a small golden key hidden underneath.")
-    meditate = Node("You close your eyes and meditate, hoping to clear your mind. You feel a strange energy coursing through you.")
-    
-    # Third set of choices
-    find_artifact = Node("Following the diary's instructions, you locate the hidden artifact - a magical amulet that grants its wearer the power to control dragons!")
-    dragon_encounter = Node("Suddenly, a massive dragon appears from the shadows! It seems the symbol you touched was actually a dragon's seal.")
-    escape_attempt = Node("You try to escape through the window, but the dragon's breath has weakened the castle walls!")
-    unlock_memory = Node("Your meditation unlocks a memory of a secret passage in the castle. You decide to find it.")
-    
-    # Fourth set of choices
-    confront_dragon = Node("With the amulet in hand, you bravely confront the dragon, ready to tame it.")
-    hide_from_dragon = Node("You hide behind a pillar, hoping the dragon doesn't notice you.")
-    search_for_exit = Node("You search frantically for an exit, knowing the dragon is close.")
-    follow_memory = Node("You follow the memory's guidance and find a hidden door leading to safety.")
-    
-    # End nodes
-    victory = Node("With the dragon-controlling amulet in your possession, you successfully tame the dragon and escape the castle as its new master. Congratulations!", is_end=True)
-    defeat = Node("The dragon's fiery breath proves too powerful. Despite your best efforts, you succumb to the flames. Game Over!", is_end=True)
-    escape = Node("Using the golden key, you unlock a secret passage and escape the castle just as it collapses. You live to tell the tale!", is_end=True)
-    safe_haven = Node("You find a safe haven beyond the hidden door, where you can rest and plan your next move. You've survived for now.", is_end=True)
+    for word in words:
+        if current_length + len(word) + 1 <= width:
+            current_line.append(word)
+            current_length += len(word) + 1
+        else:
+            lines.append(' '.join(current_line))
+            current_line = [word]
+            current_length = len(word)
 
-    # Create the graph
-    graph = Graph()
+    if current_line:
+        lines.append(' '.join(current_line))
+    return '\n'.join(lines)
+
+def print_box(text, width=70, padding=1):
+    """Print text in a decorative box"""
+    horizontal = "+" + "-" * width + "+"
+    empty = "|" + " " * width + "|"
     
-    # Add all nodes
-    nodes = [start, examine_book, examine_symbol, look_around, sit_and_think,
-             read_book, touch_symbol, check_floorboard, meditate,
-             find_artifact, dragon_encounter, escape_attempt, unlock_memory,
-             confront_dragon, hide_from_dragon, search_for_exit, follow_memory,
-             victory, defeat, escape, safe_haven]
+    print(horizontal)
+    for _ in range(padding):
+        print(empty)
     
-    for node in nodes:
-        graph.add_node(node)
+    for line in wrap_text(text, width-2).split('\n'):
+        print(f"| {line:<{width-2}} |")
     
-    # Add edges to create the story paths
-    # First level
-    graph.add_edge(start, examine_book)
-    graph.add_edge(start, examine_symbol)
-    graph.add_edge(start, look_around)
-    graph.add_edge(start, sit_and_think)
+    for _ in range(padding):
+        print(empty)
+    print(horizontal)
+
+def print_state(title, data, indent=2):
+    """Print state information in a formatted way"""
+    print(f"\n{'='*20} {title} {'='*20}")
     
-    # Second level
-    graph.add_edge(examine_book, read_book)
-    graph.add_edge(examine_symbol, touch_symbol)
-    graph.add_edge(look_around, check_floorboard)
-    graph.add_edge(sit_and_think, meditate)
+    if title == "CHARACTERS PRESENT":
+        # Special formatting for characters
+        for char_name, char_data in data.items():
+            if char_name == "player":
+                continue  # Skip player as it's shown separately
+            print(f"\n► {char_name.upper()}")
+            if isinstance(char_data, dict):
+                # Show health bar
+                health = char_data.get('health', 0)
+                health_bar = '♥' * (health // 10) + '░' * ((100 - health) // 10)
+                print(f"  Health: [{health_bar}] {health}/100")
+                
+                # Show mood with emoji
+                mood = char_data.get('mood', 'unknown')
+                mood_emoji = {
+                    'angry': '😠', 'happy': '😊', 'sad': '😢', 
+                    'afraid': '😨', 'determined': '😤', 'sleeping': '😴',
+                    'neutral': '😐', 'aggressive': '😠', 'friendly': '🙂'
+                }.get(mood.lower(), '❓')
+                print(f"  Mood: {mood_emoji} {mood}")
+                
+                # Show status effects
+                if char_data.get('status_effects'):
+                    effects = ', '.join(char_data['status_effects'])
+                    print(f"  Status Effects: ✨ {effects}")
+                
+                # Show relationships
+                if char_data.get('relationships'):
+                    print("  Relationships:")
+                    for target, relation in char_data['relationships'].items():
+                        print(f"   • {target}: {relation}")
     
-    # Third level
-    graph.add_edge(read_book, find_artifact)
-    graph.add_edge(touch_symbol, dragon_encounter)
-    graph.add_edge(check_floorboard, escape_attempt)
-    graph.add_edge(meditate, unlock_memory)
+    elif title == "CURRENT SCENE":
+        # Format scene information
+        print(f"\n🌍 Location: {data.get('location', 'Unknown')}")
+        print(f"🕒 Time: {data.get('time_of_day', 'Unknown')}")
+        print(f"🌤️  Weather: {data.get('weather', 'Unknown')}")
+        print(f"💫 Ambient: {data.get('ambient', 'Unknown')}")
     
-    # Fourth level
-    graph.add_edge(find_artifact, confront_dragon)
-    graph.add_edge(dragon_encounter, hide_from_dragon)
-    graph.add_edge(escape_attempt, search_for_exit)
-    graph.add_edge(unlock_memory, follow_memory)
-    
-    # Ensure each node has 4 choices
-    # Adding loops for choices to ensure 4 options
-    graph.add_edge(confront_dragon, confront_dragon)  # Loop back to itself
-    graph.add_edge(confront_dragon, hide_from_dragon)  # Additional choice
-    graph.add_edge(confront_dragon, search_for_exit)  # Additional choice
-    graph.add_edge(confront_dragon, follow_memory)  # Additional choice
-    
-    graph.add_edge(hide_from_dragon, confront_dragon)  # Loop back to itself
-    graph.add_edge(hide_from_dragon, search_for_exit)  # Additional choice
-    graph.add_edge(hide_from_dragon, follow_memory)  # Additional choice
-    graph.add_edge(hide_from_dragon, victory)  # Additional choice
-    
-    graph.add_edge(search_for_exit, confront_dragon)  # Loop back to itself
-    graph.add_edge(search_for_exit, hide_from_dragon)  # Additional choice
-    graph.add_edge(search_for_exit, follow_memory)  # Additional choice
-    graph.add_edge(search_for_exit, escape)  # Additional choice
-    
-    graph.add_edge(follow_memory, confront_dragon)  # Loop back to itself
-    graph.add_edge(follow_memory, hide_from_dragon)  # Additional choice
-    graph.add_edge(follow_memory, search_for_exit)  # Additional choice
-    graph.add_edge(follow_memory, safe_haven)  # Additional choice
-    
-    return graph, start
+    print("\n" + "=" * (42 + len(title)))
+
+
 
 def main():
     clear_screen()
-    print("Welcome to the Dragon's Castle Adventure!")
-    print("========================================")
+    print("Welcome to the AI-Generated Dragon's Castle Adventure!")
+    print("=" * 50)
     
-    # Get player name
     player_name = input("\nEnter your name: ")
+    death_reason = None
     
-    # Create the story graph and get starting node
-    graph, start_node = create_story_graph()
-    
-    # Create player
-    player = Player(player_name, start_node)
-    
-    # Main game loop
-    while not player.is_dead:
+    try:
+        # Try to load existing game
+        graph, story_state = load_game_state()
+        print("\nLoading your adventure...")
+        if not graph:
+            # No save file found, create new game
+            graph = Graph()
+            story_state = StoryState()
+            print("\nGenerating your unique adventure...")
+            
+            # Generate initial story
+            initial_data = generate_initial_story()
+            if not initial_data:
+                raise Exception("Failed to generate initial story")
+            
+            # Create start node
+            start_node = Node(initial_data["story"], initial_data["is_ending"])
+            start_node.scene_state = initial_data["scene_state"]
+            start_node.characters = initial_data["characters"]
+            graph.add_node(start_node)
+            
+            # Update story state
+            story_state.current_scene = initial_data["scene_state"]
+            story_state.characters = initial_data["characters"]
+            
+            # Generate initial choices
+            for choice in initial_data["choices"]:
+                choice_node = Node(choice["text"], False)
+                choice_node.scene_state = initial_data["scene_state"]
+                choice_node.characters = initial_data["characters"]
+                choice_node.consequences = choice["consequences"]
+                choice_node.backtrack = choice.get("can_backtrack", False)
+                graph.add_node(choice_node)
+                graph.add_edge(start_node, choice_node)
+            
+            # Save initial state
+            save_game_state(graph, story_state)
+        else:
+            start_node = next(iter(graph.adjacency_list))
+        
+        # Create player and start game
+        player = Player(player_name, start_node)
+        
+        # Main game loop
+        while not player.is_dead and not player.current_node.is_end:
+            clear_screen()
+            
+            # Show current story
+            print_box(player.current_node.story)
+            print_state("CURRENT SCENE", player.current_node.scene_state)
+            print_state("CHARACTERS PRESENT", player.current_node.characters)
+            
+            # Show player status
+            print("\n🎮 YOUR STATUS 🎮")
+            print(f"╔{'═'*50}╗")
+            print(f"║ {player.name:<48} ║")
+            print(f"║ Health: [{'♥' * (player.health // 10)}{'░' * ((100 - player.health) // 10)}] {player.health:>3}/100 ║")
+            print(f"║ Experience: [{'✦' * (player.experience // 10)}{'░' * ((100 - player.experience) // 10)}] {player.experience:>3} ║")
+            if player.inventory:
+                print(f"║ 🎒 Inventory:                                          ║")
+                for item in player.inventory:
+                    print(f"║  • {item:<46} ║")
+            else:
+                print(f"║ 🎒 Inventory: Empty                                    ║")
+            print(f"╚{'═'*50}╝")
+            
+            # Get available choices
+            choices = list(graph.get_children(player.current_node))
+            
+            # Generate new choices if none exist
+            if not choices and not player.current_node.is_end:
+                print("\nGenerating new story paths...")
+                try:
+                    choice_data = generate_story_node(
+                        f"After: {player.current_node.story}\n" +
+                        f"Current location: {player.current_node.scene_state['location']}\n" +
+                        f"Player status: Health {player.health}, Items: {player.inventory}",
+                        story_state
+                    )
+                    
+                    for choice in choice_data["choices"]:
+                        new_node = Node(choice["text"], choice_data.get("is_ending", False))
+                        new_node.scene_state = choice_data["scene_state"]
+                        new_node.characters = choice_data["characters"]
+                        new_node.consequences = choice["consequences"]
+                        new_node.backtrack = choice.get("can_backtrack", False)
+                        graph.add_node(new_node)
+                        graph.add_edge(player.current_node, new_node)
+                    
+                    choices = list(graph.get_children(player.current_node))
+                except Exception as e:
+                    print(f"\nError in choice generation: {e}")
+                    break
+            
+            if choices:
+                # Show available choices
+                print("\n🎲 AVAILABLE CHOICES 🎲")
+                print(f"╔{'═'*68}╗")
+                for i, choice in enumerate(choices, 1):
+                    print(f"║ {i}. {wrap_text(choice.story, 64):<64} ║")
+                    if hasattr(choice, 'consequences'):
+                        consequences = choice.consequences
+                        if consequences.get('health_change'):
+                            health_change = consequences['health_change']
+                            health_symbol = '❤️ +' if health_change > 0 else '💔 '
+                            print(f"║    {health_symbol}{health_change:<61} ║")
+                        if consequences.get('item_changes'):
+                            for item in consequences['item_changes']:
+                                if item.startswith('add_'):
+                                    print(f"║    📦 Get: {item[4:]:<57} ║")
+                                elif item.startswith('remove_'):
+                                    print(f"║    ❌ Lose: {item[7:]:<56} ║")
+                    if getattr(choice, 'backtrack', False):
+                        print(f"║    🔙 Can backtrack{' '*52} ║")
+                    print(f"║{'-'*68}║")
+                print(f"╚{'═'*68}╝")
+                
+                # Get player choice
+                while True:
+                    try:
+                        choice = int(input(f"\nEnter your choice (1-{len(choices)}): "))
+                        if 1 <= choice <= len(choices):
+                            chosen_node = choices[choice - 1]
+                            
+                            # Apply consequences
+                            if hasattr(chosen_node, 'consequences'):
+                                health_change = chosen_node.consequences.get('health_change', 0)
+                                if health_change < 0:
+                                    print(f"\nYou took {abs(health_change)} damage!")
+                                player.health += health_change
+                                
+                                # Check for death
+                                if player.health <= 0:
+                                    player.is_dead = True
+                                    player.health = 0
+                                    death_reason = chosen_node.story
+                                    break
+                                
+                                # Handle items
+                                for item in chosen_node.consequences.get('item_changes', []):
+                                    if item.startswith('add_'):
+                                        player.inventory.append(item[4:])
+                                        print(f"\nYou obtained: {item[4:]}")
+                                    elif item.startswith('remove_'):
+                                        if item[7:] in player.inventory:
+                                            player.inventory.remove(item[7:])
+                                            print(f"\nYou lost: {item[7:]}")
+                            
+                            # Move to chosen node
+                            player.move(graph, chosen_node)
+                            
+                            # Update story state
+                            story_state.current_scene = chosen_node.scene_state
+                            story_state.characters = chosen_node.characters
+                            story_state.visited_nodes.add(chosen_node.id)
+                            break
+                        else:
+                            print(f"Please enter a number between 1 and {len(choices)}")
+                    except ValueError:
+                        print("Please enter a valid number.")
+                
+                # Save after each choice
+                save_game_state(graph, story_state)
+            else:
+                print("\nYou've reached the end of this path!")
+                break
+            
+            time.sleep(1)
+        
+        # Game over
         clear_screen()
+        print("\nGame Over!")
+        print("=" * 50)
+        if player.is_dead:
+            print("\nYou have perished in your adventure!")
+            print(f"Cause of death: {death_reason}")
+            print(f"Final Health: {player.health}")
+        elif player.current_node.is_end:
+            print("\nCongratulations! You've reached an ending!")
         
-        # Show current story node
-        print_story(player.current_node)
-        
-        # Show player status
-        print("\nYour Status:")
+        print(f"\nFinal Status:")
         print(f"Health: {player.health}")
         print(f"Experience: {player.experience}")
-        print(f"Inventory: {', '.join(player.inventory) if player.inventory else 'Empty'}")
-        
-        # Get available choices
-        choices = graph.get_children(player.current_node)
-        if not choices:
-            print("\nYou've reached the end of this path!")
-            break
-        
-        # Show choices
-        print("\nAvailable choices:")
-        for i, choice in enumerate(choices, 1):
-            print(f"{i}. {choice.story[:50]}...")
-        
-        # Get player choice
-        while True:
-            try:
-                choice = int(input(f"\nEnter your choice (1-{len(choices)}): "))
-                if 1 <= choice <= len(choices):
-                    # Move to the chosen node
-                    next_node = list(choices)[choice - 1]
-                    player.move(graph, next_node)
-                    break
-                else:
-                    print(f"Please enter a number between 1 and {len(choices)}")
-            except ValueError:
-                print("Please enter a valid number.")
-        
-        # Add some delay for dramatic effect
-        time.sleep(1)
-    
-    # Game over
-    clear_screen()
-    print("\nGame Over!")
-    print("==========")
-    print(f"Final Status:")
-    print(f"Health: {player.health}")
-    print(f"Experience: {player.experience}")
-    print(f"Path taken: {' -> '.join(str(node) for node in player.traversed_nodes)}")
+        print(f"Final Inventory: {', '.join(player.inventory) if player.inventory else 'Empty'}")
+            
+    except Exception as e:
+        print(f"\nError: {e}")
+        print("Game initialization failed.")
+        return
 
 if __name__ == "__main__":
-    main() 
+    main()

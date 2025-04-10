@@ -7,6 +7,10 @@ class Node:
         self.connections = [None] * 4
         self.previous = None
         self.id = self.generate_id(story)
+        self.scene_state = {}
+        self.characters = {}
+        self.consequences = {}
+        self.backtrack = False
 
     def generate_id(self, story):
         return hashlib.sha256(story.encode()).hexdigest()
@@ -52,17 +56,4 @@ class Graph:
         root_nodes = [node for node in self.adjacency_list if not self.adjacency_list[node]['parents']]
         return json.dumps({str(node): self._build_json_structure(node)[str(node)] for node in root_nodes}, indent=4)
 
-#Example Usage:
-node1 = Node('Once upon a time...')
-node2 = Node('There was a princess...')
-node3 = Node('She lived in a castle...', is_end=True)
 
-graph = Graph()
-graph.add_node(node1)
-graph.add_node(node2)
-graph.add_node(node3)
-
-graph.add_edge(node1, node2)
-graph.add_edge(node1, node3)
-
-print(graph.get_children(graph.get_node_with_id('7cc6caf901b894033626981cd102021727aa59c2548d79e59382649b2c6f50f2')))
