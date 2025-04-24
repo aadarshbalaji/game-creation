@@ -3,7 +3,7 @@ from Graph_Classes.Structure import Node, Graph
 import json
 import os
 
-GOOGLE_API_KEY = "AIzaSyDHWjekElvSIgMNF80w6eEvit1L9m6eZmY" 
+GOOGLE_API_KEY = "" 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
