@@ -3,7 +3,7 @@ from Graph_Classes.Structure import Node, Graph
 import json
 import os
 
-GOOGLE_API_KEY = "AIzaSyDHWjekElvSIgMNF80w6eEvit1L9m6eZmY" 
+GOOGLE_API_KEY = "" 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -56,6 +56,21 @@ def generate_story_node(context, story_state):
     3. Environmental changes and atmosphere
     4. Four distinct choice paths that maintain story consistency
     5. Meaningful consequences for each choice
+    6. For each choice, include a block of at least three full sentences of spoken dialogue (strongly preferred) that reveals new plot or character information tied to that choice’s outcome.
+        - Dialogue must use the format [Name]: “...” with the spoken words in quotes.
+            - Each speaker gets exactly one line—even if they speak multiple sentences—so don’t repeat the tag for the same speaker.
+            - When the player speaks, use [You]:.
+            - Other speakers must be existing character names or broad generic roles (e.g., [Crowd]:).
+            - Each line appears on its own line, for example:
+                [You]: “I’ve never seen ruins so alive with magic. Every shadow flickers with intent. I must stay vigilant.”  
+                [Arin]: “These stones whisper of an ancient pact. We tread on promises older than kingdoms. Be wary of their echoes.”  
+        - Inner monologue (only if dialogue truly doesn’t fit) must be a single block of three sentences, without quotation marks, beginning with one of:
+            You think: 
+            You realize: 
+            Your mind races as… 
+            - To show emotion, wrap feelings in parentheses like (heart pounding), and use *actions* for movement or gestures.
+            
+        - Ensure the entire block directly advances the plot, reveals a clue, or deepens a character’s motivation in connection with the choice’s consequences.
     
     Keep the style and elements consistent with {story_state.theme} setting.
 
@@ -85,6 +100,7 @@ def generate_story_node(context, story_state):
         "choices": [
             {{
                 "text": "choice description fitting the theme",
+                "dialogue": "Provide at least three full sentences of spoken dialogue in one line per speaker, formatted as `[Name]: “…”`. Do not repeat the tag for the same speaker across lines. Use `[You]: “…”` for the player; other lines must use existing character names or sensible generic roles like `[Crowd]: “…”`. If dialogue doesn’t fit, supply a three-sentence inner monologue (no quotes), beginning with “You think: ”, “You realize: ”, or “Your mind races as…”, using (emotions) and *actions* as needed.",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -176,6 +192,7 @@ def generate_initial_story(ip):
         "choices": [
             {{
                 "text": "choice description fitting the theme",
+                "dialogue": "brief character dialogue or character monologue to reveal information about the result of this choice",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -232,6 +249,7 @@ def save_game_state(graph, story_state, filepath="game_save.json"):
     for node in graph.adjacency_list:
         save_data["graph"]["nodes"][node.id] = {
             "story": node.story,
+            "dialogue": node.dialogue,
             "scene_state": getattr(node, "scene_state", {}),
             "characters": getattr(node, "characters", {}),
             "is_end": node.is_end
@@ -273,7 +291,7 @@ def load_game_state(filepath="game_save.json", theme=None):
             story_state.theme = theme  
             
             for choice in initial_data["choices"]:
-                choice_node = Node(choice["text"], False)
+                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
                 choice_node.scene_state = initial_data["scene_state"]
                 choice_node.characters = initial_data["characters"]
                 choice_node.consequences = choice["consequences"]
@@ -296,7 +314,7 @@ def load_game_state(filepath="game_save.json", theme=None):
         story_state = StoryState.from_dict(save_data["story_state"])
 
         for node_id, node_data in save_data["graph"]["nodes"].items():
-            node = Node(node_data["story"], node_data["is_end"])
+            node = Node(node_data["story"], node_data["is_end"], node_data.get("dialogue", ""))
             node.scene_state = node_data["scene_state"]
             node.characters = node_data["characters"]
             graph.add_node(node)

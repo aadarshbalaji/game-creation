@@ -1,8 +1,9 @@
 import hashlib
 import json
 class Node:
-    def __init__(self, story, is_end=False):
+    def __init__(self, story, is_end=False, dialogue = ""):
         self.story = story
+        self.dialogue = dialogue
         self.is_end = is_end
         self.connections = [None] * 4
         self.previous = None

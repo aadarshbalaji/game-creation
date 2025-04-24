@@ -110,7 +110,7 @@ def main():
             if not initial_data:
                 raise Exception("Failed to generate initial story")
             
-            start_node = Node(initial_data["story"], initial_data["is_ending"])
+            start_node = Node(initial_data["story"], initial_data["is_ending"], initial_data.get("dialogue", ""))
             start_node.scene_state = initial_data["scene_state"]
             start_node.characters = initial_data["characters"]
             graph.add_node(start_node)
@@ -135,6 +135,8 @@ def main():
         while not player.is_dead and not player.current_node.is_end:
             clear_screen()
             print_box(player.current_node.story)
+            if player.current_node.dialogue:
+                print_box(player.current_node.dialogue)
             print_state("CURRENT SCENE", player.current_node.scene_state)
             print_state("CHARACTERS PRESENT", player.current_node.characters)
 
@@ -171,7 +173,7 @@ def main():
                     choice_data = generate_story_node(story_context, story_state)
                     
                     for choice in choice_data["choices"]:
-                        new_node = Node(choice["text"], choice_data.get("is_ending", False))
+                        new_node = Node(choice["text"], choice_data.get("is_ending", False), choice.get("dialogue", ""))
                         new_node.scene_state = choice_data["scene_state"]
                         new_node.characters = choice_data["characters"]
                         new_node.consequences = choice["consequences"]
