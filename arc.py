@@ -112,7 +112,7 @@ def generate_story_arc(theme):
         print(f"Error generating story arc: {e}")
         raise
 
-def generate_story_tree(arc_data):
+def generate_story_tree(arc_data, max_depth=8):
     """Generate a complete story tree based on the story arc"""
     
     # Initialize graph structure
@@ -183,7 +183,7 @@ def generate_story_tree(arc_data):
         nodes_by_level = {0: {0: root_node}}
         
         # Generate all levels of the tree (depth 8, binary choices)
-        for level in range(1, 8):
+        for level in range(1, max_depth):
             nodes_by_level[level] = {}
             parent_level = level - 1
             
@@ -461,9 +461,10 @@ def generate_predetermined_story(theme):
     with open('arc_data.json', 'w') as file:
         json.dump(arc_data, file, indent=4)
     
-    print(f"\nGenerating complete story tree with depth 8 and 2 choices per node...")
+    #print(f"\nGenerating complete story tree with depth 8 and 2 choices per node...")
+    depth = int(input("Enter the depth of the story tree (default is 8): "))
     print("This may take some time. Progress will be displayed below:")
-    graph, story_state = generate_story_tree(arc_data)
+    graph, story_state = generate_story_tree(arc_data, max_depth=depth)
     
     # Save the complete story tree
     save_game_state(graph, story_state, output_file)
