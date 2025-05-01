@@ -56,20 +56,20 @@ def generate_story_node(context, story_state):
     3. Environmental changes and atmosphere
     4. Four distinct choice paths that maintain story consistency
     5. Meaningful consequences for each choice
-    6. For each choice, include a block of at least three full sentences of spoken dialogue (strongly preferred) that reveals new plot or character information tied to that choice’s outcome.
-        - Dialogue must use the format [Name]: “...” with the spoken words in quotes.
-            - Each speaker gets exactly one line—even if they speak multiple sentences—so don’t repeat the tag for the same speaker.
-            - When the player speaks, use [You]:.
-            - Other speakers must be existing character names or broad generic roles (e.g., [Crowd]:).
-            - Each line appears on its own line, for example:
-                [You]: “I’ve never seen ruins so alive with magic. Every shadow flickers with intent. I must stay vigilant.”  
-                [Arin]: “These stones whisper of an ancient pact. We tread on promises older than kingdoms. Be wary of their echoes.”  
-        - Inner monologue (only if dialogue truly doesn’t fit) must be a single block of three sentences, without quotation marks, beginning with one of:
-            You think: 
-            You realize: 
-            Your mind races as… 
-            - To show emotion, wrap feelings in parentheses like (heart pounding), and use *actions* for movement or gestures.
-            
+    6. For each choice, include three to five full sentences of spoken dialogue that reveal new plot or character information tied to that choice’s outcome.
+        - Dialogue lines must use brackets **only** around speaker tags—`[You]: “…”`, `[Arin]: “…”`, `[Crowd]: “…”`
+            - When the player speaks, use `[You]:`.
+            - Other speakers must be existing character names or sensible generic roles (e.g., `[Crowd]:`).
+            - Place each speaker’s line on its own line.
+                ```
+                [You]: “I’ve never seen ruins so alive with magic. Every shadow flickers with intent. I must stay vigilant.”
+                [Arin]: “These stones whisper of an ancient pact. We tread on promises older than kingdoms. Be wary of their echoes.”
+                ```
+        - If spoken dialogue doesn’t fit naturally, supply a three-sentence inner reflection without brackets, beginning with one of:
+                - `You think: `
+                - `You realize: `
+                - `Your mind races: `
+                - `You thought`
         - Ensure the entire block directly advances the plot, reveals a clue, or deepens a character’s motivation in connection with the choice’s consequences.
     
     Keep the style and elements consistent with {story_state.theme} setting.
@@ -100,7 +100,7 @@ def generate_story_node(context, story_state):
         "choices": [
             {{
                 "text": "choice description fitting the theme",
-                "dialogue": "Provide at least three full sentences of spoken dialogue in one line per speaker, formatted as `[Name]: “…”`. Do not repeat the tag for the same speaker across lines. Use `[You]: “…”` for the player; other lines must use existing character names or sensible generic roles like `[Crowd]: “…”`. If dialogue doesn’t fit, supply a three-sentence inner monologue (no quotes), beginning with “You think: ”, “You realize: ”, or “Your mind races as…”, using (emotions) and *actions* as needed.",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races as`",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
