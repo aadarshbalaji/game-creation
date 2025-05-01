@@ -5,7 +5,7 @@ import time
 import hashlib
 from Graph_Classes.Structure import Node, Graph
 
-GOOGLE_API_KEY = "AIzaSyAOw2K58MLs6bDLIIgLoUOP1JEfKnk26zA"
+GOOGLE_API_KEY = ""
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
