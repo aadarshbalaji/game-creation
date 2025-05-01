@@ -3,7 +3,7 @@ from Graph_Classes.Structure import Node, Graph
 import json
 import os
 
-GOOGLE_API_KEY = "" 
+GOOGLE_API_KEY = "AIzaSyAOw2K58MLs6bDLIIgLoUOP1JEfKnk26zA" 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -124,7 +124,7 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
         "choices": [
             {{
                 "text": "choice description fitting the theme",
-                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races as`",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]

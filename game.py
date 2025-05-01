@@ -147,7 +147,7 @@ def main():
             story_state.characters = initial_data["characters"]
             
             for choice in initial_data["choices"]:
-                choice_node = Node(choice["text"], False)
+                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
                 choice_node.scene_state = initial_data["scene_state"]
                 choice_node.characters = initial_data["characters"]
                 choice_node.consequences = choice["consequences"]
