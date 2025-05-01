@@ -33,8 +33,30 @@ class StoryState:
         state.theme = data.get("theme", "")  
         return state
 
-def generate_story_node(context, story_state):
-    """Generate a story node with rich content based on current context"""
+def generate_story_node(context, story_state, arc_data=None, current_stage_info=None):
+    """Generate a story node with rich content based on current context, guided by the story arc."""
+    
+    # --- Build Arc Context --- 
+    arc_context_prompt = ""
+    if arc_data and current_stage_info:
+        stage_index = current_stage_info.get("stage_index", 0)
+        stage_progression = current_stage_info.get("progression", "Unknown")
+        
+        if 0 <= stage_index < len(arc_data.get('arc', [])):
+            stage_data = arc_data['arc'][stage_index]
+            arc_context_prompt = f"""
+            Story Arc Context:
+            - Current Stage: {stage_data.get('stage', 'Unknown')} ({stage_progression})
+            - Stage Goal: {stage_data.get('description', 'Unknown')}
+            - Key Plot Points for this stage: {', '.join(stage_data.get('key_plot_points', []))}
+            - Overall Goal: {arc_data.get('golden_path', 'Complete the adventure')}
+            """
+        else:
+             arc_context_prompt = "Story Arc Context: Stage information is unavailable."
+    else:
+        arc_context_prompt = "Story Arc Context: No arc data provided."
+    # --- End Arc Context ---
+    
     prompt = f"""
     Based on this detailed story context:
     Previous Scene: {context['previous_scene']}
@@ -42,6 +64,8 @@ def generate_story_node(context, story_state):
     Time of Day: {context['time_of_day']}
     Weather: {context['weather']}
     Story Theme: {story_state.theme}  
+    
+    {arc_context_prompt}
     
     Player Status:
     - Health: {context['player_status']['health']}
@@ -76,7 +100,7 @@ def generate_story_node(context, story_state):
 
     Return ONLY valid JSON in this exact format:
     {{
-        "story": "detailed scene description maintaining the theme",
+        "story": "detailed scene description maintaining the theme and aligning with the story arc stage",
         "scene_state": {{
             "location": "specific location fitting the theme",
             "time_of_day": "time period",
@@ -151,184 +175,4 @@ def generate_story_node(context, story_state):
 
     except Exception as e:
         print(f"\nError generating story: {e}")
-        raise
-
-def generate_initial_story(ip):
-
-    """Generate the starting point of the story"""
-    prompt = f"""
-    Create an engaging opening scene for a {ip} story with:
-    1. Rich initial scene description that fits the {ip} theme
-    2. Initial character setup including the player and characters relevant to {ip}
-    3. Clear starting location that matches the {ip} setting
-    4. Four distinct paths to begin the adventure in the {ip} world
-    
-    For example, if this is a Dracula story, include gothic elements, vampires, and Victorian era details.
-    If this is a sci-fi story, include futuristic elements, technology, and space-related details.
-    
-    Return as valid JSON in this format:
-    {{
-        "story": "detailed opening scene description fitting the {ip} theme",
-        "scene_state": {{
-            "location": "thematic location name",
-            "time_of_day": "time period",
-            "weather": "atmospheric conditions",
-            "ambient": "mood fitting the theme"
-        }},
-        "characters": {{
-            "player": {{
-                "health": 100,
-                "mood": "initial state",
-                "status_effects": [],
-                "relationships": {{}}
-            }},
-            "other_characters": {{
-                "name": "character fitting the {ip} theme",
-                "health": number,
-                "mood": "thematic state",
-                "relationships": {{"player": "initial relationship"}}
-            }}
-        }},
-        "choices": [
-            {{
-                "text": "choice description fitting the theme",
-                "dialogue": "brief character dialogue or character monologue to reveal information about the result of this choice",
-                "consequences": {{
-                    "health_change": number,
-                    "item_changes": ["add_item", "remove_item"]
-                }},
-                "can_backtrack": boolean
-            }}
-        ],
-        "is_ending": false
-    }}
-    
-    Make sure all elements (story, characters, choices, items) fit the {ip} theme and setting.
-    """
-    
-    try:
-        response = client.models.generate_content(
-            contents=[prompt],
-            model="gemini-2.0-flash",
-        )
-        
-        raw_text = response.text.strip()
-
-        if raw_text.startswith("```"):
-            lines = raw_text.split('\n')
-            if lines[0].startswith("```") and lines[-1].startswith("```"):
-                raw_text = '\n'.join(lines[1:-1])
-            elif lines[0].startswith("```"):
-                raw_text = '\n'.join(lines[1:])
-                
-        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-        story_data = json.loads(raw_text)
-        print("Story data parsed successfully")
-        required_fields = ["story", "scene_state", "characters", "choices"]
-        if not all(field in story_data for field in required_fields):
-            raise Exception("Missing required fields in initial story")
-            
-        if len(story_data["choices"]) != 4:
-            raise Exception("Initial story must have exactly 4 choices")
-            
-        return story_data
-        
-    except Exception as e:
-        print(f"\nError generating initial story: {e}")
-        raise
-
-def save_game_state(graph, story_state, filepath="game_save.json"):
-    save_data = {
-        "story_state": story_state.to_dict(),
-        "graph": {
-            "nodes": {},
-            "edges": []
-        }
-    }
-    
-    for node in graph.adjacency_list:
-        save_data["graph"]["nodes"][node.id] = {
-            "story": node.story,
-            "dialogue": node.dialogue,
-            "scene_state": getattr(node, "scene_state", {}),
-            "characters": getattr(node, "characters", {}),
-            "is_end": node.is_end
-        }
-        
-        for child in graph.get_children(node):
-            save_data["graph"]["edges"].append({
-                "from": node.id,
-                "to": child.id,
-                "backtrack": getattr(child, "backtrack", False)
-            })
-    
-    with open(filepath, 'w') as f:
-        json.dump(save_data, f, indent=2)
-
-def load_game_state(filepath="game_save.json", theme=None):
-    """Load game state from file or create initial state if empty"""
-    try:
-        if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
-            print("\nCreating new game state...")
-            
-            if not theme:
-                raise Exception("Theme required for new game")
-            
-            initial_data = generate_initial_story(theme)
-            if not initial_data:
-                raise Exception("Failed to generate initial story")
-        
-            graph = Graph()
-            story_state = StoryState()
-            
-            start_node = Node(initial_data["story"], initial_data["is_ending"])
-            start_node.scene_state = initial_data["scene_state"]
-            start_node.characters = initial_data["characters"]
-            graph.add_node(start_node)
-            
-            story_state.current_scene = initial_data["scene_state"]
-            story_state.characters = initial_data["characters"]
-            story_state.theme = theme  
-            
-            for choice in initial_data["choices"]:
-                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
-                choice_node.scene_state = initial_data["scene_state"]
-                choice_node.characters = initial_data["characters"]
-                choice_node.consequences = choice["consequences"]
-                choice_node.backtrack = choice.get("can_backtrack", False)
-                graph.add_node(choice_node)
-                graph.add_edge(start_node, choice_node)
-            
-            save_game_state(graph, story_state, filepath)
-            return graph, story_state
-            
-        with open(filepath, 'r') as f:
-            try:
-                save_data = json.load(f)
-            except json.JSONDecodeError:
-                print("\nCorrupted save file. Creating new game...")
-                os.remove(filepath)
-                return load_game_state(filepath)
-            
-        graph = Graph()
-        story_state = StoryState.from_dict(save_data["story_state"])
-
-        for node_id, node_data in save_data["graph"]["nodes"].items():
-            node = Node(node_data["story"], node_data["is_end"], node_data.get("dialogue", ""))
-            node.scene_state = node_data["scene_state"]
-            node.characters = node_data["characters"]
-            graph.add_node(node)
-        
-        for edge in save_data["graph"]["edges"]:
-            from_node = graph.get_node_with_id(edge["from"])
-            to_node = graph.get_node_with_id(edge["to"])
-            if from_node and to_node:
-                graph.add_edge(from_node, to_node)
-                if edge.get("backtrack"):
-                    to_node.backtrack = True
-        
-        return graph, story_state
-        
-    except Exception as e:
-        print(f"\nError loading/creating save: {e}")
         raise

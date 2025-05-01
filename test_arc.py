@@ -8,6 +8,13 @@ from Graph_Classes.Structure import Node, Graph
 GOOGLE_API_KEY = ""
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
+ARC_DIR = "story_arcs"
+PREDETERMINED_STORIES_DIR = "predetermined_stories"
+
+# Ensure directories exist
+os.makedirs(ARC_DIR, exist_ok=True)
+os.makedirs(PREDETERMINED_STORIES_DIR, exist_ok=True)
+
 class StoryState:
     def __init__(self):
         self.characters = {}
@@ -100,12 +107,17 @@ def generate_story_arc(theme):
         start_idx = raw_text.find('{')
         end_idx = raw_text.rfind('}') + 1
         if start_idx < 0 or end_idx <= 0:
-            raise Exception("Invalid JSON format")
+            raise Exception("Invalid JSON format in arc generation")
             
         json_text = raw_text[start_idx:end_idx]
         arc_data = json.loads(json_text)
         
-        print(f"Successfully generated story arc for {theme}")
+        # Save the arc data
+        arc_filename = os.path.join(ARC_DIR, f"{theme.lower().replace(' ', '_')}_arc.json")
+        with open(arc_filename, 'w') as f:
+            json.dump(arc_data, f, indent=2)
+        print(f"Successfully generated and saved story arc for {theme} to {arc_filename}")
+        
         return arc_data
         
     except Exception as e:
@@ -492,7 +504,7 @@ def generate_fallback_node(arc_data, story_stage_idx, current_level, max_depth):
     
     return fallback_data
 
-def save_game_state(graph, story_state, filepath="game_save.json"):
+def save_predetermined_story(graph, story_state, filepath):
     """Save the game state to a file"""
     save_data = {
         "story_state": story_state.to_dict(),
@@ -524,54 +536,73 @@ def save_game_state(graph, story_state, filepath="game_save.json"):
 
 def generate_predetermined_story(theme, depth=8):
     """Generate a full predetermined story tree for the given theme with custom depth"""
-    output_file = f"{theme.lower().replace(' ', '_')}_{depth}_story.json"
-    
+    story_filename = os.path.join(PREDETERMINED_STORIES_DIR, f"{theme.lower().replace(' ', '_')}_{depth}_story.json")
+    arc_filename = os.path.join(ARC_DIR, f"{theme.lower().replace(' ', '_')}_arc.json")
+
     print(f"\nGenerating story arc for {theme}...")
+    # generate_story_arc now saves the file itself
     arc_data = generate_story_arc(theme)
-    with open('arc_data.json', 'w') as file:
-        json.dump(arc_data, file, indent=4)
+    # Redundant save:
+    # with open(arc_filename, 'w') as file:
+    #     json.dump(arc_data, file, indent=4)
     
     print(f"\nGenerating complete story tree with depth {depth} and 2 choices per node...")
     print("This may take some time. Progress will be displayed below:")
     graph, story_state = generate_story_tree(arc_data, depth)
     
     # Save the complete story tree
-    save_game_state(graph, story_state, output_file)
+    save_predetermined_story(graph, story_state, story_filename)
     
     # Count the total number of nodes
     node_count = len(graph.adjacency_list)
     print(f"\nSuccess! Story tree for '{theme}' has been generated.")
     print(f"Total nodes: {node_count}")
-    print(f"File saved as: {output_file}")
+    print(f"Story file saved as: {story_filename}")
+    print(f"Arc file saved as: {arc_filename}")
     
-    return graph, story_state
+    return graph, story_state, arc_data
 
-def load_game_state(filepath=None, theme=None, depth=8):
+def load_or_generate_predetermined_story(filepath=None, theme=None, depth=8):
     """Load game state from file or create initial state with predetermined story"""
     try:
-        # If theme is provided but no filepath, look for a themed file
-        if theme and not filepath:
-            potential_file = f"{theme.lower().replace(' ', '_')}_{depth}_story.json"
-            if os.path.exists(potential_file):
-                filepath = potential_file
-                
-        # If a valid filepath is provided, load the game state
+        # If theme is provided, determine file paths
+        story_filename = None
+        arc_filename = None
+        if theme:
+            story_filename = os.path.join(PREDETERMINED_STORIES_DIR, f"{theme.lower().replace(' ', '_')}_{depth}_story.json")
+            arc_filename = os.path.join(ARC_DIR, f"{theme.lower().replace(' ', '_')}_arc.json")
+            # Use themed file path if no specific filepath provided
+            if not filepath:
+                filepath = story_filename
+
+        # Try loading the story file
         if filepath and os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-            print(f"\nLoading game from {filepath}...")
+            print(f"\nLoading predetermined story from {filepath}...")
             with open(filepath, 'r') as f:
                 try:
                     save_data = json.load(f)
                 except json.JSONDecodeError:
-                    print("\nCorrupted save file. Creating new game...")
+                    print("\nCorrupted story file. Will attempt to regenerate...")
                     if theme:
-                        return generate_predetermined_story(theme, depth)
-                    else:
-                        raise Exception("Cannot create new game without theme")
+                        # Generate and save the predetermined story
+                        graph, story_state, arc_data = generate_predetermined_story(theme, depth)
+                        return graph, story_state, arc_data
             
-            graph = Graph()
             story_state = StoryState.from_dict(save_data["story_state"])
 
+            # Load corresponding arc data
+            arc_data = None
+            if arc_filename and os.path.exists(arc_filename):
+                with open(arc_filename, 'r') as f:
+                    try:
+                        arc_data = json.load(f)
+                    except json.JSONDecodeError:
+                         print(f"Warning: Could not load arc data from {arc_filename}")
+            else:
+                 print(f"Warning: Arc data file not found at {arc_filename}")
+
             # Create all nodes first
+            graph = Graph()
             for node_id, node_data in save_data["graph"]["nodes"].items():
                 node = Node(node_data["story"], node_data["is_end"])
                 node.scene_state = node_data["scene_state"]
@@ -588,12 +619,14 @@ def load_game_state(filepath=None, theme=None, depth=8):
                     if edge.get("backtrack"):
                         to_node.backtrack = True
             
-            return graph, story_state
+            return graph, story_state, arc_data
         
         # If we can't load from a file but have a theme, generate a new story
         elif theme:
             print(f"\nGenerating new {theme} adventure with depth {depth}...")
-            return generate_predetermined_story(theme, depth)
+            # Generate and save the predetermined story
+            graph, story_state, arc_data = generate_predetermined_story(theme, depth)
+            return graph, story_state, arc_data
         
         # No valid file and no theme
         else:
@@ -609,4 +642,6 @@ if __name__ == "__main__":
     
     theme = input("\nWhat kind of story would you like to generate?\n(e.g., Star Wars, Lord of the Rings, Dracula, Cyberpunk): ")
     depth = int(input("\nHow deep should the story tree be? (recommended: 5+): "))
-    generate_predetermined_story(theme, depth)
+    # generate_predetermined_story now saves the files internally
+    load_or_generate_predetermined_story(theme, depth)
+    print("\nGeneration and saving complete.")
