@@ -3,7 +3,9 @@ from Graph_Classes.Structure import Node, Graph
 import json
 import os
 
-GOOGLE_API_KEY = "" 
+from arc import return_story_arc, return_story_tree
+
+GOOGLE_API_KEY = "AIzaSyBQjg0r1vHzO3MNg_8zg18DyCTV8K-cJdE" 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -33,30 +35,8 @@ class StoryState:
         state.theme = data.get("theme", "")  
         return state
 
-def generate_story_node(context, story_state, arc_data=None, current_stage_info=None):
-    """Generate a story node with rich content based on current context, guided by the story arc."""
-    
-    # --- Build Arc Context --- 
-    arc_context_prompt = ""
-    if arc_data and current_stage_info:
-        stage_index = current_stage_info.get("stage_index", 0)
-        stage_progression = current_stage_info.get("progression", "Unknown")
-        
-        if 0 <= stage_index < len(arc_data.get('arc', [])):
-            stage_data = arc_data['arc'][stage_index]
-            arc_context_prompt = f"""
-            Story Arc Context:
-            - Current Stage: {stage_data.get('stage', 'Unknown')} ({stage_progression})
-            - Stage Goal: {stage_data.get('description', 'Unknown')}
-            - Key Plot Points for this stage: {', '.join(stage_data.get('key_plot_points', []))}
-            - Overall Goal: {arc_data.get('golden_path', 'Complete the adventure')}
-            """
-        else:
-             arc_context_prompt = "Story Arc Context: Stage information is unavailable."
-    else:
-        arc_context_prompt = "Story Arc Context: No arc data provided."
-    # --- End Arc Context ---
-    
+def generate_story_node(context, story_state, story_arc, story_graph):
+    """Generate a story node with rich content based on current context"""
     prompt = f"""
     Based on this detailed story context:
     Previous Scene: {context['previous_scene']}
@@ -65,8 +45,6 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
     Weather: {context['weather']}
     Story Theme: {story_state.theme}  
     
-    {arc_context_prompt}
-    
     Player Status:
     - Health: {context['player_status']['health']}
     - Inventory: {', '.join(context['player_status']['inventory'])}
@@ -74,15 +52,20 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
     
     Characters Present: {json.dumps(context['characters'], indent=2)}
 
-    Generate a vivid story continuation that fits the {story_state.theme} theme and includes:
+    Also using the story arc that is passed in and the golden example of a story, try to stay near these elements.
+    **Closely follow the structure and spirit of the provided Story Arc and the Golden Example story graph.** Ensure the generated scene logically progresses from the previous one and aligns with the current stage of the overall narrative defined in the arc.
+    Story Arc: {story_arc}
+    Golden Example: {story_graph}
+
+    Generate a **smoothly flowing and coherent** story continuation that fits the {story_state.theme} theme and includes:
     1. Rich, detailed description of what happens next
     2. Character reactions and development
     3. Environmental changes and atmosphere
     4. Four distinct choice paths that maintain story consistency
     5. Meaningful consequences for each choice
     6. For each choice, include a block of at least three full sentences of spoken dialogue (strongly preferred) that reveals new plot or character information tied to that choice's outcome.
-        - Dialogue must use the format [Name]: "..." with the spoken words in quotes.
-            - Each speaker gets exactly one line—even if they speak multiple sentences—so don't repeat the tag for the same speaker.
+        - Dialogue must use the format [Name]: "...\" with the spoken words in quotes.
+            - Each speaker gets exactly one line--even if they speak multiple sentences--so don't repeat the tag for the same speaker.
             - When the player speaks, use [You]:.
             - Other speakers must be existing character names or broad generic roles (e.g., [Crowd]:).
             - Each line appears on its own line, for example:
@@ -95,12 +78,15 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
             - To show emotion, wrap feelings in parentheses like (heart pounding), and use *actions* for movement or gestures.
             
         - Ensure the entire block directly advances the plot, reveals a clue, or deepens a character's motivation in connection with the choice's consequences.
+    7. **Crucially, evaluate if the story has reached a natural narrative conclusion based on the Story Arc (especially if nearing or within the 'Return and Resolution' stage). If so, ensure "is_ending" is set to true. If not, ensure "is_ending" is false.**
+    
+    **If "is_ending" is true, also include an "ending_type" field with one of these values: "victory", "defeat", "neutral", "bittersweet", or "tragic" to classify the ending, and an "ending_reason" field with a one-sentence explanation of why the story is concluding.**
     
     Keep the style and elements consistent with {story_state.theme} setting.
 
     Return ONLY valid JSON in this exact format:
     {{
-        "story": "detailed scene description maintaining the theme and aligning with the story arc stage",
+        "story": "detailed scene description maintaining the theme",
         "scene_state": {{
             "location": "specific location fitting the theme",
             "time_of_day": "time period",
@@ -124,7 +110,7 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
         "choices": [
             {{
                 "text": "choice description fitting the theme",
-                "dialogue": "Provide at least three full sentences of spoken dialogue in one line per speaker, formatted as `[Name]: "... "`. Do not repeat the tag for the same speaker across lines. Use `[You]: "... "` for the player; other lines must use existing character names or sensible generic roles like `[Crowd]: "... "`. If dialogue doesn't fit, supply a three-sentence inner monologue (no quotes), beginning with "You think: ", "You realize: ", or "Your mind races as...", using (emotions) and *actions* as needed.",
+                "dialogue": "Provide at least three full sentences of spoken dialogue in one line per speaker, formatted as `[Name]: "...\"`. Do not repeat the tag for the same speaker across lines. Use `[You]: "...\"` for the player; other lines must use existing character names or sensible generic roles like `[Crowd]: "...\"`. If dialogue doesn't fit, supply a three-sentence inner monologue (no quotes), beginning with "You think: ", "You realize: ", or "Your mind races as..." using (emotions) and *actions* as needed.",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -132,7 +118,9 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
                 "can_backtrack": boolean
             }}
         ],
-        "is_ending": boolean
+        "is_ending": boolean,
+        "ending_type": "victory|defeat|neutral|bittersweet|tragic (only include if is_ending is true)",
+        "ending_reason": "One sentence explanation of why the story concludes here (only include if is_ending is true)"
     }}
     """
 
@@ -176,3 +164,447 @@ def generate_story_node(context, story_state, arc_data=None, current_stage_info=
     except Exception as e:
         print(f"\nError generating story: {e}")
         raise
+
+def generate_initial_story(theme, story_arc, story_tree):
+    """Generate the starting point of the story"""
+    depth = int(input("Enter the depth of the game tree (default is 8): "))
+    prompt = f"""
+
+    **Using the provided Story Arc and the example Story Tree (Golden Example) as guides, create an engaging opening.** Ensure the scene aligns with the initial stage of the Story Arc and reflects the tone and style of the Golden Example.
+    Story Arc: {story_arc}
+    Golden Example: {story_tree}
+
+    Create an engaging and **thematically consistent** opening scene for a {theme} story with:
+    1. Rich initial scene description that fits the {theme} theme
+    2. Initial character setup including the player and characters relevant to {theme}
+    3. Clear starting location that matches the {theme} setting
+    4. Four distinct and **logical starting choices** that seamlessly flow from the opening scene and fit the {theme} world
+    
+    For example, if this is a Dracula story, include gothic elements, vampires, and Victorian era details.
+    If this is a sci-fi story, include futuristic elements, technology, and space-related details.
+    
+    Return as valid JSON in this format:
+    {{
+        "story": "detailed opening scene description fitting the {theme} theme",
+        "scene_state": {{
+            "location": "thematic location name",
+            "time_of_day": "time period",
+            "weather": "atmospheric conditions",
+            "ambient": "mood fitting the theme"
+        }},
+        "characters": {{
+            "player": {{
+                "health": 100,
+                "mood": "initial state",
+                "status_effects": [],
+                "relationships": {{}}
+            }},
+            "other_characters": {{
+                "name": "character fitting the {theme} theme",
+                "health": number,
+                "mood": "thematic state",
+                "relationships": {{"player": "initial relationship"}}
+            }}
+        }},
+        "choices": [
+            {{
+                "text": "choice description fitting the theme",
+                "dialogue": "brief character dialogue or character monologue to reveal information about the result of this choice",
+                "consequences": {{
+                    "health_change": number,
+                    "item_changes": ["add_item", "remove_item"]
+                }},
+                "can_backtrack": boolean
+            }}
+        ],
+        "is_ending": false,
+        "ending_type": "victory|defeat|neutral|bittersweet|tragic (only include if is_ending is true)",
+        "ending_reason": "One sentence explanation of why the story concludes here (only include if is_ending is true)"
+    }}
+    
+    Make sure all elements (story, characters, choices, items) fit the {theme} theme and setting.
+    """
+    
+    try:
+        response = client.models.generate_content(
+            contents=[prompt],
+            model="gemini-2.0-flash",
+        )
+        
+        if not response.text:
+            raise Exception("Empty response from API")
+            
+        raw_text = response.text.strip()
+
+        if raw_text.startswith("```"):
+            lines = raw_text.split('\n')
+            if lines[0].startswith("```") and lines[-1].startswith("```"):
+                raw_text = '\n'.join(lines[1:-1])
+            elif lines[0].startswith("```"):
+                raw_text = '\n'.join(lines[1:])
+                
+        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+        
+        # Try to fix common JSON errors
+        raw_text = raw_text.replace(",\n}", "\n}")
+        raw_text = raw_text.replace(",\n]", "\n]")
+        raw_text = raw_text.replace(",,", ",")
+        raw_text = raw_text.replace(",}", "}")
+        raw_text = raw_text.replace(",]", "]")
+        
+        # Find JSON boundaries
+        start_idx = raw_text.find('{')
+        end_idx = raw_text.rfind('}') + 1
+        if start_idx < 0 or end_idx <= 0:
+            raise Exception("Invalid JSON format in initial story")
+            
+        json_text = raw_text[start_idx:end_idx]
+        
+        try:
+            story_data = json.loads(json_text)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error in initial story: {e}")
+            print("Retrying with fallback approach...")
+            # This is a simplified fallback approach
+            story_data = {
+                "story": f"You find yourself in the world of {theme}, ready to begin your adventure.",
+                "scene_state": {
+                    "location": f"{theme} starting location",
+                    "time_of_day": "morning",
+                    "weather": "clear",
+                    "ambient": "peaceful"
+                },
+                "characters": {
+                    "player": {
+                        "health": 100,
+                        "mood": "determined",
+                        "status_effects": [],
+                        "relationships": {}
+                    },
+                    "other_characters": {
+                        "guide": {
+                            "name": "Guide",
+                            "health": 100,
+                            "mood": "helpful",
+                            "relationships": {"player": "neutral"}
+                        }
+                    }
+                },
+                "choices": [
+                    {
+                        "text": f"Explore the {theme} world",
+                        "dialogue": "You decide to venture forth and see what awaits.",
+                        "consequences": {
+                            "health_change": 0,
+                            "item_changes": []
+                        },
+                        "can_backtrack": True
+                    },
+                    {
+                        "text": "Seek guidance",
+                        "dialogue": "You decide to find someone who can help you understand this world better.",
+                        "consequences": {
+                            "health_change": 0,
+                            "item_changes": []
+                        },
+                        "can_backtrack": True
+                    },
+                    {
+                        "text": "Gather supplies",
+                        "dialogue": "You decide to prepare yourself before venturing further.",
+                        "consequences": {
+                            "health_change": 0,
+                            "item_changes": ["add_basic_supplies"]
+                        },
+                        "can_backtrack": True
+                    },
+                    {
+                        "text": "Follow the path ahead",
+                        "dialogue": "You decide to follow the most obvious path and see where it leads.",
+                        "consequences": {
+                            "health_change": 0,
+                            "item_changes": []
+                        },
+                        "can_backtrack": True
+                    }
+                ],
+                "is_ending": False,
+                "ending_type": "neutral",
+                "ending_reason": "The story has reached its conclusion."
+            }
+        
+        print("Story data parsed successfully")
+        
+        required_fields = ["story", "scene_state", "characters", "choices"]
+        if not all(field in story_data for field in required_fields):
+            print("Missing required fields in initial story, using fallback data")
+            # Use same fallback approach as above
+            # This code would be duplicate of the fallback above
+            
+        if "choices" not in story_data or len(story_data["choices"]) != 4:
+            print("Initial story must have exactly 4 choices, fixing...")
+            # Ensure we have exactly 4 choices
+            if "choices" not in story_data:
+                story_data["choices"] = []
+                
+            # Add generic choices if needed
+            generic_choices = [
+                {
+                    "text": f"Explore the {theme} world",
+                    "dialogue": "You decide to venture forth and see what awaits.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Seek guidance",
+                    "dialogue": "You decide to find someone who can help you understand this world better.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Gather supplies",
+                    "dialogue": "You decide to prepare yourself before venturing further.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": ["add_basic_supplies"]
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Follow the path ahead",
+                    "dialogue": "You decide to follow the most obvious path and see where it leads.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                }
+            ]
+            
+            # Keep existing choices and add generic ones until we have 4
+            existing_choices = story_data["choices"][:min(len(story_data["choices"]), 4)]
+            while len(existing_choices) < 4:
+                existing_choices.append(generic_choices[len(existing_choices)])
+                
+            story_data["choices"] = existing_choices
+            
+        # Make sure is_ending is set
+        if "is_ending" not in story_data:
+            story_data["is_ending"] = False
+            
+        return story_data
+        
+    except Exception as e:
+        print(f"\nError generating initial story: {e}")
+        print("Generating fallback story data...")
+        
+        # Return a very basic fallback story
+        return {
+            "story": f"You find yourself in the world of {theme}, ready to begin your adventure.",
+            "scene_state": {
+                "location": f"{theme} starting location",
+                "time_of_day": "morning",
+                "weather": "clear",
+                "ambient": "peaceful"
+            },
+            "characters": {
+                "player": {
+                    "health": 100,
+                    "mood": "determined",
+                    "status_effects": [],
+                    "relationships": {}
+                },
+                "other_characters": {
+                    "guide": {
+                        "name": "Guide",
+                        "health": 100,
+                        "mood": "helpful",
+                        "relationships": {"player": "neutral"}
+                    }
+                }
+            },
+            "choices": [
+                {
+                    "text": f"Explore the {theme} world",
+                    "dialogue": "You decide to venture forth and see what awaits.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Seek guidance",
+                    "dialogue": "You decide to find someone who can help you understand this world better.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Gather supplies",
+                    "dialogue": "You decide to prepare yourself before venturing further.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": ["add_basic_supplies"]
+                    },
+                    "can_backtrack": True
+                },
+                {
+                    "text": "Follow the path ahead",
+                    "dialogue": "You decide to follow the most obvious path and see where it leads.",
+                    "consequences": {
+                        "health_change": 0,
+                        "item_changes": []
+                    },
+                    "can_backtrack": True
+                }
+            ],
+            "is_ending": False,
+            "ending_type": "neutral",
+            "ending_reason": "The story has reached its conclusion."
+        }
+
+def save_game_state(graph, story_state, filepath="game_save.json"):
+    save_data = {
+        "story_state": story_state.to_dict(),
+        "graph": {
+            "nodes": {},
+            "edges": []
+        }
+    }
+    
+    for node in graph.adjacency_list:
+        save_data["graph"]["nodes"][node.id] = {
+            "story": node.story,
+            "dialogue": node.dialogue,
+            "scene_state": getattr(node, "scene_state", {}),
+            "characters": getattr(node, "characters", {}),
+            "is_end": node.is_end,
+            "ending_type": getattr(node, "ending_type", "neutral") if node.is_end else None,
+            "ending_reason": getattr(node, "ending_reason", "The story has reached its conclusion.") if node.is_end else None
+        }
+        
+        for child in graph.get_children(node):
+            save_data["graph"]["edges"].append({
+                "from": node.id,
+                "to": child.id,
+                "backtrack": getattr(child, "backtrack", False)
+            })
+    
+    with open(filepath, 'w') as f:
+        json.dump(save_data, f, indent=2)
+
+def load_game_state(filepath="game_save.json", theme=None, story_arc=None, story_tree=None):
+    """Load game state from file or create initial state if empty"""
+    try:
+        if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+            print("\nCreating new game state...")
+            
+            if not theme:
+                raise Exception("Theme required for new game")
+                
+            # Make sure we have a story arc
+            if not story_arc:
+                print("No story arc provided, generating one...")
+                story_arc = return_story_arc(theme)
+                
+            if not story_tree:
+                print("No story tree template provided, generating one...")
+                story_tree_file = return_story_tree(theme)
+                try:
+                    with open(story_tree_file, 'r') as f:
+                        story_tree = json.load(f)
+                except (json.JSONDecodeError, FileNotFoundError) as e:
+                    print(f"Error loading story tree: {e}")
+                    print("Continuing without a template story tree.")
+                    story_tree = {}
+            
+            initial_data = generate_initial_story(theme, story_arc, story_tree)
+            if not initial_data:
+                raise Exception("Failed to generate initial story")
+        
+            graph = Graph()
+            story_state = StoryState()
+            
+            start_node = Node(initial_data["story"], initial_data["is_ending"])
+            start_node.scene_state = initial_data["scene_state"]
+            start_node.characters = initial_data["characters"]
+            if initial_data.get("is_ending") and initial_data.get("ending_type"):
+                start_node.ending_type = initial_data.get("ending_type")
+                start_node.ending_reason = initial_data.get("ending_reason", "The story has reached its conclusion.")
+            graph.add_node(start_node)
+            
+            story_state.current_scene = initial_data["scene_state"]
+            story_state.characters = initial_data["characters"]
+            story_state.theme = theme  
+            
+            for choice in initial_data["choices"]:
+                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
+                choice_node.scene_state = initial_data["scene_state"]
+                choice_node.characters = initial_data["characters"]
+                choice_node.consequences = choice["consequences"]
+                choice_node.backtrack = choice.get("can_backtrack", False)
+                graph.add_node(choice_node)
+                graph.add_edge(start_node, choice_node)
+            
+            save_game_state(graph, story_state, filepath)
+            return graph, story_state
+            
+        # Try to load from existing file
+        try:
+            with open(filepath, 'r') as f:
+                save_data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"\nCorrupted save file ({e}). Creating new game...")
+            os.remove(filepath)
+            return load_game_state(filepath, theme, story_arc, story_tree)
+        except Exception as e:
+            print(f"\nError reading save file: {e}. Creating new game...")
+            os.remove(filepath)
+            return load_game_state(filepath, theme, story_arc, story_tree)
+            
+        graph = Graph()
+        story_state = StoryState.from_dict(save_data["story_state"])
+
+        for node_id, node_data in save_data["graph"]["nodes"].items():
+            node = Node(node_data["story"], node_data["is_end"], node_data.get("dialogue", ""))
+            node.scene_state = node_data["scene_state"]
+            node.characters = node_data["characters"]
+            # Load ending information if this is an end node
+            if node_data["is_end"]:
+                node.ending_type = node_data.get("ending_type", "neutral")
+                node.ending_reason = node_data.get("ending_reason", "The story has reached its conclusion.")
+            graph.add_node(node)
+        
+        for edge in save_data["graph"]["edges"]:
+            from_node = graph.get_node_with_id(edge["from"])
+            to_node = graph.get_node_with_id(edge["to"])
+            if from_node and to_node:
+                graph.add_edge(from_node, to_node)
+                if edge.get("backtrack"):
+                    to_node.backtrack = True
+        
+        return graph, story_state
+        
+    except Exception as e:
+        print(f"\nError loading/creating save: {e}")
+        
+        # If we have a theme, try one more time with a clean slate
+        if theme and os.path.exists(filepath):
+            print("Attempting to create a new game from scratch...")
+            try:
+                os.remove(filepath)
+                return load_game_state(filepath, theme, story_arc, story_tree)
+            except Exception as e2:
+                print(f"Final error: {e2}")
+                raise
+        else:
+            raise

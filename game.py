@@ -1,12 +1,15 @@
 import time
 import json
 import os
+from arc import return_story_arc, return_story_tree
 from storygen import StoryState, generate_initial_story, generate_story_node, save_game_state, load_game_state
 from Graph_Classes.Structure import Node, Graph
 from Graph_Classes.Interact import Player
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
+    pass
+
 
 def wrap_text(text, width=70):
     words = text.split()
@@ -97,22 +100,40 @@ def main():
     
     player_name = input("\nEnter your name: ")
     story_theme = input("\nWhat kind of story would you like to experience?\n(e.g., Star Wars, Lord of the Rings, Dracula, your own movie idea): ")
-    death_reason = None
     
     try:
-        graph, story_state = load_game_state(theme=story_theme)
+        # Generate story arc first
+        story_arc = return_story_arc(story_theme)
+        
+        # Generate a small story tree template
+        story_tree_file = return_story_tree(story_theme)
+        try:
+            with open(story_tree_file, 'r') as f:
+                story_tree = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            print(f"Error loading story tree: {e}")
+            print("Continuing without a template story tree.")
+            story_tree = {}
+        
+        # Load the game state with the correct parameter names
+        graph, story_state = load_game_state(theme=story_theme, story_arc=story_arc, story_tree=story_tree)
+        
         if not graph:
             graph = Graph()
             story_state = StoryState()
             print(f"\nGenerating your unique {story_theme} adventure...")
             
-            initial_data = generate_initial_story(story_theme)
+            initial_data = generate_initial_story(story_theme, story_arc, story_tree)
             if not initial_data:
                 raise Exception("Failed to generate initial story")
             
             start_node = Node(initial_data["story"], initial_data["is_ending"], initial_data.get("dialogue", ""))
             start_node.scene_state = initial_data["scene_state"]
             start_node.characters = initial_data["characters"]
+            # Handle ending information if this is an ending
+            if initial_data.get("is_ending"):
+                start_node.ending_type = initial_data.get("ending_type", "neutral")
+                start_node.ending_reason = initial_data.get("ending_reason", "The story has reached its conclusion.")
             graph.add_node(start_node)
             
             story_state.current_scene = initial_data["scene_state"]
@@ -154,6 +175,7 @@ def main():
             print(f"╚{'═'*50}╝")
             
             choices = list(graph.get_children(player.current_node))
+            generation_failed_or_empty = False # Flag for fallback ending
             if not choices and not player.current_node.is_end:
                 print("\nGenerating new story paths...")
                 try:
@@ -170,7 +192,7 @@ def main():
                         "recent_events": [node.story for node in player.traversed_nodes[-3:]]
                     }
                     
-                    choice_data = generate_story_node(story_context, story_state)
+                    choice_data = generate_story_node(story_context, story_state, story_arc, story_tree)
                     
                     for choice in choice_data["choices"]:
                         new_node = Node(choice["text"], choice_data.get("is_ending", False), choice.get("dialogue", ""))
@@ -178,15 +200,36 @@ def main():
                         new_node.characters = choice_data["characters"]
                         new_node.consequences = choice["consequences"]
                         new_node.backtrack = choice.get("can_backtrack", False)
+                        # Add ending type and reason if this is an ending node
+                        if choice_data.get("is_ending"):
+                            new_node.ending_type = choice_data.get("ending_type", "neutral")
+                            new_node.ending_reason = choice_data.get("ending_reason", "The story has reached its conclusion.")
                         graph.add_node(new_node)
                         graph.add_edge(player.current_node, new_node)
                     
                     choices = list(graph.get_children(player.current_node))
                 except Exception as e:
                     print(f"\nError in choice generation: {e}")
-                    break
+                    # Instead of break, set flag for fallback ending
+                    generation_failed_or_empty = True
+                    #break # Removed break
             
-            if choices:
+            # Also check if choices is empty even after successful generation attempt
+            if not choices and not player.current_node.is_end and not generation_failed_or_empty:
+                 print("\nNo further paths could be generated from this point.")
+                 generation_failed_or_empty = True
+
+            # If generation failed or yielded no path, trigger fallback ending
+            if generation_failed_or_empty:
+                print("The path ahead fades into uncertainty...")
+                player.current_node.is_end = True # Force an ending state
+                player.current_node.ending_type = "neutral"
+                player.current_node.ending_reason = "The path ahead could not be determined."
+                # Optional: Set a generic ending story message
+                # player.current_node.story = "Your journey concludes here, the path ahead shrouded in mystery."
+                # break # Let the loop condition handle the exit now
+
+            if choices and not generation_failed_or_empty: # Proceed only if choices exist and generation was ok
                 print("\n🎲 AVAILABLE CHOICES 🎲")
                 print(f"╔{'═'*68}╗")
                 for i, choice in enumerate(choices, 1):
@@ -247,10 +290,12 @@ def main():
                         print("Please enter a valid number.")
                 
                 save_game_state(graph, story_state)
-            else:
-                print("\nYou've reached the end of this path!")
-                break
+            elif not player.current_node.is_end: # Handles the case where generation failed/empty AND it wasn't already an end node
+                 print("\nYou've reached an unexpected end to this path!")
+                 # break # Let the main loop condition handle exit
             
+            # The main loop condition (while not player.is_dead and not player.current_node.is_end)
+            # will now catch the forced end state from generation failure
             time.sleep(1)
     
         clear_screen()
@@ -261,7 +306,26 @@ def main():
             print(f"Cause of death: {death_reason}")
             print(f"Final Health: {player.health}")
         elif player.current_node.is_end:
-            print("\nCongratulations! You've reached an ending!")
+            ending_type = getattr(player.current_node, 'ending_type', 'neutral')
+            ending_reason = getattr(player.current_node, 'ending_reason', 'Your journey has concluded.')
+            
+            # Ending type symbols
+            ending_symbols = {
+                'victory': '🏆 VICTORY',
+                'defeat': '💔 DEFEAT',
+                'neutral': '🔄 CONCLUSION',
+                'bittersweet': '🌅 BITTERSWEET',
+                'tragic': '⚰️ TRAGIC'
+            }
+            
+            symbol = ending_symbols.get(ending_type, '🔄 CONCLUSION')
+            
+            print(f"\n{symbol} ENDING!")
+            print_box(ending_reason)
+            
+            # Add specific message if it was a fallback ending
+            if generation_failed_or_empty:
+                print("(Note: The story faded early due to technical limitations.)")
         
         print(f"\nFinal Status:")
         print(f"Health: {player.health}")
@@ -274,4 +338,7 @@ def main():
         return
 
 if __name__ == "__main__":
+    if os.path.exists("game_save.json"):
+        os.remove("game_save.json")
+        
     main()

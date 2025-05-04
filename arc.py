@@ -5,7 +5,7 @@ import time
 import hashlib
 from Graph_Classes.Structure import Node, Graph
 
-GOOGLE_API_KEY = ""
+GOOGLE_API_KEY = "AIzaSyBQjg0r1vHzO3MNg_8zg18DyCTV8K-cJdE"
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -63,7 +63,7 @@ def generate_story_arc(theme):
     Return ONLY valid JSON in this exact format:
     {{
         "theme": "{theme}",
-        "golden_path": "the ideal/optimal storyline that will serve as the golden path for the generated story in 5-8 sentences"
+        "golden_path": "the ideal/optimal storyline that will serve as the golden path for the generated story in 5-8 sentences",
         "arc": [
             {{
                 "stage": "The Ordinary World",
@@ -78,39 +78,166 @@ def generate_story_arc(theme):
     }}
     """
     
-    try:
-        response = client.models.generate_content(
-            contents=[prompt],
-            model="gemini-2.0-flash",
-        )
-        
-        raw_text = response.text.strip()
-        
-        # Clean up response to extract valid JSON
-        if raw_text.startswith("```"):
-            lines = raw_text.split('\n')
-            if lines[0].startswith("```") and lines[-1].startswith("```"):
-                raw_text = '\n'.join(lines[1:-1])
-            elif lines[0].startswith("```"):
-                raw_text = '\n'.join(lines[1:])
-                
-        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-        
-        # Find JSON boundaries
-        start_idx = raw_text.find('{')
-        end_idx = raw_text.rfind('}') + 1
-        if start_idx < 0 or end_idx <= 0:
-            raise Exception("Invalid JSON format")
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                contents=[prompt],
+                model="gemini-2.0-flash",
+            )
             
-        json_text = raw_text[start_idx:end_idx]
-        arc_data = json.loads(json_text)
-        
-        print(f"Successfully generated story arc for {theme}")
-        return arc_data
-        
-    except Exception as e:
-        print(f"Error generating story arc: {e}")
-        raise
+            if not response.text:
+                print(f"Empty response from API (attempt {attempt+1}/{max_retries})")
+                if attempt == max_retries - 1:
+                    raise Exception("Received empty response from API after all attempts")
+                continue
+                
+            raw_text = response.text.strip()
+            
+            # Clean up response to extract valid JSON
+            if raw_text.startswith("```"):
+                lines = raw_text.split('\n')
+                if lines[0].startswith("```") and lines[-1].startswith("```"):
+                    raw_text = '\n'.join(lines[1:-1])
+                elif lines[0].startswith("```"):
+                    raw_text = '\n'.join(lines[1:])
+                    
+            raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+            
+            # Find JSON boundaries
+            start_idx = raw_text.find('{')
+            end_idx = raw_text.rfind('}') + 1
+            if start_idx < 0 or end_idx <= 0:
+                print(f"Invalid JSON format (attempt {attempt+1}/{max_retries})")
+                if attempt == max_retries - 1:
+                    raise Exception("Invalid JSON format after all attempts")
+                continue
+                
+            json_text = raw_text[start_idx:end_idx]
+            
+            # Try to fix common JSON errors
+            json_text = json_text.replace(",\n}", "\n}")
+            json_text = json_text.replace(",\n]", "\n]")
+            
+            # Try to parse the JSON
+            try:
+                arc_data = json.loads(json_text)
+            except json.JSONDecodeError as e:
+                print(f"JSON parsing error: {e} (attempt {attempt+1}/{max_retries})")
+                if attempt == max_retries - 1:
+                    raise
+                continue
+            
+            # Validate required fields
+            required_fields = ["theme", "golden_path", "arc"]
+            if not all(field in arc_data for field in required_fields):
+                print(f"Missing required fields (attempt {attempt+1}/{max_retries})")
+                if attempt == max_retries - 1:
+                    raise Exception("Missing required fields in generated story arc")
+                continue
+            
+            # Validate arc structure
+            if not isinstance(arc_data["arc"], list) or len(arc_data["arc"]) != 8:
+                print(f"Invalid arc structure (attempt {attempt+1}/{max_retries})")
+                if attempt == max_retries - 1:
+                    raise Exception("Invalid arc structure in generated story arc")
+                continue
+            
+            for stage in arc_data["arc"]:
+                required_stage_fields = ["stage", "description", "characters", "key_plot_points", "potential_branches", "thematic_elements"]
+                if not all(field in stage for field in required_stage_fields):
+                    print(f"Missing required stage fields (attempt {attempt+1}/{max_retries})")
+                    if attempt == max_retries - 1:
+                        raise Exception("Missing required stage fields in generated story arc")
+                    continue
+            
+            print(f"Successfully generated story arc for {theme}")
+            return arc_data
+            
+        except Exception as e:
+            print(f"Error in attempt {attempt+1}/{max_retries}: {e}")
+            if attempt == max_retries - 1:
+                print(f"Failed to generate story arc after {max_retries} attempts")
+                
+                # Provide a fallback story arc
+                return generate_fallback_arc(theme)
+
+def generate_fallback_arc(theme):
+    """Generate a fallback story arc if API generation fails"""
+    print(f"Generating fallback story arc for {theme}...")
+    
+    fallback_arc = {
+        "theme": theme,
+        "golden_path": f"A hero in the {theme} universe embarks on a journey, faces challenges, makes allies, confronts enemies, and ultimately succeeds in their quest, returning changed from the experience.",
+        "arc": [
+            {
+                "stage": "The Ordinary World",
+                "description": f"The protagonist lives their normal life in the {theme} setting.",
+                "characters": ["Protagonist", "Mentor"],
+                "key_plot_points": ["Establish protagonist's normal life", "Hint at the coming adventure"],
+                "potential_branches": ["Accept the call", "Delay the adventure"],
+                "thematic_elements": ["Normalcy", "Foreshadowing"]
+            },
+            {
+                "stage": "The Call to Adventure",
+                "description": "Something disrupts the protagonist's normal life, pushing them toward adventure.",
+                "characters": ["Protagonist", "Messenger", "Ally"],
+                "key_plot_points": ["Receive call to adventure", "Initial reluctance"],
+                "potential_branches": ["Accept the call", "Refuse the call"],
+                "thematic_elements": ["Disruption", "Choice"]
+            },
+            {
+                "stage": "Crossing the Threshold",
+                "description": "The protagonist leaves their comfort zone and enters the world of adventure.",
+                "characters": ["Protagonist", "Threshold Guardian", "Mentor"],
+                "key_plot_points": ["Leave familiar surroundings", "Enter new territory"],
+                "potential_branches": ["Cautious approach", "Bold entry"],
+                "thematic_elements": ["Transition", "Leaving comfort"]
+            },
+            {
+                "stage": "Tests, Allies, and Enemies",
+                "description": "The protagonist faces various challenges and meets key characters.",
+                "characters": ["Protagonist", "Allies", "Enemies"],
+                "key_plot_points": ["Face initial tests", "Form alliances", "Identify enemies"],
+                "potential_branches": ["Fight", "Negotiate", "Avoid conflict"],
+                "thematic_elements": ["Challenge", "Friendship", "Conflict"]
+            },
+            {
+                "stage": "The Approach",
+                "description": "The protagonist prepares for the major challenge ahead.",
+                "characters": ["Protagonist", "Allies", "Mentor"],
+                "key_plot_points": ["Gather resources", "Create plan", "Final preparations"],
+                "potential_branches": ["Careful planning", "Immediate action"],
+                "thematic_elements": ["Preparation", "Strategy"]
+            },
+            {
+                "stage": "The Ordeal",
+                "description": "The protagonist faces their greatest challenge.",
+                "characters": ["Protagonist", "Main Antagonist", "Allies"],
+                "key_plot_points": ["Confrontation with main challenge", "Moment of crisis", "Transformation"],
+                "potential_branches": ["Direct confrontation", "Clever solution"],
+                "thematic_elements": ["Crisis", "Transformation", "Climax"]
+            },
+            {
+                "stage": "The Reward",
+                "description": "The protagonist achieves something valuable from their ordeal.",
+                "characters": ["Protagonist", "Allies"],
+                "key_plot_points": ["Obtain reward", "Celebrate victory", "Face consequences"],
+                "potential_branches": ["Accept reward", "Reject reward"],
+                "thematic_elements": ["Achievement", "Growth"]
+            },
+            {
+                "stage": "Return and Resolution",
+                "description": "The protagonist returns to their old world, changed by the adventure.",
+                "characters": ["Protagonist", "Home Characters"],
+                "key_plot_points": ["Return journey", "Apply lessons learned", "New equilibrium"],
+                "potential_branches": ["Complete return", "Start new adventure"],
+                "thematic_elements": ["Resolution", "Change", "New beginning"]
+            }
+        ]
+    }
+    
+    return fallback_arc
 
 def generate_story_tree(arc_data, max_depth=8):
     """Generate a complete story tree based on the story arc"""
@@ -358,6 +485,9 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
 
 def clean_response(raw_text):
     """Clean an API response to extract valid JSON"""
+    if not raw_text:
+        raise Exception("Empty response received")
+        
     raw_text = raw_text.strip()
     
     # Handle code blocks
@@ -374,9 +504,27 @@ def clean_response(raw_text):
     start_idx = raw_text.find('{')
     end_idx = raw_text.rfind('}') + 1
     if start_idx < 0 or end_idx <= 0:
-        raise Exception("Invalid JSON format")
+        raise Exception("Invalid JSON format - cannot find JSON boundaries")
+    
+    json_str = raw_text[start_idx:end_idx]
+    
+    # Try to fix common JSON syntax errors
+    json_str = json_str.replace(",\n}", "\n}")
+    json_str = json_str.replace(",\n]", "\n]")
+    json_str = json_str.replace(",,", ",")
+    json_str = json_str.replace(",}", "}")
+    json_str = json_str.replace(",]", "]")
+    
+    # Attempt to validate JSON
+    try:
+        # Test if the JSON is valid
+        json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print(f"Warning: JSON validation failed: {e}")
+        print(f"Attempting to continue with potentially invalid JSON...")
+        # The calling function will handle this exception
         
-    return raw_text[start_idx:end_idx]
+    return json_str
 
 def generate_fallback_node(arc_data, current_stage):
     """Generate a fallback node if regular generation fails"""
@@ -456,13 +604,12 @@ def generate_predetermined_story(theme):
     """Generate a full predetermined story tree for the given theme"""
     output_file = f"{theme.lower().replace(' ', '_')}_story.json"
     
-    print(f"\nGenerating story arc for {theme}...")
     arc_data = generate_story_arc(theme)
     with open('arc_data.json', 'w') as file:
         json.dump(arc_data, file, indent=4)
     
     #print(f"\nGenerating complete story tree with depth 8 and 2 choices per node...")
-    depth = int(input("Enter the depth of the story tree (default is 8): "))
+    depth = int(input("Enter the depth of the sample story tree (default is 8): "))
     print("This may take some time. Progress will be displayed below:")
     graph, story_state = generate_story_tree(arc_data, max_depth=depth)
     
@@ -475,7 +622,7 @@ def generate_predetermined_story(theme):
     print(f"Total nodes: {node_count}")
     print(f"File saved as: {output_file}")
     
-    return graph, story_state
+    return graph, story_state, output_file
 
 def load_game_state(filepath=None, theme=None):
     """Load game state from file or create initial state with predetermined story"""
@@ -532,6 +679,17 @@ def load_game_state(filepath=None, theme=None):
     except Exception as e:
         print(f"\nError loading/creating game: {e}")
         raise
+
+def return_story_arc(theme):
+    """Returns the story arc for the given theme"""
+    print(f"\nGenerating story arc for {theme}...")
+    arc_data = generate_story_arc(theme)
+    return arc_data
+
+def return_story_tree(theme, depth=8):
+    """Returns the story tree for the given theme"""
+    graph, story_state, output_file = generate_predetermined_story(theme)
+    return output_file
 
 if __name__ == "__main__":
     print("Welcome to the Predetermined Story Generator!")
