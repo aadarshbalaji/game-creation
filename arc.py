@@ -318,7 +318,6 @@ def generate_story_tree(arc_data, max_depth=8):
             for parent_pos, parent_node in nodes_by_level[parent_level].items():
                 # Calculate current stage in the story arc
                 current_stage = min(level, 7)  # Stage index (0-7)
-                
                 # Generate two choices for this parent
                 for choice_idx in range(2):
                     # Generate node content based on the current stage and previous choice
@@ -331,7 +330,8 @@ def generate_story_tree(arc_data, max_depth=8):
                     )
                     
                     # Create choice node
-                    child_node = Node(node_data["story"], node_data.get("is_ending", False))
+                    # NODE DATA HAS CHOICES -> DIALOGUE
+                    child_node = Node(node_data["story"], node_data.get("is_ending", False), node_data["choices"][choice_idx].get("dialogue", ""))
                     child_node.scene_state = node_data["scene_state"]
                     child_node.characters = node_data["characters"]
                     
@@ -401,6 +401,22 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
     3. Present exactly 2 meaningful choices that could lead to different outcomes
     4. Maintain consistency with the {arc_data['theme']} setting and tone
     5. Reference previous characters and locations when appropriate
+    6. For each choice, include three to five full sentences of spoken dialogue that reveal new plot or character information tied to that choice’s outcome.
+        - Dialogue lines must use brackets **only** around speaker tags—`[You]: “…”`, `[Arin]: “…”`, `[Crowd]: “…”`
+            - When the player speaks, use `[You]:`.
+            - Other speakers must be existing character names or sensible generic roles (e.g., `[Crowd]:`).
+            - Place each speaker’s line on its own line.
+                ```
+                [You]: “I’ve never seen ruins so alive with magic. Every shadow flickers with intent. I must stay vigilant.”
+                [Arin]: “These stones whisper of an ancient pact. We tread on promises older than kingdoms. Be wary of their echoes.”
+                ```
+        - If spoken dialogue doesn’t fit naturally, supply a three-sentence inner reflection without brackets, beginning with one of:
+                - `You think: `
+                - `You realize: `
+                - `Your mind races: `
+                - `You thought`
+        - Ensure the entire block directly advances the plot, reveals a clue, or deepens a character’s motivation in connection with the choice’s consequences.
+    
     
     Return ONLY valid JSON in this format:
     {{
@@ -428,6 +444,7 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
         "choices": [
             {{
                 "text": "first choice description",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -435,6 +452,7 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
             }},
             {{
                 "text": "second choice description",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
                 "consequences": {{
                     "health_change": number,
                     "item_changes": ["add_item", "remove_item"]
@@ -475,7 +493,7 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
         # Set ending flag for the final level
         if current_stage == 7:
             node_data["is_ending"] = True
-            
+        
         return node_data
         
     except Exception as e:
@@ -555,6 +573,7 @@ def generate_fallback_node(arc_data, current_stage):
         "choices": [
             {
                 "text": "Continue cautiously forward",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
                 "consequences": {
                     "health_change": 0,
                     "item_changes": []
@@ -562,6 +581,7 @@ def generate_fallback_node(arc_data, current_stage):
             },
             {
                 "text": "Take a different approach",
+                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
                 "consequences": {
                     "health_change": 0,
                     "item_changes": []
@@ -584,6 +604,7 @@ def save_game_state(graph, story_state, filepath="game_save.json"):
     for node in graph.adjacency_list:
         save_data["graph"]["nodes"][node.id] = {
             "story": node.story,
+            "dialogue": node.dialogue,
             "scene_state": getattr(node, "scene_state", {}),
             "characters": getattr(node, "characters", {}),
             "is_end": node.is_end
@@ -651,7 +672,7 @@ def load_game_state(filepath=None, theme=None):
 
             # Create all nodes first
             for node_id, node_data in save_data["graph"]["nodes"].items():
-                node = Node(node_data["story"], node_data["is_end"])
+                node = Node(node_data["story"], node_data["is_end"], node_data.get("dialogue", ""))
                 node.scene_state = node_data["scene_state"]
                 node.characters = node_data["characters"]
                 graph.add_node(node)

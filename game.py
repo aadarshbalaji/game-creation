@@ -1,6 +1,8 @@
 import time
 import json
 import os
+import re
+import textwrap
 from arc import return_story_arc, return_story_tree
 from storygen import StoryState, generate_initial_story, generate_story_node, save_game_state, load_game_state
 from Graph_Classes.Structure import Node, Graph
@@ -42,6 +44,32 @@ def print_box(text, width=70, padding=1):
     for line in wrap_text(text, width-2).split('\n'):
         print(f"| {line:<{width-2}} |")
     
+    for _ in range(padding):
+        print(empty)
+    print(horizontal)
+
+def print_box_dialogue(raw_dialogue: str, width: int = 70, padding: int = 1):
+    """
+    Prints dialogue inside a decorative box, inserting line breaks before each speaker tag '['
+    (except at start), breaking lines at literal '\\n' or real newlines, and wrapping each part
+    to fit within the box width.
+    """
+    dialogue = re.sub(r'\\\\n|\\n|\n', '\n', raw_dialogue)
+    dialogue = re.sub(r'(?<!^)\[', r'\n[', dialogue)
+    wrapped_lines = []
+    for part in dialogue.splitlines():
+        part = part.strip()
+        if part:
+            wrapped = textwrap.wrap(part, width=width-4) or ['']
+            wrapped_lines.extend(wrapped)
+
+    horizontal = "+" + "-" * width + "+"
+    empty = "|" + " " * width + "|"
+    print(horizontal)
+    for _ in range(padding):
+        print(empty)
+    for line in wrapped_lines:
+        print(f"| {line:<{width-2}} |")
     for _ in range(padding):
         print(empty)
     print(horizontal)
@@ -140,7 +168,7 @@ def main():
             story_state.characters = initial_data["characters"]
             
             for choice in initial_data["choices"]:
-                choice_node = Node(choice["text"], False)
+                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
                 choice_node.scene_state = initial_data["scene_state"]
                 choice_node.characters = initial_data["characters"]
                 choice_node.consequences = choice["consequences"]
@@ -157,7 +185,7 @@ def main():
             clear_screen()
             print_box(player.current_node.story)
             if player.current_node.dialogue:
-                print_box(player.current_node.dialogue)
+                print_box_dialogue(player.current_node.dialogue)
             print_state("CURRENT SCENE", player.current_node.scene_state)
             print_state("CHARACTERS PRESENT", player.current_node.characters)
 
