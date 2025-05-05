@@ -14,7 +14,8 @@ class StoryState:
         self.current_scene = {}
         self.inventory = []
         self.visited_nodes = set()
-        self.theme = ""  
+        self.theme = ""
+        self.max_depth = None
 
     def to_dict(self):
         return {
@@ -22,7 +23,8 @@ class StoryState:
             "current_scene": self.current_scene,
             "inventory": self.inventory,
             "visited_nodes": list(self.visited_nodes),
-            "theme": self.theme  
+            "theme": self.theme,
+            "max_depth": self.max_depth
         }
 
     @classmethod
@@ -32,7 +34,8 @@ class StoryState:
         state.current_scene = data["current_scene"]
         state.inventory = data["inventory"]
         state.visited_nodes = set(data["visited_nodes"])
-        state.theme = data.get("theme", "")  
+        state.theme = data.get("theme", "")
+        state.max_depth = data.get("max_depth", None)
         return state
 
 def generate_story_node(context, story_state, story_arc, story_graph):
@@ -56,6 +59,19 @@ def generate_story_node(context, story_state, story_arc, story_graph):
     **Closely follow the structure and spirit of the provided Story Arc and the Golden Example story graph.** Ensure the generated scene logically progresses from the previous one and aligns with the current stage of the overall narrative defined in the arc.
     Story Arc: {story_arc}
     Golden Example: {story_graph}
+
+    **Story Length Guidance (Apply if `current_step_count` is provided and >= 7):**
+    - The story has progressed for {context.get('current_step_count', 'several')} steps.
+    - **Strongly prioritize steering the narrative towards a satisfying conclusion within the next 2-3 choices (steps).**
+    - Evaluate if the *current* state naturally allows for a wrap-up soon. Generate choices that facilitate reaching a conclusion based on the Story Arc's final stages.
+    - If the narrative is very close to a resolution (e.g., final confrontation passed, objective achieved/failed), consider setting `"is_ending": true` for this node or the immediate next one.
+    - Ensure the conclusion feels earned and not abrupt.
+
+    **Evaluate the Current Narrative Position:**
+    - Consider the player's journey so far (recent actions, character states) in relation to the **Story Arc**.
+    - **Specifically check if the narrative logically corresponds to the later stages of the arc (e.g., 'The Ordeal', 'The Reward', 'Return and Resolution').**
+    - **Only set `"is_ending": true` if the current context genuinely represents a natural narrative conclusion fitting the arc's structure.** Do NOT end the story prematurely unless the player has reached a point of clear victory, defeat, or resolution as defined by the arc.
+    - If ending the story, provide a clear `"ending_reason"` that justifies the conclusion based on the events and the arc.
 
     Generate a **smoothly flowing and coherent** story continuation that fits the {story_state.theme} theme and includes:
     1. Rich, detailed description of what happens next
@@ -167,7 +183,6 @@ def generate_story_node(context, story_state, story_arc, story_graph):
 
 def generate_initial_story(theme, story_arc, story_tree):
     """Generate the starting point of the story"""
-    depth = int(input("Enter the depth of the game tree (default is 8): "))
     prompt = f"""
 
     **Using the provided Story Arc and the example Story Tree (Golden Example) as guides, create an engaging opening.** Ensure the scene aligns with the initial stage of the Story Arc and reflects the tone and style of the Golden Example.
@@ -183,6 +198,8 @@ def generate_initial_story(theme, story_arc, story_tree):
     For example, if this is a Dracula story, include gothic elements, vampires, and Victorian era details.
     If this is a sci-fi story, include futuristic elements, technology, and space-related details.
     
+    **Important: The initial scene must NOT be an ending. Ensure `"is_ending"` is always `false` for this initial generation.**
+
     Return as valid JSON in this format:
     {{
         "story": "detailed opening scene description fitting the {theme} theme",
@@ -472,6 +489,156 @@ def generate_initial_story(theme, story_arc, story_tree):
             "ending_reason": "The story has reached its conclusion."
         }
 
+def _generate_full_graph(theme, story_arc, story_tree_template, pregen_depth):
+    """Generates a story graph up to the specified depth."""
+    print(f"\nGenerating story graph up to depth {pregen_depth}...")
+    graph = Graph()
+    story_state = StoryState()
+    story_state.theme = theme
+    story_state.max_depth = pregen_depth # Store pregen_depth
+
+    try:
+        initial_data = generate_initial_story(theme, story_arc, story_tree_template)
+        if not initial_data:
+            raise Exception("Failed to generate initial story node")
+
+        start_node = Node(initial_data["story"], initial_data.get("is_ending", False), initial_data.get("dialogue", ""))
+        start_node.scene_state = initial_data["scene_state"]
+        start_node.characters = initial_data["characters"]
+        if initial_data.get("is_ending"):
+            start_node.ending_type = initial_data.get("ending_type", "neutral")
+            start_node.ending_reason = initial_data.get("ending_reason", "The story concluded at the start.")
+        graph.add_node(start_node)
+
+        story_state.current_scene = initial_data["scene_state"]
+        story_state.characters = initial_data["characters"]
+        story_state.visited_nodes.add(start_node.id) # Add start node as visited
+
+        # Initialize the processing queue with the *initial choices*
+        nodes_to_process = []
+        if "choices" in initial_data and pregen_depth > 0: # Only process initial choices if pregen_depth allows
+            for choice in initial_data["choices"]:
+                # Create nodes for initial choices
+                choice_node = Node(choice["text"], False, choice.get("dialogue", "")) # Initial choices are not endings
+                # Use the scene/character state from the *initial* node for these first choices
+                choice_node.scene_state = initial_data["scene_state"]
+                choice_node.characters = initial_data["characters"]
+                choice_node.consequences = choice.get("consequences", {})
+                choice_node.backtrack = choice.get("can_backtrack", False)
+
+                if choice_node.id not in graph.nodes:
+                    graph.add_node(choice_node)
+                graph.add_edge(start_node, choice_node) # Link start node to this choice
+
+                # Add this initial choice node to the queue for further processing (at depth 1)
+                if not choice_node.is_end:
+                    nodes_to_process.append((choice_node, 1))
+        elif pregen_depth == 0:
+             print("\nPre-generation depth is 0. Only the starting node was created.")
+        else:
+            print("\nWarning: Initial story data did not contain choices. Pre-generation might be incomplete.")
+
+        # nodes_to_process = [(start_node, 0)] # Queue for BFS: (node, depth) <-- Old logic removed
+        processed_nodes = 0
+        # Keep track of depths being processed for cleaner printing
+        current_processing_depth = 0
+
+        while nodes_to_process:
+            current_node, current_depth = nodes_to_process.pop(0)
+            
+            # Print progress only when depth changes
+            if current_depth > current_processing_depth:
+                print(f"\n  Generating nodes at depth {current_depth}... (Processed nodes so far: {processed_nodes})")
+                current_processing_depth = current_depth
+            else:
+                 # Still print something to show activity within the same depth
+                 print(f"  Processing node {current_node.id} at depth {current_depth}...", end='\r')
+            
+            processed_nodes += 1
+            # print(f"  Generating nodes at depth {current_depth}... (Processed: {processed_nodes})", end='\r') <-- Removed redundant print
+
+
+            # Stop generating if depth limit reached or node is an end node
+            # Note: Depth check is now >= pregen_depth because we start processing at depth 1
+            if current_depth >= pregen_depth or current_node.is_end:
+                continue
+
+            # Check if children already exist (shouldn't happen with this new logic unless graph loaded?)
+            existing_children = list(graph.get_children(current_node))
+            if not existing_children:
+                 # Prepare context for generating next choices
+                story_context = {
+                    "previous_scene": current_node.story,
+                    "current_location": current_node.scene_state.get('location', 'Unknown'),
+                    "time_of_day": current_node.scene_state.get('time_of_day', 'Unknown'),
+                    "weather": current_node.scene_state.get('weather', 'Unknown'),
+                    "player_status": { # Assuming default player status for pre-generation
+                        "health": 100,
+                        "inventory": [],
+                    },
+                    "characters": current_node.characters,
+                    "recent_events": [current_node.story] # Simplified context for pre-gen
+                }
+
+                try:
+                    # Generate the next set of choices/nodes
+                    choice_data = generate_story_node(story_context, story_state, story_arc, story_tree_template)
+
+                    if not choice_data or not choice_data.get("choices"):
+                         print(f"\nWarning: Failed to generate choices for node {current_node.id} at depth {current_depth}. Stopping branch.")
+                         continue # Stop generation for this branch if generation fails
+
+                    # Add generated choices as new nodes
+                    for choice in choice_data["choices"]:
+                        new_node = Node(choice["text"], choice_data.get("is_ending", False), choice.get("dialogue", ""))
+                        new_node.scene_state = choice_data["scene_state"]
+                        new_node.characters = choice_data["characters"]
+                        new_node.consequences = choice["consequences"]
+                        new_node.backtrack = choice.get("can_backtrack", False)
+
+                        if choice_data.get("is_ending"):
+                            new_node.ending_type = choice_data.get("ending_type", "neutral")
+                            new_node.ending_reason = choice_data.get("ending_reason", "The pre-generated story concluded here.")
+
+                        if new_node.id not in graph.nodes: # Avoid adding duplicate nodes
+                             graph.add_node(new_node)
+                        graph.add_edge(current_node, new_node)
+
+                        # Add to queue for further generation if not an end node
+                        if not new_node.is_end:
+                            nodes_to_process.append((new_node, current_depth + 1))
+
+                except Exception as e:
+                    print(f"\nError generating node content at depth {current_depth} for node {current_node.id}: {e}. Stopping branch.")
+                    # Mark node as having failed generation? Or just stop the branch.
+                    continue
+            else:
+                 # If children already exist (only happens for start node initially), add them to queue
+                 for child in existing_children:
+                      if not child.is_end:
+                           nodes_to_process.append((child, current_depth + 1))
+
+
+        print(f"\nFinished pre-generating graph. Total nodes: {len(graph.nodes)}")
+        return graph, story_state
+
+    except Exception as e:
+        print(f"\nError during full graph generation: {e}")
+        # Fallback: return a minimal graph with just the start node
+        if 'start_node' in locals():
+             graph = Graph()
+             graph.add_node(start_node)
+             story_state = StoryState()
+             story_state.theme = theme
+             story_state.max_depth = pregen_depth
+             story_state.current_scene = start_node.scene_state
+             story_state.characters = start_node.characters
+             story_state.visited_nodes.add(start_node.id)
+             print("Warning: Pre-generation failed. Starting with minimal graph.")
+             return graph, story_state
+        else:
+             raise Exception("Fatal error: Could not even generate initial story node for pre-generation.")
+
 def save_game_state(graph, story_state, filepath="game_save.json"):
     save_data = {
         "story_state": story_state.to_dict(),
@@ -502,75 +669,58 @@ def save_game_state(graph, story_state, filepath="game_save.json"):
     with open(filepath, 'w') as f:
         json.dump(save_data, f, indent=2)
 
-def load_game_state(filepath="game_save.json", theme=None, story_arc=None, story_tree=None):
-    """Load game state from file or create initial state if empty"""
+def load_game_state(filepath="game_save.json", theme=None, story_arc=None, story_tree=None, max_depth=None):
+    """Load game state from file or create initial state with pre-generated graph if empty"""
     try:
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
-            print("\nCreating new game state...")
-            
+            print("\nSave file not found or empty. Creating new game state...")
+
             if not theme:
                 raise Exception("Theme required for new game")
-                
-            # Make sure we have a story arc
+            if max_depth is None or max_depth <= 0:
+                 print("Warning: Valid pre-generation depth not provided for new game, defaulting to 1.")
+                 max_depth = 1 # Default pre-generation depth
+
+            # Ensure we have a story arc
             if not story_arc:
                 print("No story arc provided, generating one...")
                 story_arc = return_story_arc(theme)
-                
+
+            # Ensure we have a story tree template (golden example)
             if not story_tree:
                 print("No story tree template provided, generating one...")
-                story_tree_file = return_story_tree(theme)
+                # Note: return_story_tree generates and saves the template, and returns the filename
+                story_tree_file = return_story_tree(theme) # We need the content, not just the file path here for the template
                 try:
                     with open(story_tree_file, 'r') as f:
                         story_tree = json.load(f)
-                except (json.JSONDecodeError, FileNotFoundError) as e:
-                    print(f"Error loading story tree: {e}")
+                except (json.JSONDecodeError, FileNotFoundError, TypeError) as e: # Added TypeError for Nonetype
+                    print(f"Error loading story tree template from {story_tree_file}: {e}")
                     print("Continuing without a template story tree.")
-                    story_tree = {}
-            
-            initial_data = generate_initial_story(theme, story_arc, story_tree)
-            if not initial_data:
-                raise Exception("Failed to generate initial story")
-        
-            graph = Graph()
-            story_state = StoryState()
-            
-            start_node = Node(initial_data["story"], initial_data["is_ending"])
-            start_node.scene_state = initial_data["scene_state"]
-            start_node.characters = initial_data["characters"]
-            if initial_data.get("is_ending") and initial_data.get("ending_type"):
-                start_node.ending_type = initial_data.get("ending_type")
-                start_node.ending_reason = initial_data.get("ending_reason", "The story has reached its conclusion.")
-            graph.add_node(start_node)
-            
-            story_state.current_scene = initial_data["scene_state"]
-            story_state.characters = initial_data["characters"]
-            story_state.theme = theme  
-            
-            for choice in initial_data["choices"]:
-                choice_node = Node(choice["text"], False, choice.get("dialogue", ""))
-                choice_node.scene_state = initial_data["scene_state"]
-                choice_node.characters = initial_data["characters"]
-                choice_node.consequences = choice["consequences"]
-                choice_node.backtrack = choice.get("can_backtrack", False)
-                graph.add_node(choice_node)
-                graph.add_edge(start_node, choice_node)
-            
+                    story_tree = {} # Use an empty dict as fallback
+
+            # Generate the full graph up to max_depth
+            graph, story_state = _generate_full_graph(theme, story_arc, story_tree, max_depth)
+
+            # Save the newly generated graph
             save_game_state(graph, story_state, filepath)
+            print(f"New game state with pre-generated graph (depth {max_depth}) saved.")
             return graph, story_state
-            
+
         # Try to load from existing file
+        print(f"\nLoading game state from {filepath}...")
         try:
             with open(filepath, 'r') as f:
                 save_data = json.load(f)
         except json.JSONDecodeError as e:
             print(f"\nCorrupted save file ({e}). Creating new game...")
             os.remove(filepath)
-            return load_game_state(filepath, theme, story_arc, story_tree)
+            return load_game_state(filepath, theme, story_arc, story_tree, max_depth) # Pass max_depth on retry
         except Exception as e:
             print(f"\nError reading save file: {e}. Creating new game...")
             os.remove(filepath)
-            return load_game_state(filepath, theme, story_arc, story_tree)
-            
+            return load_game_state(filepath, theme, story_arc, story_tree, max_depth) # Pass max_depth on retry
+
         graph = Graph()
         story_state = StoryState.from_dict(save_data["story_state"])
 
@@ -602,7 +752,8 @@ def load_game_state(filepath="game_save.json", theme=None, story_arc=None, story
             print("Attempting to create a new game from scratch...")
             try:
                 os.remove(filepath)
-                return load_game_state(filepath, theme, story_arc, story_tree)
+                # Pass max_depth on retry
+                return load_game_state(filepath, theme, story_arc, story_tree, max_depth)
             except Exception as e2:
                 print(f"Final error: {e2}")
                 raise
