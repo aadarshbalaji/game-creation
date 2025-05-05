@@ -78,7 +78,7 @@ def generate_story_arc(theme):
     }}
     """
     
-    max_retries = 3
+    max_retries = 7
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
