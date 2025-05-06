@@ -136,7 +136,6 @@ def print_state(title, data, indent=2):
                                 else:
                                     # Handle case where npc_data is not a dict
                                     print(f"    (Unexpected data format for NPC {npc_name}: {type(npc_data)})")
-
                         # Handle case where 'other_characters' value is a list
                         elif isinstance(char_data, list):
                             print("\n► OTHER CHARACTERS (List Format)")
@@ -317,12 +316,7 @@ def load_game(theme, depth=3, choices_per_node=2):
 def main():
     # Initialize story state and player
     try:
-        # ASCII art title
-        title_text = """
-        █▀█ █ ▀█▀ █▀▀ █▀█   █▀▀ ▄▀█ █▀▄▀█ █▀▀   █▀▀ █▄░█ █▀▀ █ █▄░█ █▀▀
-        █▀▄ █ ░█░ █▄▄ █▀▄   █▄█ █▀█ █░▀░█ ██▄   ██▄ █░▀█ █▄█ █ █░▀█ ██▄
-        """
-        print(title_text)
+
         print("\nWelcome to the Interactive Story Generator!\n")
         
         # Get user input for theme
