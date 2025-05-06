@@ -78,7 +78,7 @@ def generate_story_tree(theme, story_arc, depth=3, choices_per_node=4):
     """Generate a story tree with the specified depth and number of choices per node"""
     # Define the root prompt
     root_prompt = f"""
-    Create a story node for an interactive narrative game set in the world of {theme}.
+    Create a story node for an interactive narrative game set in the world of {theme}. Be sure to keep the characters/names the same as in the original theme.
     Use the following story arc as a guide:
     {story_arc}
     
@@ -609,6 +609,7 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
             Current situation: {current_node['story']}
 
             Generate {choices_per_node} distinct, action-oriented choices for the player, appropriate for the '{narrative_stage}' stage.
+            If the {narrative_stage} is the 'Conclusion' stage, make sure the choices lead towards the ending pretty quickly.
             Each choice must start with a verb and describe what the player DOES.
 
             Return a valid JSON object:
