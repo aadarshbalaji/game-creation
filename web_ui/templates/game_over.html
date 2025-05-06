@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over - Netflix CYOA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="game-over-screen">
+            <h1>Game Over!</h1>
+            <div class="final-stats">
+                <h2>Final Stats for {{ player_name }}</h2>
+                
+                <div class="stat-box">
+                    <h3>Health</h3>
+                    <div class="health-bar-container">
+                        <div class="health-bar" data-health="{{ player_stats.health }}"></div>
+                    </div>
+                    <p>{{ player_stats.health }}/100</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>Experience</h3>
+                    <p>{{ player_stats.experience }} points</p>
+                </div>
+
+                {% if player_stats.abilities %}
+                <div class="stat-box">
+                    <h3>Abilities Acquired</h3>
+                    <div class="abilities-list">
+                        {% for ability in player_stats.abilities %}
+                        <div class="ability-card">
+                            <h4>✨ {{ ability.name }}</h4>
+                            <p>{{ ability.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="stat-box">
+                    <h3>Items Collected</h3>
+                    {% if player_stats.inventory %}
+                    <ul class="inventory-list">
+                        {% for item in player_stats.inventory %}
+                        <li>🎒 {{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No items collected</p>
+                    {% endif %}
+                </div>
+
+                <div class="stat-box">
+                    <h3>Your Journey Path</h3>
+                    <p class="path-display">{{ choice_path|join(' → ') }}</p>
+                </div>
+            </div>
+
+            <div class="game-over-actions">
+                <a href="{{ url_for('index') }}" class="btn">Play Again</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const healthBar = document.querySelector('.health-bar');
+            if (healthBar) {
+                const health = healthBar.getAttribute('data-health');
+                healthBar.style.width = health + '%';
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -207,15 +207,27 @@ def print_dialogue_box(dialogue_text, width=70):
     print(horizontal)
 
 def enrich_node_with_dialogue(node, theme):
-    """Add dialogue to a node if it doesn't already have it"""
-    # Skip if the node already has dialogue
-    if "dialogue" in node and node["dialogue"]:
-        return
-    
-    # Generate dialogue based on node content and theme
-    dialogue = generate_scene_dialogue(node, theme)
-    if dialogue:
-        node["dialogue"] = dialogue
+    """Add dialogue to a node if it doesn't already have it or if existing text isn't formatted dialogue."""
+    # Check if existing dialogue is already properly formatted character/player dialogue
+    is_existing_dialogue_formatted = False
+    if "dialogue" in node and node["dialogue"] and isinstance(node["dialogue"], str):
+        # Simple check: does it contain markers of our dialogue format?
+        if "[You]:" in node["dialogue"] or "]:" in node["dialogue"] or "[Player's Thoughts]:" in node["dialogue"]:
+            is_existing_dialogue_formatted = True
+
+    if is_existing_dialogue_formatted:
+        return # Already has good dialogue
+
+    # If we are here, either no dialogue, or it's not well-formatted (e.g. just consequence text)
+    # So, attempt to generate fresh dialogue.
+    generated_dialogue = generate_scene_dialogue(node, theme)
+    if generated_dialogue:
+        node["dialogue"] = generated_dialogue
+    # If generate_scene_dialogue returns empty (e.g. it couldn't determine good dialogue 
+    # and player thoughts are off by its internal logic for some reason) and there was 
+    # some old non-formatted text in node["dialogue"], that old text will remain.
+    # This is generally acceptable, as it avoids overwriting potentially useful 
+    # (though not well-formatted) consequence text if new dialogue isn't generated.
 
 def print_ability_box(ability, width=70):
     """Print a special ability notification in a decorative box"""
