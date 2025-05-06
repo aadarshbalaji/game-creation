@@ -465,7 +465,7 @@ def main():
                 print("\nYou've reached the end of this path!")
                 break
             
-            time.sleep(1)
+            time.sleep(1.5)
     
         clear_screen()
         print("\nGame Over!")

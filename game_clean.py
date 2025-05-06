@@ -28,15 +28,26 @@ def wrap_text(text, width=70):
 
 
 
-def print_scene_context(node_data, player_name):
+def print_scene_context(node_data, player_name, player_stats):
     scene = node_data.get("scene_state", {})
     characters = node_data.get("characters", {})
-    player = characters.get("player", {})
 
-    location = scene.get("location") or "Crystal Caves"
-    time_of_day = scene.get("time_of_day") or "Twilight"
-    weather = scene.get("weather") or "Foggy"
-    ambient = scene.get("ambient") or "Flickering lights"
+    # Get scene data with fallbacks only if the values are missing
+    location = scene.get("location")
+    if location == "unknown" or not location:
+        location = "Crystal Caves"  # Only use fallback if missing or unknown
+        
+    time_of_day = scene.get("time_of_day")
+    if time_of_day == "day" or not time_of_day:
+        time_of_day = "Twilight"  # Only use fallback if missing or generic
+        
+    weather = scene.get("weather")
+    if weather == "clear" or not weather:
+        weather = "Foggy"  # Only use fallback if missing or generic
+        
+    ambient = scene.get("ambient")
+    if ambient == "mysterious" or not ambient:
+        ambient = "Flickering lights"  # Only use fallback if missing or generic
 
     print("\n" + "=" * 30 + " CURRENT SCENE " + "=" * 30)
     print(f"🌍 Location: {location}")
@@ -44,25 +55,82 @@ def print_scene_context(node_data, player_name):
     print(f"🌤️ Weather: {weather}")
     print(f"🐾 Ambient: {ambient}")
 
-    print("\n" + "=" * 28 + " CHARACTERS PRESENT " + "=" * 28)
-    for char_name, char_data in characters.items():
-        if char_name.lower() == "player":
-            continue
-        print(f"\n► {char_name.upper()}")
-        print(f"Health: [{'♥' * (char_data.get('health', 100) // 10)}] {char_data.get('health', 100)}/100")
-        mood = char_data.get("mood", "Unknown")
-        print(f"Mood: {'❓' if mood == 'Unknown' else ''} {mood}")
-        relationships = char_data.get("relationships", {})
-        if relationships:
-            print("Relationships:")
-            for other, status in relationships.items():
-                print(f"• {other}: {status}")
+    # Display characters present in the scene (except player)
+    other_characters = {name: data for name, data in characters.items() if name.lower() != "player"}
+    
+    if other_characters:
+        print("\n" + "=" * 28 + " CHARACTERS PRESENT " + "=" * 28)
+        
+        # Group characters by type for better organization
+        character_groups = {
+            "ally": [],
+            "enemy": [],
+            "neutral": []
+        }
+        
+        # Sort characters into groups
+        for char_name, char_data in other_characters.items():
+            char_type = char_data.get("type", "neutral")
+            character_groups[char_type].append((char_name, char_data))
+        
+        # Define icons for character types
+        type_icons = {
+            "ally": "🤝",
+            "enemy": "⚔️",
+            "neutral": "❓"
+        }
+        
+        # Display allies first, then neutrals, then enemies
+        for char_type in ["ally", "neutral", "enemy"]:
+            chars_of_type = character_groups[char_type]
+            if chars_of_type:
+                print(f"\n{type_icons[char_type]} {char_type.upper()} CHARACTERS:")
+                
+                for char_name, char_data in chars_of_type:
+                    print(f"\n► {char_name.upper()}")
+                    
+                    # Show character description if available
+                    if "description" in char_data:
+                        print(f"  {char_data['description']}")
+                    
+                    # Show health with appropriate visualization
+                    health = char_data.get("health", 100)
+                    health_icon = "♥" if char_type != "enemy" else "❤️"
+                    health_bar = health_icon * (health // 10) + "░" * ((100 - health) // 10)
+                    print(f"  Health: [{health_bar}] {health}/100")
+                    
+                    # Show mood with appropriate emoji
+                    mood = char_data.get("mood", "neutral")
+                    mood_emoji = {
+                        "hostile": "😠", "aggressive": "😠", "angry": "😠", "threatening": "😠",
+                        "friendly": "😊", "happy": "😊", "helpful": "😊",
+                        "sad": "😢", "upset": "😢",
+                        "scared": "😨", "terrified": "😨", "frightened": "😨",
+                        "suspicious": "🤨", "cautious": "🤨",
+                        "neutral": "😐", "indifferent": "😐",
+                        "calm": "😌", "peaceful": "😌",
+                        "mysterious": "🧐", "cryptic": "🧐",
+                        "wise": "🧙", "knowledgeable": "🧙",
+                        "calculating": "🤔", "thoughtful": "🤔"
+                    }.get(mood.lower(), "😐")
+                    print(f"  Mood: {mood_emoji} {mood}")
+                    
+                    # Show relationship with player if available
+                    relationship = char_data.get("relationships", {}).get("player", "neutral")
+                    rel_emoji = {
+                        "hostile": "⚔️", "friendly": "🤝", "neutral": "🤲",
+                        "suspicious": "🔍", "trusting": "🛡️"
+                    }.get(relationship.lower(), "🤲")
+                    print(f"  Feels {rel_emoji} {relationship} toward you")
+    else:
+        print("\n" + "=" * 28 + " NO OTHER CHARACTERS PRESENT " + "=" * 28)
 
+    # Use player_stats directly since that's the authoritative source
     print("\n" + "=" * 32 + " YOUR STATUS " + "=" * 32)
     print(f"{player_name}")
-    health = player.get("health", 100)
-    experience = player.get("experience", 10)
-    inventory = player.get("inventory", [])
+    health = player_stats["health"]
+    experience = player_stats["experience"]
+    inventory = player_stats["inventory"]
     print(f"Health: [{'♥' * (health // 10)}] {health}/100")
     print(f"Experience: [{'♦' * (experience // 5)}] {experience}")
     print(f"🎒 Inventory: {', '.join(inventory) if inventory else 'Empty'}")
@@ -110,6 +178,13 @@ def load_game(theme, depth=3, choices_per_node=2):
                 "story": node_data["story"],
                 "is_end": node_data.get("is_end", False),
                 "dialogue": node_data.get("dialogue", ""),
+                "scene_state": node_data.get("scene_state", {}),  # Include scene_state
+                "characters": node_data.get("characters", {}),    # Include characters
+                "outcome": node_data.get("outcome", {             # Include outcome data
+                    "health_change": 0,
+                    "experience_change": 0,
+                    "inventory_changes": []
+                }),
                 "children": [],
                 "child_actions": []  # Store action text separately from full scene descriptions
             }
@@ -277,10 +352,17 @@ def main():
     # Ask for player name
     player_name = input("\nWhat is your name, adventurer? ")
     
+    # Initialize player stats
+    player_stats = {
+        "health": 100,
+        "experience": 10,
+        "inventory": []
+    }
+    
     # Display the welcome message
     print(f"\nWelcome to your {theme} adventure, {player_name}!")
     print("Your journey is about to begin...\n")
-    time.sleep(1)
+    time.sleep(1.5)
     
     # Game loop
     while True:
@@ -289,13 +371,32 @@ def main():
         
         # Get current node
         current_node = nodes[current_node_id]
-        print_scene_context(current_node, player_name)
-        current_node = nodes[current_node_id]
+        
+        # Update character data with latest player stats
+        if "characters" in current_node and "player" in current_node["characters"]:
+            current_node["characters"]["player"]["health"] = player_stats["health"]
+            current_node["characters"]["player"]["experience"] = player_stats["experience"]
+            current_node["characters"]["player"]["inventory"] = player_stats["inventory"]
+        else:
+            # Ensure character data exists
+            if "characters" not in current_node:
+                current_node["characters"] = {}
+            current_node["characters"]["player"] = {
+                "health": player_stats["health"],
+                "experience": player_stats["experience"],
+                "mood": "determined",
+                "status_effects": [],
+                "inventory": player_stats["inventory"]
+            }
+        
+        # Display scene context and player status
+        print_scene_context(current_node, player_name, player_stats)
         
         # Display the scene
         print(f"\n📜 YOUR SITUATION 📜")
         print_box(current_node["story"])
         
+        # Display result of the previous choice if there's dialogue
         if current_node["dialogue"]:
             print("\n💬 RESULT OF YOUR LAST ACTION 💬")
             print_box(current_node["dialogue"])
@@ -345,7 +446,63 @@ def main():
                 choice_index = int(choice_input) - 1
                 
                 if 0 <= choice_index < len(choices):
+                    # Store the current node ID before changing
+                    previous_node_id = current_node_id
+                    
+                    # Update current node to the chosen one
                     current_node_id = choices[choice_index][0]
+                    chosen_node = nodes[current_node_id]
+                    
+                    # Apply outcome effects from the chosen node immediately
+                    if "outcome" in chosen_node:
+                        outcome = chosen_node["outcome"]
+                        
+                        # Apply health changes
+                        health_change = outcome.get("health_change", 0)
+                        
+                        if health_change != 0:
+                            old_health = player_stats["health"]
+                            
+                            # Apply health change (ensuring it's noticeable)
+                            if health_change < 0:
+                                player_stats["health"] = max(1, player_stats["health"] - max(5, abs(health_change)))
+                            else:
+                                player_stats["health"] = min(100, player_stats["health"] + max(5, health_change))
+                                
+                            new_health = player_stats["health"]
+                            
+                            if health_change > 0:
+                                print(f"\n💓 HEALTH UPDATE 💓")
+                                print_box(f"You gained {new_health - old_health} health points.")
+                            else:
+                                print(f"\n💓 HEALTH UPDATE 💓")
+                                print_box(f"You lost {old_health - new_health} health points.")
+                        
+                        # Apply experience changes
+                        exp_change = outcome.get("experience_change", 0)
+                        if exp_change > 0:
+                            player_stats["experience"] += exp_change
+                            print(f"\n✨ EXPERIENCE GAINED ✨")
+                            print_box(f"You gained {exp_change} experience points.")
+                        
+                        # Apply inventory changes
+                        inventory_changes = outcome.get("inventory_changes", [])
+                        items_added = []
+                        for change in inventory_changes:
+                            if "add" in change:
+                                items_added.append(change["add"])
+                                if change["add"] not in player_stats["inventory"]:
+                                    player_stats["inventory"].append(change["add"])
+                            elif "remove" in change and change["remove"] in player_stats["inventory"]:
+                                player_stats["inventory"].remove(change["remove"])
+                        
+                        if items_added:
+                            print(f"\n🎒 ITEMS ACQUIRED 🎒")
+                            print_box(f"You found: {', '.join(items_added)}")
+                        
+                        # A brief pause to let the player read the updates
+                        time.sleep(3)
+                    
                     valid_choice = True
                 else:
                     print(f"Please enter a number between 1 and {len(choices)}.")
@@ -355,6 +512,13 @@ def main():
     # Game over screen
     print("\nGame Over!")
     print("=" * 50)
+    print(f"\nFinal Stats for {player_name}:")
+    print(f"Health: {player_stats['health']}/100")
+    print(f"Experience: {player_stats['experience']}")
+    if player_stats["inventory"]:
+        print(f"Items Collected: {', '.join(player_stats['inventory'])}")
+    else:
+        print("Items Collected: None")
     print("\nThanks for playing!")
 
 if __name__ == "__main__":
