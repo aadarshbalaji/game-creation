@@ -483,6 +483,9 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
     # Process the root node (introduction)
     root_data = generate_story_node(f"""
     Create an introduction for an interactive narrative game set in the world of {theme}.
+    You should be sticking to the story arc provided as much as possible, but feel free to deviate if you must:
+    Here is the story arc:
+    {story_arc}
     This should be the introduction to our story, establishing the setting, main character, and initial situation.
     
     Just provide a single JSON object containing:
@@ -565,151 +568,190 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
     visited.add(root_id)
     
     # BFS to generate the rest of the tree
-    while queue and len(queue) < 100:  # Safety limit of 100 nodes
+    while queue and len(visited) < 150: # Increased safety limit slightly
         node_id, current_depth = queue.pop(0)
-        
-        # Skip if we've visited this node or reached max depth
-        if node_id in visited or current_depth >= depth:
+
+        # Skip if we've visited this node (check visited size for safety limit)
+        if node_id in visited:
             continue
-        
+
         # Mark as visited
         visited.add(node_id)
-        
+
         # Get current node data
         current_node = story_graph["nodes"][node_id]
-        
-        # Enrich the node with scene state, characters, etc.
+
+        # Enrich the node if needed (e.g., add scene state, characters)
         if "scene_state" not in current_node:
             enrich_story_node(current_node, node_id, theme)
-        
-        # Check if this should be an ending
-        should_be_ending = current_depth == depth - 1
-        
-        # Sometimes create early endings
-        if current_depth > 1 and hash(node_id) % 10 == 0:
-            should_be_ending = True
-        
-        # If not an ending, generate children
-        if not should_be_ending:
-            # Generate child nodes using guided prompts
+
+        # Determine narrative stage based on depth
+        stage_threshold_1 = depth / 3
+        stage_threshold_2 = 2 * depth / 3
+        narrative_stage = ""
+        if current_depth < stage_threshold_1:
+            narrative_stage = "Introduction"
+        elif current_depth < stage_threshold_2:
+            narrative_stage = "Middle"
+        else: # current_depth >= stage_threshold_2
+            narrative_stage = "Conclusion"
+        print(f"Processing node {node_id} (Depth {current_depth}/{depth}, Stage: {narrative_stage})")
+
+        # Check if this node's children will be the final endings
+        is_final_choice_layer = (current_depth == depth - 1)
+
+        if not is_final_choice_layer:
+            # --- Generate Normal Child Nodes with Choices ---
             child_prompt = f"""
-            Create {choices_per_node} distinct narrative choices for the next steps in this {theme} adventure.
-            
+            This is the '{narrative_stage}' phase of a {theme} interactive story.
+            Overall Story Arc Guidance: {story_arc}
             Current situation: {current_node['story']}
-            
-            Return a valid JSON object with this format:
+
+            Generate {choices_per_node} distinct, action-oriented choices for the player, appropriate for the '{narrative_stage}' stage.
+            Each choice must start with a verb and describe what the player DOES.
+
+            Return a valid JSON object:
             {{
                 "choices": [
                     {{
-                        "text": "Player action 1 - start with a strong verb",
-                        "consequences": "short description of immediate results"
+                        "text": "Player action 1 (verb first, fits '{narrative_stage}')",
+                        "consequences": "Immediate result (fits '{narrative_stage}')"
                     }},
-                    ... additional choices ...
+                    ... {choices_per_node - 1} more choices ...
                 ]
             }}
-            
-            Each choice must:
-            1. Start with an action verb
-            2. Be distinct from the other choices
-            3. Represent a clear action the player takes
             """
-            
             child_data = generate_story_node(child_prompt)
-            
+
             # Default options if generation fails
             if not child_data or "choices" not in child_data:
                 child_data = {
                     "choices": [
-                        {"text": "Continue exploring cautiously, staying alert for danger.", "consequences": "You proceed with caution."},
-                        {"text": "Search the area thoroughly before moving on.", "consequences": "You take time to search for useful items."},
-                        {"text": "Move quickly to the next area, hoping to make progress.", "consequences": "You hurry forward, eager to advance."},
-                        {"text": "Take a different path, avoiding the obvious route.", "consequences": "You choose a less traveled path."}
-                    ][:choices_per_node]
+                        {"text": f"Action {i+1}: Explore the {narrative_stage.lower()} stage options.", "consequences": f"You proceed during the {narrative_stage.lower()} phase."}
+                        for i in range(choices_per_node)
+                    ]
                 }
-            
-            # Make sure we have exactly choices_per_node choices
+
+            # Ensure correct number of choices
             choices = child_data.get("choices", [])
             while len(choices) < choices_per_node:
                 idx = len(choices)
                 default_choices = [
-                    {"text": "Explore further, looking for clues or useful items.", "consequences": "You search the area carefully."},
-                    {"text": "Proceed with caution, staying alert for any danger.", "consequences": "You move forward carefully."},
-                    {"text": "Take a different approach, trying to find another way.", "consequences": "You look for an alternative path."},
-                    {"text": "Observe the surroundings before deciding what to do next.", "consequences": "You take a moment to assess the situation."}
+                    {"text": f"Investigate further during the {narrative_stage}.", "consequences": "You delve deeper."},
+                    {"text": f"Confront the challenge of the {narrative_stage}.", "consequences": "You face the situation."},
+                    {"text": f"Seek allies during the {narrative_stage}.", "consequences": "You look for help."},
+                    {"text": f"Analyze the {narrative_stage} situation.", "consequences": "You assess your options."}
                 ]
                 choices.append(default_choices[idx % len(default_choices)])
-            
-            # Trim to exactly choices_per_node
             choices = choices[:choices_per_node]
-            
-            # Create child nodes and add them to the graph
+
+            # Create child nodes and add them to the graph/queue
             for i, choice in enumerate(choices):
                 child_id = f"{node_id}_{i+1}"
-                child_story = choice.get("text", "You continue your journey.")
+                child_story = choice.get("text", f"Continue ({narrative_stage})")
                 child_consequence = choice.get("consequences", "")
-                
-                # Add edge connecting parent to this child
+
+                # Add edge
                 story_graph["edges"].append({
                     "from": node_id,
                     "to": child_id,
                     "action": child_story
                 })
-                
-                # Calculate if this should be an ending based on depth
-                is_end = current_depth + 1 >= depth
-                
-                # Sometimes create early endings
-                if current_depth > 1 and hash(child_id) % 8 == 0:
-                    is_end = True
-                
-                # Create child node with basic info
+
+                # Create child node
                 story_graph["nodes"][child_id] = {
-                    "story": child_story,
-                    "is_end": is_end,
+                    "story": child_story, # Story here is the ACTION taken
+                    "is_end": False,      # Will be marked True later if it's the final depth
                     "dialogue": child_consequence
                 }
-                
-                # Enrich the node with scene state, characters, etc.
-                enrich_story_node(story_graph["nodes"][child_id], child_id, theme)
-                
-                # Add to queue for further processing
-                if not is_end:
+                enrich_story_node(story_graph["nodes"][child_id], child_id, theme) # Enrich new node
+
+                # Add to queue if not exceeding depth
+                if current_depth + 1 < depth:
                     queue.append((child_id, current_depth + 1))
-        else:
-            # Mark as ending
-            current_node["is_end"] = True
-            
-            # Add potential ending outcome
-            if hash(node_id) % 3 == 0:
-                current_node["outcome"] = {
-                    "health_change": -20,  # Bad ending: lose health
-                    "experience_change": 10,
-                    "inventory_changes": []
+                else:
+                     # This child node IS the ending because it's at max depth
+                     story_graph["nodes"][child_id]["is_end"] = True
+                     # Optionally generate a concluding story *for this node* instead of using action text
+                     # For now, we'll handle specific ending text generation in the 'else' block below
+                     story_graph["nodes"][child_id]["outcome"] = generate_ending_outcome(child_id, theme)
+
+
+        else: # current_depth == depth - 1: Generate Endings, not Choices
+            # --- Generate Ending Nodes ---
+            ending_prompt = f"""
+            This branch of the {theme} story ({narrative_stage} stage) is reaching its conclusion.
+            Overall Story Arc Guidance: {story_arc}
+            Current situation leading to the end: {current_node['story']}
+
+            Generate {choices_per_node} distinct narrative endings for this path. Each ending should be a short concluding paragraph (2-4 sentences).
+
+            Return a valid JSON object:
+            {{
+                "endings": [
+                    {{"text": "Narrative conclusion for ending 1."}},
+                    {{"text": "Narrative conclusion for ending 2."}},
+                    ... up to {choices_per_node} endings ...
+                ]
+            }}
+            """
+            ending_data = generate_story_node(ending_prompt)
+
+            # Default endings if generation fails
+            if not ending_data or "endings" not in ending_data:
+                ending_data = {"endings": [{"text": f"Conclusion {i+1}: The journey ends here, shaped by your choices during the {narrative_stage}."} for i in range(choices_per_node)]}
+
+            endings = ending_data.get("endings", [])
+            # Ensure correct number of endings
+            while len(endings) < choices_per_node:
+                 endings.append({"text": f"Conclusion {len(endings)+1}: An alternate end to the {theme} tale."})
+            endings = endings[:choices_per_node]
+
+            # Create child nodes which ARE the endings
+            for i, ending in enumerate(endings):
+                child_id = f"{node_id}_{i+1}"
+                # The story IS the ending text
+                child_story = ending.get("text", "The adventure concludes.")
+
+                # Add edge representing the choice leading TO this specific end
+                story_graph["edges"].append({
+                    "from": node_id,
+                    "to": child_id,
+                    "action": f"Pursue Ending Path {i+1}" # The action is choosing this ending branch
+                })
+
+                # Create the final ending node
+                story_graph["nodes"][child_id] = {
+                    "story": child_story, # Story is the conclusion text
+                    "is_end": True,       # This node IS an end
+                    "dialogue": "",       # Endings don't usually have consequence dialogue
+                    "outcome": generate_ending_outcome(child_id, theme) # Add outcome stats
                 }
-            elif hash(node_id) % 3 == 1:
-                current_node["outcome"] = {
-                    "health_change": 20,  # Good ending: gain health and a special item
-                    "experience_change": 30,
-                    "inventory_changes": [{"add": f"Special {theme} artifact"}]
-                }
-            else:
-                current_node["outcome"] = {
-                    "health_change": 0,  # Neutral ending
-                    "experience_change": 20,
-                    "inventory_changes": []
-                }
-    
-    # Ensure all nodes have characters and scene state
+                enrich_story_node(story_graph["nodes"][child_id], child_id, theme) # Add final scene state etc.
+                visited.add(child_id) # Mark ending node as visited, won't be processed further
+
+    # Final pass to ensure all nodes at max depth are marked as end nodes
+    # (This acts as a safeguard)
+    for node_id, node_data in story_graph["nodes"].items():
+        node_depth_check = len(node_id.split('_')) - 1 # Recalculate depth from ID
+        if node_depth_check >= depth:
+            if not node_data.get("is_end", False):
+                 print(f"Safeguard: Marking node {node_id} at depth {node_depth_check} as ending.")
+                 node_data["is_end"] = True
+                 if "outcome" not in node_data: # Add outcome if missing
+                      node_data["outcome"] = generate_ending_outcome(node_id, theme)
+
+    # Ensure all nodes have characters and scene state (might be redundant but safe)
     for node_id, node_data in story_graph["nodes"].items():
         # Generate scene state if missing
         if "scene_state" not in node_data:
             enrich_story_node(node_data, node_id, theme)
-        
-        # Generate dialogue between characters
-        dialogue = generate_scene_dialogue(node_data, theme)
-        if dialogue:
-            node_data["dialogue"] = dialogue
-    
+        # Generate dialogue if appropriate (avoid for endings?)
+        if not node_data.get("is_end", False) and not node_data.get("dialogue"):
+             dialogue = generate_scene_dialogue(node_data, theme)
+             if dialogue:
+                 node_data["dialogue"] = dialogue
+
     # Create the full save data structure
     save_data = {
         "story_state": {
@@ -1269,6 +1311,18 @@ def enrich_story_node(node_data, node_id, theme):
     
     # Update the node's characters
     node_data["characters"] = characters
+
+def generate_ending_outcome(node_id, theme):
+    """Generates a basic outcome dictionary for an ending node."""
+    outcome_hash = hash(node_id)
+    if outcome_hash % 4 == 0: # Bad ending
+        return {"health_change": -30, "experience_change": 5, "inventory_changes": []}
+    elif outcome_hash % 4 == 1: # Good ending
+         return {"health_change": 25, "experience_change": 40, "inventory_changes": [{"add": f"Memento of the {theme} Conclusion"}]}
+    elif outcome_hash % 4 == 2: # Neutral ending
+         return {"health_change": 0, "experience_change": 20, "inventory_changes": []}
+    else: # Mixed ending
+         return {"health_change": -10, "experience_change": 25, "inventory_changes": [{"add": f"Scrap of {theme} Lore"}]}
 
 if __name__ == "__main__":
     print("Welcome to the Predetermined Story Generator!")

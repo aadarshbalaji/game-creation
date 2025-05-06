@@ -80,82 +80,126 @@ def print_box_dialogue(raw_dialogue: str, width: int = 70, padding: int = 1):
         print(empty)
     print(horizontal)
 
+import sys # Added for potential detailed error printing if needed
+
 def print_state(title, data, indent=2):
     """Print state information in a formatted way"""
     print(f"\n{'='*20} {title} {'='*20}")
     try:
-    if title == "CHARACTERS PRESENT":
-        # Check if the main data is a dictionary before using .items()
-        if isinstance(data, dict):
-            for char_name, char_data in data.items():
-                if char_name == "player":
-                    continue  
-                if char_name == "other_characters":
-                    # Check if the value under 'other_characters' is also a dict
-                    if isinstance(char_data, dict):
-                        for npc_name, npc_data in char_data.items():
-                                print(f"\n► {str(npc_name).upper()}")
-                            if isinstance(npc_data, dict):
+        if title == "CHARACTERS PRESENT":
+            # Check if the main data is a dictionary before processing
+            if isinstance(data, dict):
+                for char_name, char_data in data.items():
+                    if char_name == "player":
+                        continue  # Skip player character if found at this level
+
+                    # Use elif to handle 'other_characters' specifically
+                    elif char_name == "other_characters":
+                        # Check if the value under 'other_characters' is a dict (expected)
+                        if isinstance(char_data, dict):
+                            print("\n► OTHER CHARACTERS (Dict Format)") # Clarify format
+                            for npc_name, npc_data in char_data.items():
+                                print(f"\n  ► {str(npc_name).upper()}")
+                                if isinstance(npc_data, dict):
+                                    # Health Bar
                                     health = int(npc_data.get('health', 0))
-                                health_bar = '♥' * (health // 10) + '░' * ((100 - health) // 10)
-                                print(f"  Health: [{health_bar}] {health}/100")
-                                    mood = str(npc_data.get('mood', 'unknown'))
-                                mood_emoji = {
-                                    'angry': '😠', 'happy': '😊', 'sad': '😢', 
-                                    'afraid': '😨', 'determined': '😤', 'sleeping': '😴',
-                                    'neutral': '😐', 'aggressive': '😠', 'friendly': '🙂',
-                                    'fearful': '😨', 'panicked': '😰', 'suspicious': '🤨'
-                                }.get(mood.lower(), '❓')
-                                print(f"  Mood: {mood_emoji} {mood}")
-                                if npc_data.get('status_effects'):
+                                    # Ensure health is within 0-100 for bar display
+                                    health = max(0, min(100, health))
+                                    health_bar = '♥' * (health // 10) + '░' * ((100 - health) // 10)
+                                    # Ensure bar is always 10 characters long
+                                    health_bar = health_bar.ljust(10, '░')
+                                    print(f"    Health: [{health_bar}] {health}/100")
+
+                                    # Mood
+                                    mood = str(npc_data.get('mood', 'unknown')).lower()
+                                    mood_emoji = {
+                                        'angry': '😠', 'happy': '😊', 'sad': '😢',
+                                        'afraid': '😨', 'determined': '😤', 'sleeping': '😴',
+                                        'neutral': '😐', 'aggressive': '😠', 'friendly': '🙂',
+                                        'fearful': '😨', 'panicked': '😰', 'suspicious': '🤨'
+                                    }.get(mood, '❓') # Use mood directly after lowercasing
+                                    print(f"    Mood: {mood_emoji} {mood.capitalize()}") # Capitalize mood string
+
+                                    # Status Effects
+                                    if npc_data.get('status_effects'):
                                         effects = ', '.join(map(str, npc_data['status_effects']))
-                                    print(f"  Status Effects: ✨ {effects}")
-                                if npc_data.get('relationships'):
-                                    print("  Relationships:")
-                                    if isinstance(npc_data['relationships'], dict):
-                                        for target, relation in npc_data['relationships'].items():
-                                                print(f"   • {str(target)}: {str(relation)}")
-                                    else:
-                                        print(f"    (Unexpected relationship format: {type(npc_data['relationships'])})")
-                            else:
-                                print(f"  (Unexpected data format for NPC {npc_name}: {type(npc_data)})")
-                    elif isinstance(char_data, list):
-                        print("\n► OTHER CHARACTERS (List Format)")
-                        for item in char_data:
-                            if isinstance(item, dict):
-                                name = item.get('name', 'Unknown NPC')
-                                    print(f"  • {str(name)}")
-                            else:
-                                    print(f"  • Unknown item data: {str(item)}")
+                                        print(f"    Status Effects: ✨ {effects}")
+
+                                    # Relationships
+                                    if npc_data.get('relationships'):
+                                        print("    Relationships:")
+                                        if isinstance(npc_data['relationships'], dict):
+                                            for target, relation in npc_data['relationships'].items():
+                                                print(f"     • {str(target)}: {str(relation)}")
+                                        else:
+                                            print(f"      (Unexpected relationship format: {type(npc_data['relationships'])})")
+                                else:
+                                    # Handle case where npc_data is not a dict
+                                    print(f"    (Unexpected data format for NPC {npc_name}: {type(npc_data)})")
+
+                        # Handle case where 'other_characters' value is a list
+                        elif isinstance(char_data, list):
+                            print("\n► OTHER CHARACTERS (List Format)")
+                            for item in char_data:
+                                if isinstance(item, dict):
+                                    name = item.get('name', 'Unknown NPC')
+                                    # Maybe print more details if available?
+                                    print(f"    • {str(name)}")
+                                else:
+                                    print(f"    • Unknown item data: {str(item)}")
+                        else:
+                             # Handle unexpected format for 'other_characters' value
+                            print(f"\n  (Unexpected format for 'other_characters' value: {type(char_data)})")
+
+                    # Handle other top-level keys in the data dictionary (besides 'player' and 'other_characters')
                     else:
-                        print(f"\n(Unexpected format for 'other_characters': {type(char_data)})")
-                else:
-                        print(f"\n► {str(char_name).upper()}")
-                    if isinstance(char_data, dict):
-                       mood = char_data.get('mood', None)
-                       if mood:
-                                print(f"  Mood: {str(mood)}")
-        elif isinstance(data, list):
-            print("\n(Warning: Character data received in unexpected list format)")
-            for item in data:
-                 if isinstance(item, dict):
-                     name = item.get('name', 'Unknown Character')
-                        print(f"\n► {str(name).upper()} (from list)")
-                 else:
-                        print(f"\n► Unknown Character Data (from list): {str(item)}")
-        else:
-             print(f"\n(Warning: Unexpected character data format received: {type(data)})")
-    elif title == "CURRENT SCENE":
-        if isinstance(data, dict):
-                print(f"\n🌍 Location: {str(data.get('location', 'Unknown'))}")
-                print(f"🕒 Time: {str(data.get('time_of_day', 'Unknown'))}")
-                print(f"🌤️  Weather: {str(data.get('weather', 'Unknown'))}")
-                print(f"💫 Ambient: {str(data.get('ambient', 'Unknown'))}")
-        else:
-            print(f"\n(Warning: Unexpected scene data format: {type(data)})")
-                print(f"Raw Scene Data: {str(data)}")
+                        print(f"\n► {str(char_name).upper()} (Top Level)")
+                        if isinstance(char_data, dict):
+                           mood = char_data.get('mood', None)
+                           if mood:
+                                print(f"    Mood: {str(mood)}")
+                           # Add more fields as needed for other top-level character types
+                        else:
+                            print(f"    (Data: {str(char_data)})") # Show the data if not a dict
+
+            # Handle case where the main 'data' for characters is a list, not a dict
+            elif isinstance(data, list):
+                print("\n(Warning: Character data received in unexpected list format)")
+                for item in data:
+                     if isinstance(item, dict):
+                         name = item.get('name', 'Unknown Character')
+                         print(f"\n► {str(name).upper()} (from list)")
+                         # Potentially add more details here if available in the dict item
+                     else:
+                         print(f"\n► Unknown Character Data (from list): {str(item)}")
+            else:
+                # Handle case where the main 'data' is neither a dict nor a list
+                 print(f"\n(Warning: Unexpected character data format received: {type(data)})")
+                 print(f"Raw Data: {str(data)}")
+
+        elif title == "CURRENT SCENE":
+            if isinstance(data, dict):
+                print(f"\n  🌍 Location: {str(data.get('location', 'Unknown'))}")
+                print(f"  🕒 Time: {str(data.get('time_of_day', 'Unknown'))}")
+                print(f"  🌤️  Weather: {str(data.get('weather', 'Unknown'))}")
+                print(f"  💫 Ambient: {str(data.get('ambient', 'Unknown'))}")
+                # Add other scene details if necessary
+            else:
+                # Handle unexpected format for scene data
+                print(f"\n  (Warning: Unexpected scene data format: {type(data)})")
+                print(f"  Raw Scene Data: {str(data)}")
+
+        # Add elif blocks here for other potential titles
+
     except Exception as e:
-        print(f"[print_state ERROR]: {e}")
+        # More detailed error printing
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = exc_tb.tb_frame.f_code.co_filename
+        print(f"\n[PRINT_STATE ERROR] Type: {exc_type}, File: {fname}, Line: {exc_tb.tb_lineno}")
+        print(f"  Error Message: {e}")
+        print(f"  Problematic Data (type: {type(data)}): {str(data)[:200]}...") # Print start of data
+
+    # Footer line matches header length
     print("\n" + "=" * (42 + len(str(title))))
 
 def load_game(theme, depth=3, choices_per_node=2):
@@ -287,19 +331,19 @@ def main():
             theme = "adventure"
             
         # Get depth and choices per node from user
-        depth = 3  # Default
+        depth = 6  # Default
         choices_per_node = 2  # Default
         
         try:
-            depth_input = input(f"How deep would you like your story to be? (3-5, default: {depth}): ").strip()
+            depth_input = input(f"How deep would you like your story to be? (default: {depth}): ").strip()
             if depth_input:
                 depth = int(depth_input)
                 if depth < 3:
                     depth = 3
                     print("Minimum depth is 3. Using depth = 3.")
-                elif depth > 5:
-                    depth = 5
-                    print("Maximum depth is 5. Using depth = 5.")
+                elif depth > 12:
+                    depth = 12
+                    print("Maximum depth is 12. Using depth = 12.")
         except ValueError:
             print(f"Invalid input. Using default depth = {depth}.")
             
@@ -316,6 +360,7 @@ def main():
         except ValueError:
             print(f"Invalid input. Using default choices = {choices_per_node}.")
         
+    
         # Load game state
         nodes, current_node_id, max_depth = load_game(theme, depth, choices_per_node)
         
@@ -426,7 +471,7 @@ if __name__ == "__main__":
         os.remove("game_save.json")
         
     try:
-    main()
+        main()
     except Exception as e:
         print(f"\nError: {e}")
         print("Game initialization failed. Please try again.")
