@@ -205,7 +205,7 @@ def main():
         
         # Load the game state with the correct parameter names and max_depth (for pre-generation)
         graph, story_state = load_game_state(theme=story_theme, story_arc=story_arc, story_tree=story_tree, max_depth=max_depth)
-        
+        print(graph)
         # Ensure start_node is correctly identified after loading/generation
         if not graph or not graph.adjacency_list:
              raise Exception("Failed to load or generate a valid starting node.")
