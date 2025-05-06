@@ -371,6 +371,29 @@ def generate_story_tree(theme, story_arc, depth=3, choices_per_node=4):
             
             if not is_ending:  # Only process non-ending nodes
                 nodes_to_process.append((choice_id, current_depth + 1))
+        else:
+            # Mark as ending
+            story_graph["nodes"][current_id]["is_end"] = True
+            
+            # Add potential ending outcome
+            if hash(current_id) % 3 == 0:
+                story_graph["nodes"][current_id]["outcome"] = {
+                    "health_change": -20,  # Bad ending: lose health
+                    "experience_change": 10,
+                    "inventory_changes": []
+                }
+            elif hash(current_id) % 3 == 1:
+                story_graph["nodes"][current_id]["outcome"] = {
+                    "health_change": 20,  # Good ending: gain health and a special item
+                    "experience_change": 30,
+                    "inventory_changes": [{"add": f"Special {theme} artifact"}]
+                }
+            else:
+                story_graph["nodes"][current_id]["outcome"] = {
+                    "health_change": 0,  # Neutral ending
+                    "experience_change": 20,
+                    "inventory_changes": []
+                }
     
     print(f"Story tree generation complete with {len(story_graph['nodes'])} nodes and {len(story_graph['edges'])} edges")
     
@@ -445,407 +468,247 @@ def return_story_arc(theme):
     return generate_story_arc(theme)
 
 def return_story_tree(theme, depth=3, choices_per_node=4):
-    """
-    Generate and save a story tree for the given theme
-    Returns the path to the saved JSON file
-    """
-    story_arc = generate_story_arc(theme)
-    story_graph = generate_story_tree(theme, story_arc, depth, choices_per_node)
+    """Generate a full story tree based on the given theme, with proper graph structure"""
     
-    # Create scene states and character data
-    for node_id, node_data in story_graph["nodes"].items():
-        story_text = node_data["story"].lower()
+    # Generate the story arc
+    story_arc = return_story_arc(theme)
+    
+    # Generate the story tree
+    story_graph = {"nodes": {}, "edges": []}
+    
+    # Define a StoryState to track global game state
+    story_state = StoryState()
+    story_state.theme = theme
+    
+    # Process the root node (introduction)
+    root_data = generate_story_node(f"""
+    Create an introduction for an interactive narrative game set in the world of {theme}.
+    This should be the introduction to our story, establishing the setting, main character, and initial situation.
+    
+    Just provide a single JSON object containing:
+    {{
+        "story": "rich descriptive text for the introduction scene",
+        "choices": [
+            {{"text": "action player takes 1", "consequences": "immediate result"}},
+            {{"text": "action player takes 2", "consequences": "immediate result"}}
+        ]
+    }}
+    """, is_root=True)
+    
+    if not root_data:
+        root_data = {
+            "story": f"You begin your adventure in the world of {theme}. The path ahead is uncertain, but destiny awaits.",
+            "choices": [
+                {"text": "Explore the immediate area carefully, looking for clues.", "consequences": "You discover signs of recent activity."},
+                {"text": "Move forward quickly, eager to begin your journey.", "consequences": "You press onward, leaving the safety of familiar surroundings."}
+            ]
+        }
+    
+    # Create story graph structure
+    queue = []
+    visited = set()
+    
+    # Create root node
+    root_id = "node_0"
+    root_story = root_data.get("story", f"You begin your {theme} adventure!")
+    root_choices = root_data.get("choices", [])
+    
+    # Make sure we have exactly choices_per_node choices for root
+    while len(root_choices) < choices_per_node:
+        # Add generic choices to fill up to requested number
+        idx = len(root_choices)
+        choices = [
+            {"text": "Explore the surrounding area carefully, searching for anything useful.", "consequences": "You find signs of recent activity."},
+            {"text": "Proceed cautiously, keeping alert for any danger.", "consequences": "You move forward with careful steps."},
+            {"text": "Take a moment to gather your thoughts and plan your next move.", "consequences": "You consider your options carefully."},
+            {"text": "Look for any hidden paths or secret areas nearby.", "consequences": "You search for less obvious routes."}
+        ]
+        root_choices.append(choices[idx % len(choices)])
+    
+    # Trim to exactly choices_per_node
+    root_choices = root_choices[:choices_per_node]
+    
+    # Add root node to story graph
+    story_graph["nodes"][root_id] = {
+        "story": root_story,
+        "is_end": False,
+        "dialogue": ""
+    }
+    
+    # Process root node - add scene state, characters, etc.
+    enrich_story_node(story_graph["nodes"][root_id], root_id, theme)
+    
+    # Add root node's children to the queue
+    for i, choice in enumerate(root_choices):
+        child_id = f"{root_id}_{i+1}"
+        child_story = choice.get("text", "You continue your journey.")
+        child_consequence = choice.get("consequences", "")
         
-        # Generate location based on story content and theme
-        location = "unknown"
-        if "castle" in story_text or "fortress" in story_text or "tower" in story_text:
-            location = "Ancient Castle"
-        elif "forest" in story_text or "woods" in story_text or "trees" in story_text:
-            location = "Mysterious Forest"
-        elif "cave" in story_text or "cavern" in story_text or "underground" in story_text:
-            location = "Deep Caverns"
-        elif "city" in story_text or "town" in story_text or "urban" in story_text:
-            location = "City District"
-        elif "ship" in story_text or "spacecraft" in story_text or "space" in story_text:
-            location = "Starship Deck"
-        elif "lab" in story_text or "laboratory" in story_text or "facility" in story_text:
-            location = "Research Facility"
-        elif "temple" in story_text or "shrine" in story_text or "sacred" in story_text:
-            location = "Ancient Temple"
-        elif "mountain" in story_text or "hill" in story_text or "peak" in story_text:
-            location = "Mountain Pass"
-        elif "desert" in story_text or "sand" in story_text or "dune" in story_text:
-            location = "Vast Desert"
-        elif "ocean" in story_text or "sea" in story_text or "beach" in story_text:
-            location = "Coastal Shore"
-        elif "village" in story_text or "settlement" in story_text or "hamlet" in story_text:
-            location = "Small Village"
+        # Add edge connecting root to this child
+        story_graph["edges"].append({
+            "from": root_id,
+            "to": child_id,
+            "action": child_story
+        })
         
-        # Theme-specific locations as fallback
-        if location == "unknown":
-            if "star wars" in theme.lower() or "space" in theme.lower() or "sci-fi" in theme.lower():
-                locations = ["Rebel Base", "Imperial Station", "Space Outpost", "Alien Planet", "Derelict Ship"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "fantasy" in theme.lower() or "medieval" in theme.lower() or "magic" in theme.lower():
-                locations = ["Enchanted Grove", "Dragon's Lair", "Wizard's Tower", "Royal Castle", "Dwarven Mines"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "cyberpunk" in theme.lower() or "future" in theme.lower() or "tech" in theme.lower():
-                locations = ["Neon District", "Corporate HQ", "Underground Bunker", "Virtual Reality", "Hacker's Den"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "horror" in theme.lower() or "scary" in theme.lower() or "spooky" in theme.lower():
-                locations = ["Abandoned Mansion", "Foggy Graveyard", "Cursed Forest", "Decrepit Hospital", "Dark Cellar"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "western" in theme.lower() or "wild west" in theme.lower():
-                locations = ["Dusty Saloon", "Desert Canyon", "Sheriff's Office", "Ghost Town", "Train Station"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "detective" in theme.lower() or "mystery" in theme.lower() or "noir" in theme.lower():
-                locations = ["Crime Scene", "Detective's Office", "Shady Alley", "Upscale Club", "Abandoned Warehouse"]
-                location = locations[hash(node_id) % len(locations)]
-            elif "superhero" in theme.lower() or "avengers" in theme.lower() or "hero" in theme.lower():
-                locations = ["City Rooftop", "Secret Hideout", "Villain's Lair", "Downtown Battlefield", "Research Lab"]
-                location = locations[hash(node_id) % len(locations)]
+        # Create child node with basic info
+        story_graph["nodes"][child_id] = {
+            "story": child_story,
+            "is_end": False,
+            "dialogue": child_consequence
+        }
+        
+        # Add child to queue for further processing
+        queue.append((child_id, 1))  # (node_id, depth)
+    
+    # Track visited nodes
+    visited.add(root_id)
+    
+    # BFS to generate the rest of the tree
+    while queue and len(queue) < 100:  # Safety limit of 100 nodes
+        node_id, current_depth = queue.pop(0)
+        
+        # Skip if we've visited this node or reached max depth
+        if node_id in visited or current_depth >= depth:
+            continue
+        
+        # Mark as visited
+        visited.add(node_id)
+        
+        # Get current node data
+        current_node = story_graph["nodes"][node_id]
+        
+        # Enrich the node with scene state, characters, etc.
+        if "scene_state" not in current_node:
+            enrich_story_node(current_node, node_id, theme)
+        
+        # Check if this should be an ending
+        should_be_ending = current_depth == depth - 1
+        
+        # Sometimes create early endings
+        if current_depth > 1 and hash(node_id) % 10 == 0:
+            should_be_ending = True
+        
+        # If not an ending, generate children
+        if not should_be_ending:
+            # Generate child nodes using guided prompts
+            child_prompt = f"""
+            Create {choices_per_node} distinct narrative choices for the next steps in this {theme} adventure.
+            
+            Current situation: {current_node['story']}
+            
+            Return a valid JSON object with this format:
+            {{
+                "choices": [
+                    {{
+                        "text": "Player action 1 - start with a strong verb",
+                        "consequences": "short description of immediate results"
+                    }},
+                    ... additional choices ...
+                ]
+            }}
+            
+            Each choice must:
+            1. Start with an action verb
+            2. Be distinct from the other choices
+            3. Represent a clear action the player takes
+            """
+            
+            child_data = generate_story_node(child_prompt)
+            
+            # Default options if generation fails
+            if not child_data or "choices" not in child_data:
+                child_data = {
+                    "choices": [
+                        {"text": "Continue exploring cautiously, staying alert for danger.", "consequences": "You proceed with caution."},
+                        {"text": "Search the area thoroughly before moving on.", "consequences": "You take time to search for useful items."},
+                        {"text": "Move quickly to the next area, hoping to make progress.", "consequences": "You hurry forward, eager to advance."},
+                        {"text": "Take a different path, avoiding the obvious route.", "consequences": "You choose a less traveled path."}
+                    ][:choices_per_node]
+                }
+            
+            # Make sure we have exactly choices_per_node choices
+            choices = child_data.get("choices", [])
+            while len(choices) < choices_per_node:
+                idx = len(choices)
+                default_choices = [
+                    {"text": "Explore further, looking for clues or useful items.", "consequences": "You search the area carefully."},
+                    {"text": "Proceed with caution, staying alert for any danger.", "consequences": "You move forward carefully."},
+                    {"text": "Take a different approach, trying to find another way.", "consequences": "You look for an alternative path."},
+                    {"text": "Observe the surroundings before deciding what to do next.", "consequences": "You take a moment to assess the situation."}
+                ]
+                choices.append(default_choices[idx % len(default_choices)])
+            
+            # Trim to exactly choices_per_node
+            choices = choices[:choices_per_node]
+            
+            # Create child nodes and add them to the graph
+            for i, choice in enumerate(choices):
+                child_id = f"{node_id}_{i+1}"
+                child_story = choice.get("text", "You continue your journey.")
+                child_consequence = choice.get("consequences", "")
+                
+                # Add edge connecting parent to this child
+                story_graph["edges"].append({
+                    "from": node_id,
+                    "to": child_id,
+                    "action": child_story
+                })
+                
+                # Calculate if this should be an ending based on depth
+                is_end = current_depth + 1 >= depth
+                
+                # Sometimes create early endings
+                if current_depth > 1 and hash(child_id) % 8 == 0:
+                    is_end = True
+                
+                # Create child node with basic info
+                story_graph["nodes"][child_id] = {
+                    "story": child_story,
+                    "is_end": is_end,
+                    "dialogue": child_consequence
+                }
+                
+                # Enrich the node with scene state, characters, etc.
+                enrich_story_node(story_graph["nodes"][child_id], child_id, theme)
+                
+                # Add to queue for further processing
+                if not is_end:
+                    queue.append((child_id, current_depth + 1))
+        else:
+            # Mark as ending
+            current_node["is_end"] = True
+            
+            # Add potential ending outcome
+            if hash(node_id) % 3 == 0:
+                current_node["outcome"] = {
+                    "health_change": -20,  # Bad ending: lose health
+                    "experience_change": 10,
+                    "inventory_changes": []
+                }
+            elif hash(node_id) % 3 == 1:
+                current_node["outcome"] = {
+                    "health_change": 20,  # Good ending: gain health and a special item
+                    "experience_change": 30,
+                    "inventory_changes": [{"add": f"Special {theme} artifact"}]
+                }
             else:
-                # Generic interesting locations if theme doesn't match any category
-                locations = ["Crystal Caves", "Ancient Ruins", "Hidden Valley", "Forgotten Sanctuary", "Misty Lake"]
-                location = locations[hash(node_id) % len(locations)]
-        
-        # Time of day based on story content
-        time_of_day = "day"
-        if "night" in story_text or "dark" in story_text or "shadow" in story_text:
-            time_of_day = "night"
-        elif "evening" in story_text or "sunset" in story_text or "dusk" in story_text:
-            time_of_day = "evening"
-        elif "dawn" in story_text or "sunrise" in story_text or "morning" in story_text:
-            time_of_day = "dawn"
-        elif "noon" in story_text or "midday" in story_text:
-            time_of_day = "noon"
-        else:
-            # Varied times of day if not specified in text
-            times = ["dawn", "morning", "noon", "afternoon", "evening", "dusk", "twilight", "night", "midnight"]
-            time_of_day = times[hash(node_id) % len(times)]
-        
-        # Weather based on story content and mood
-        weather = "clear"
-        if "rain" in story_text or "storm" in story_text or "thunder" in story_text:
-            weather = "stormy"
-        elif "snow" in story_text or "ice" in story_text or "frost" in story_text or "winter" in story_text:
-            weather = "snowy"
-        elif "fog" in story_text or "mist" in story_text or "haze" in story_text:
-            weather = "foggy"
-        elif "cloud" in story_text or "overcast" in story_text:
-            weather = "cloudy"
-        elif "sun" in story_text or "sunny" in story_text or "bright" in story_text:
-            weather = "sunny"
-        elif "wind" in story_text or "breeze" in story_text or "gust" in story_text:
-            weather = "windy"
-        else:
-            # Weather based on node depth and story progression
-            node_depth = len(node_id.split('_')) - 1
-            weathers = ["clear", "partly cloudy", "foggy", "light rain", "stormy", "windy", "hazy"]
-            weather = weathers[(hash(node_id) + node_depth) % len(weathers)]
-        
-        # Ambient mood based on story content
-        ambient = "mysterious"
-        if any(word in story_text for word in ["danger", "threat", "attack", "fight", "battle"]):
-            ambient = "tense"
-        elif any(word in story_text for word in ["discover", "find", "reveal", "secret", "hidden"]):
-            ambient = "mysterious"
-        elif any(word in story_text for word in ["ruin", "ancient", "old", "dust", "decay"]):
-            ambient = "abandoned"
-        elif any(word in story_text for word in ["beautiful", "stunning", "impressive", "breathtaking"]):
-            ambient = "magnificent"
-        elif any(word in story_text for word in ["scary", "terrifying", "horror", "fear", "dread"]):
-            ambient = "eerie"
-        elif any(word in story_text for word in ["sacred", "holy", "divine", "religious", "spiritual"]):
-            ambient = "reverent"
-        elif any(word in story_text for word in ["busy", "crowd", "people", "populated", "active"]):
-            ambient = "bustling"
-        elif any(word in story_text for word in ["quiet", "silent", "still", "peaceful", "calm"]):
-            ambient = "tranquil"
-        elif any(word in story_text for word in ["royal", "noble", "wealth", "rich", "luxury"]):
-            ambient = "opulent"
-        elif any(word in story_text for word in ["alien", "strange", "unfamiliar", "bizarre", "weird"]):
-            ambient = "otherworldly"
-        else:
-            # Varied ambient moods based on node
-            ambients = ["tense", "mysterious", "serene", "chaotic", "magical", "foreboding", 
-                        "peaceful", "ominous", "enchanted", "desolate", "vibrant", "haunting"]
-            ambient = ambients[hash(node_id) % len(ambients)]
-        
-        # Add scene state to node data
-        node_data["scene_state"] = {
-            "location": location,
-            "time_of_day": time_of_day,
-            "weather": weather,
-            "ambient": ambient
-        }
-        
-        # Add placeholder character data
-        node_data["characters"] = {
-            "player": {
-                "health": 100,
-                "mood": "determined",
-                "status_effects": [],
-                "experience": 10,
-                "inventory": []
-            }
-        }
-        
-        # Add other characters based on the theme and story content
-        story_text = node_data["story"].lower()
-        node_depth = len(node_id.split('_')) - 1
-
-        # Check if the story mentions specific character types
-        has_enemy = any(word in story_text for word in ["enemy", "villain", "foe", "opponent", "adversary", "antagonist"])
-        has_ally = any(word in story_text for word in ["ally", "friend", "companion", "partner", "helper", "supporter"])
-        has_neutral = any(word in story_text for word in ["stranger", "merchant", "traveler", "native", "inhabitant", "civilian"])
-
-        # Character generation based on theme
-        possible_characters = []
-        
-        # Common character types based on theme
-        if "star wars" in theme.lower() or "sci-fi" in theme.lower() or "space" in theme.lower():
-            possible_characters = [
-                {"name": "Imperial Officer", "type": "enemy", "mood": "hostile", "description": "A stern officer in a gray uniform"},
-                {"name": "Rebel Spy", "type": "ally", "mood": "cautious", "description": "A nervous individual with vital information"},
-                {"name": "Jedi Knight", "type": "ally", "mood": "calm", "description": "A robed figure with a lightsaber at their belt"},
-                {"name": "Bounty Hunter", "type": "neutral", "mood": "calculating", "description": "A heavily armed mercenary watching your movements"},
-                {"name": "Smuggler", "type": "neutral", "mood": "shifty", "description": "A rugged spacer looking for a deal"},
-                {"name": "Droid", "type": "neutral", "mood": "helpful", "description": "A mechanical assistant beeping occasionally"}
-            ]
-        elif "fantasy" in theme.lower() or "medieval" in theme.lower() or "magic" in theme.lower():
-            possible_characters = [
-                {"name": "Knight", "type": "ally", "mood": "honorable", "description": "A warrior in shining armor"},
-                {"name": "Wizard", "type": "neutral", "mood": "mysterious", "description": "A robed figure with a staff"},
-                {"name": "Goblin", "type": "enemy", "mood": "aggressive", "description": "A small, green creature with sharp teeth"},
-                {"name": "Merchant", "type": "neutral", "mood": "greedy", "description": "A well-dressed trader with valuable goods"},
-                {"name": "Elf Scout", "type": "ally", "mood": "alert", "description": "A graceful archer watching from nearby"},
-                {"name": "Dragon", "type": "enemy", "mood": "imposing", "description": "A massive scaled beast eyeing you carefully"}
-            ]
-        elif "cyberpunk" in theme.lower() or "future" in theme.lower() or "tech" in theme.lower():
-            possible_characters = [
-                {"name": "Hacker", "type": "ally", "mood": "paranoid", "description": "A nervy individual surrounded by screens"},
-                {"name": "Corporate Agent", "type": "enemy", "mood": "cold", "description": "A suit-wearing professional with hidden weapons"},
-                {"name": "Street Doc", "type": "neutral", "mood": "practical", "description": "A back-alley surgeon with cybernetic arms"},
-                {"name": "Fixer", "type": "neutral", "mood": "businesslike", "description": "A well-connected middleman with many favors owed"},
-                {"name": "Rogue AI", "type": "enemy", "mood": "calculating", "description": "A digital entity speaking through nearby screens"},
-                {"name": "Mercenary", "type": "enemy", "mood": "threatening", "description": "A heavily augmented soldier for hire"}
-            ]
-        elif "horror" in theme.lower() or "scary" in theme.lower():
-            possible_characters = [
-                {"name": "Mysterious Stranger", "type": "neutral", "mood": "unsettling", "description": "A pale figure watching from the shadows"},
-                {"name": "Cultist", "type": "enemy", "mood": "fanatic", "description": "A robed zealot muttering strange phrases"},
-                {"name": "Survivor", "type": "ally", "mood": "terrified", "description": "A traumatized individual with vital information"},
-                {"name": "Paranormal Investigator", "type": "ally", "mood": "curious", "description": "A scholarly figure with strange equipment"},
-                {"name": "Possessed Victim", "type": "enemy", "mood": "erratic", "description": "A person with unnatural movements and blank eyes"},
-                {"name": "Ancient Entity", "type": "enemy", "mood": "malevolent", "description": "A presence that defies natural laws"}
-            ]
-        elif "detective" in theme.lower() or "noir" in theme.lower() or "mystery" in theme.lower():
-            possible_characters = [
-                {"name": "Inspector", "type": "neutral", "mood": "suspicious", "description": "A sharp-eyed officer of the law"},
-                {"name": "Informant", "type": "ally", "mood": "nervous", "description": "A jumpy character with street knowledge"},
-                {"name": "Witness", "type": "neutral", "mood": "hesitant", "description": "Someone who saw something important"},
-                {"name": "Suspect", "type": "neutral", "mood": "defensive", "description": "A person of interest with something to hide"},
-                {"name": "Femme Fatale", "type": "neutral", "mood": "seductive", "description": "A mysterious woman with hidden motives"},
-                {"name": "Criminal", "type": "enemy", "mood": "dangerous", "description": "A hardened lawbreaker watching your every move"}
-            ]
-        elif "western" in theme.lower() or "cowboy" in theme.lower():
-            possible_characters = [
-                {"name": "Sheriff", "type": "neutral", "mood": "stern", "description": "The law in these parts, wearing a silver star"},
-                {"name": "Outlaw", "type": "enemy", "mood": "dangerous", "description": "A rough-looking gunslinger with a bounty on their head"},
-                {"name": "Bartender", "type": "neutral", "mood": "friendly", "description": "A keeper of secrets and server of drinks"},
-                {"name": "Native Scout", "type": "ally", "mood": "watchful", "description": "A skilled tracker familiar with the territory"},
-                {"name": "Gambler", "type": "neutral", "mood": "calculating", "description": "A well-dressed card player with a poker face"},
-                {"name": "Rancher", "type": "ally", "mood": "straightforward", "description": "A hardworking landowner with local influence"}
-            ]
-        else:
-            # Generic characters for any theme
-            possible_characters = [
-                {"name": "Guardian", "type": "ally", "mood": "protective", "description": "A watchful protector"},
-                {"name": "Sage", "type": "ally", "mood": "wise", "description": "A source of ancient knowledge"},
-                {"name": "Adversary", "type": "enemy", "mood": "threatening", "description": "Someone who stands in your way"},
-                {"name": "Guide", "type": "ally", "mood": "helpful", "description": "A knowledgeable local"},
-                {"name": "Trickster", "type": "neutral", "mood": "mischievous", "description": "A cunning individual with unclear motives"},
-                {"name": "Innocent", "type": "neutral", "mood": "frightened", "description": "Someone caught in events beyond their control"}
-            ]
-
-        # Add character specifics based on story text
-        for word in ["guard", "soldier", "warrior", "fighter"]:
-            if word in story_text:
-                possible_characters.append({
-                    "name": "Guard", 
-                    "type": "neutral" if "friendly" in story_text else "enemy", 
-                    "mood": "alert", 
-                    "description": "An armored sentinel watching for trouble"
-                })
-                break
-
-        for word in ["king", "queen", "prince", "princess", "ruler", "lord", "noble"]:
-            if word in story_text:
-                possible_characters.append({
-                    "name": "Noble", 
-                    "type": "neutral", 
-                    "mood": "commanding", 
-                    "description": "A person of high status and authority"
-                })
-                break
-
-        for word in ["monster", "beast", "creature", "abomination"]:
-            if word in story_text:
-                possible_characters.append({
-                    "name": "Monster", 
-                    "type": "enemy", 
-                    "mood": "hostile", 
-                    "description": "A frightening creature with ill intent"
-                })
-                break
-
-        for word in ["merchant", "trader", "vendor", "shopkeeper"]:
-            if word in story_text:
-                possible_characters.append({
-                    "name": "Merchant", 
-                    "type": "neutral", 
-                    "mood": "businesslike", 
-                    "description": "A seller of goods and information"
-                })
-                break
-
-        # Select characters to include in this node based on story context
-        characters_to_include = []
-
-        # Always include specific character types if mentioned
-        if has_enemy:
-            enemies = [c for c in possible_characters if c["type"] == "enemy"]
-            if enemies:
-                characters_to_include.append(enemies[hash(node_id) % len(enemies)])
-
-        if has_ally:
-            allies = [c for c in possible_characters if c["type"] == "ally"]
-            if allies:
-                characters_to_include.append(allies[hash(node_id + "ally") % len(allies)])
-
-        if has_neutral:
-            neutrals = [c for c in possible_characters if c["type"] == "neutral"]
-            if neutrals:
-                characters_to_include.append(neutrals[hash(node_id + "neutral") % len(neutrals)])
-
-        # If we still need more characters, add some based on node depth
-        if len(characters_to_include) < min(node_depth + 1, 3):
-            remaining = [c for c in possible_characters if c not in characters_to_include]
-            if remaining:
-                # Add up to 2 more characters for deeper nodes
-                additional_count = min(min(node_depth + 1, 3) - len(characters_to_include), 2)
-                for i in range(additional_count):
-                    if remaining:
-                        char_idx = hash(f"{node_id}_{i}") % len(remaining)
-                        characters_to_include.append(remaining[char_idx])
-                        remaining.pop(char_idx)
-
-        # Add the selected characters to the node
-        for character in characters_to_include:
-            char_name = character["name"]
-            
-            # Add some variety with adjectives based on theme
-            if hash(f"{node_id}_{char_name}") % 5 == 0:  # 20% chance to add adjective
-                adjectives = {
-                    "enemy": ["Menacing", "Dangerous", "Hostile", "Threatening", "Sinister"],
-                    "ally": ["Loyal", "Trustworthy", "Dependable", "Helpful", "Brave"],
-                    "neutral": ["Mysterious", "Cautious", "Reserved", "Curious", "Watchful"]
+                current_node["outcome"] = {
+                    "health_change": 0,  # Neutral ending
+                    "experience_change": 20,
+                    "inventory_changes": []
                 }
-                adj_list = adjectives[character["type"]]
-                adj = adj_list[hash(f"{node_id}_{char_name}_adj") % len(adj_list)]
-                char_name = f"{adj} {char_name}"
-            
-            # Add the character
-            node_data["characters"][char_name] = {
-                "health": 100 - (20 if character["type"] == "enemy" else 0),  # Enemies sometimes injured
-                "mood": character["mood"],
-                "status_effects": [],
-                "description": character["description"],
-                "type": character["type"],
-                "relationships": {
-                    "player": "hostile" if character["type"] == "enemy" else 
-                             "friendly" if character["type"] == "ally" else "neutral"
-                }
-            }
+    
+    # Ensure all nodes have characters and scene state
+    for node_id, node_data in story_graph["nodes"].items():
+        # Generate scene state if missing
+        if "scene_state" not in node_data:
+            enrich_story_node(node_data, node_id, theme)
         
-        # Add potential status changes based on node type and content
-        node_depth = len(node_id.split('_')) - 1
-        story_text = node_data["story"].lower()
-
-        # Determine if this choice involves risks or rewards
-        is_risky = any(word in story_text for word in ["danger", "fight", "attack", "threat", "battle", "defend", "risk"])
-        is_reward = any(word in story_text for word in ["treasure", "reward", "discover", "find", "chest", "prize", "valuable"])
-        is_learning = any(word in story_text for word in ["learn", "knowledge", "understand", "wisdom", "skill", "master"])
-
-        # Define potential outcomes based on choice content (more depth = more extreme outcomes)
-        node_data["outcome"] = {
-            "health_change": 0,
-            "experience_change": 0,
-            "inventory_changes": []
-        }
-
-        # Health changes - can lose or gain health based on choice
-        if is_risky:
-            # More depth = higher risk
-            risk_factor = min(10 + (node_depth * 5), 30)  # Max 30% health loss
-            node_data["outcome"]["health_change"] = -risk_factor
-        elif "heal" in story_text or "rest" in story_text or "recover" in story_text:
-            # Health recovery options
-            heal_amount = min(10 + (node_depth * 3), 25)  # Max 25% health gain
-            node_data["outcome"]["health_change"] = heal_amount
-
-        # Experience changes - gain experience from various activities
-        if is_learning:
-            # Direct learning provides most experience
-            exp_gain = 5 + (node_depth * 3)
-            node_data["outcome"]["experience_change"] = exp_gain
-        elif is_risky or is_reward:
-            # Taking risks or finding rewards also gives experience
-            exp_gain = 3 + (node_depth * 2)
-            node_data["outcome"]["experience_change"] = exp_gain
-        else:
-            # Some minimal experience for any choice
-            node_data["outcome"]["experience_change"] = 1 + node_depth
-
-        # Inventory changes
-        if "find" in story_text or "discover" in story_text or "obtain" in story_text or "take" in story_text:
-            # Potential item additions based on theme and story content
-            possible_items = []
-            
-            if "sword" in story_text or "blade" in story_text or "weapon" in story_text:
-                possible_items = ["Ancient Sword", "Mysterious Blade", "Enchanted Dagger"]
-            elif "potion" in story_text or "elixir" in story_text or "vial" in story_text:
-                possible_items = ["Healing Potion", "Strength Elixir", "Magic Vial"]
-            elif "key" in story_text or "lockpick" in story_text:
-                possible_items = ["Rusty Key", "Golden Key", "Master Lockpick"]
-            elif "map" in story_text or "scroll" in story_text or "book" in story_text:
-                possible_items = ["Ancient Map", "Mysterious Scroll", "Forgotten Tome"]
-            elif "gem" in story_text or "crystal" in story_text or "jewel" in story_text:
-                possible_items = ["Glowing Crystal", "Precious Gem", "Magical Jewel"]
-            elif "food" in story_text or "ration" in story_text or "fruit" in story_text:
-                possible_items = ["Rations", "Exotic Fruit", "Magical Herb"]
-            elif "tech" in story_text or "device" in story_text or "gadget" in story_text:
-                possible_items = ["Strange Device", "Alien Tech", "Advanced Gadget"]
-            
-            # Theme-specific items as fallback
-            if not possible_items:
-                if "star wars" in theme.lower() or "space" in theme.lower() or "sci-fi" in theme.lower():
-                    possible_items = ["Blaster", "Datapad", "Shield Generator", "Medpac", "Droid Part"]
-                elif "fantasy" in theme.lower() or "medieval" in theme.lower() or "magic" in theme.lower():
-                    possible_items = ["Magic Scroll", "Healing Herbs", "Silver Coin", "Enchanted Ring", "Old Map"]
-                elif "cyberpunk" in theme.lower() or "future" in theme.lower() or "tech" in theme.lower():
-                    possible_items = ["Neural Chip", "Hacking Tool", "Cybernetic Implant", "Stealth Module", "VR Interface"]
-                elif "horror" in theme.lower() or "scary" in theme.lower() or "spooky" in theme.lower():
-                    possible_items = ["Strange Amulet", "Mysterious Note", "Rusty Key", "Old Photograph", "Ritual Component"]
-                else:
-                    # Generic useful items
-                    possible_items = ["Useful Tool", "Mysterious Artifact", "Valuable Trinket", "Hidden Message", "Special Component"]
-            
-            # Add an item to the inventory changes if the depth is right and we have possible items
-            if node_depth > 0 and possible_items and (is_reward or (hash(node_id) % 3 == 0)):
-                item = possible_items[hash(node_id) % len(possible_items)]
-                node_data["outcome"]["inventory_changes"].append({"add": item})
+        # Generate dialogue between characters
+        dialogue = generate_scene_dialogue(node_data, theme)
+        if dialogue:
+            node_data["dialogue"] = dialogue
     
     # Create the full save data structure
     save_data = {
@@ -875,6 +738,537 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
         
     print(f"Story tree saved to {filename}")
     return filename
+
+def generate_scene_dialogue(node_data, theme):
+    """Generate dialogue between player and characters in the scene that's highly specific to the current context"""
+    story_text = node_data["story"].lower()
+    characters = node_data.get("characters", {})
+    
+    # Filter out any non-dictionary character entries
+    valid_characters = {name: data for name, data in characters.items() 
+                       if isinstance(data, dict)}
+    
+    # Only generate dialogue if there are other characters
+    other_characters = [name for name in valid_characters if name.lower() != "player"]
+    if not other_characters:
+        return ""
+    
+    # Extract key elements from the story text to make dialogue more relevant
+    location = node_data.get("scene_state", {}).get("location", "this place")
+    
+    # Extract key nouns and concepts from the story
+    nouns = []
+    important_objects = ["sword", "key", "door", "map", "artifact", "treasure", "weapon", "book", 
+                        "device", "machine", "creature", "monster", "ship", "vehicle", "potion", 
+                        "scroll", "computer", "terminal", "gold", "jewel", "crystal", "orb"]
+    
+    for word in story_text.split():
+        # Remove punctuation
+        clean_word = word.strip(".,!?;:()'\"")
+        if clean_word in important_objects:
+            nouns.append(clean_word)
+    
+    # Use only the most relevant single object
+    key_object = nouns[0] if nouns else None
+    
+    # Extract primary action/activity in the scene
+    actions = []
+    action_verbs = {
+        "searching": ["search", "look", "seek", "hunt", "explore"],
+        "fighting": ["fight", "battle", "combat", "attack", "defend", "struggle"],
+        "escaping": ["escape", "flee", "run", "evade", "avoid"],
+        "investigating": ["investigate", "examine", "inspect", "study", "analyze"],
+        "meeting": ["meet", "encounter", "find", "discover"],
+        "travelling": ["travel", "journey", "trek", "voyage", "expedition"],
+        "hiding": ["hide", "conceal", "stealth", "sneak"],
+        "negotiating": ["negotiate", "bargain", "deal", "trade", "barter"]
+    }
+    
+    for action_type, verbs in action_verbs.items():
+        if any(verb in story_text for verb in verbs):
+            actions.append(action_type)
+    
+    # Get primary action
+    primary_action = actions[0] if actions else "exploring"
+    
+    # Select just ONE character for dialogue - makes conversations more focused
+    # Prioritize characters that match the primary action context
+    potential_speakers = []
+    
+    if primary_action == "fighting":
+        # Prefer enemies for fighting scenes
+        enemies = [name for name, data in valid_characters.items() 
+                  if name.lower() != "player" and data.get("type") == "enemy"]
+        if enemies:
+            potential_speakers = enemies
+    elif primary_action in ["negotiating", "meeting"]:
+        # Prefer neutrals for negotiation scenes
+        neutrals = [name for name, data in valid_characters.items() 
+                   if name.lower() != "player" and data.get("type") == "neutral"]
+        if neutrals:
+            potential_speakers = neutrals
+    elif primary_action in ["investigating", "searching", "travelling"]:
+        # Prefer allies for cooperative actions
+        allies = [name for name, data in valid_characters.items() 
+                 if name.lower() != "player" and data.get("type") == "ally"]
+        if allies:
+            potential_speakers = allies
+    
+    # If nothing matched, use any available character
+    if not potential_speakers:
+        potential_speakers = other_characters
+    
+    # Select just one character for more focused dialogue
+    char_name = potential_speakers[0]
+    char_data = valid_characters[char_name]
+    char_type = char_data.get("type", "neutral")
+    char_mood = char_data.get("mood", "neutral")
+    char_desc = char_data.get("description", "")
+    
+    # Generate dialogue based on scene context
+    dialogue_lines = []
+    
+    # Create dialogue that specifically references scene elements
+    if primary_action == "searching" or primary_action == "investigating":
+        if key_object:
+            player_opener = f"I'm looking for {key_object}. Have you seen anything like that around here?"
+        else:
+            player_opener = f"What can you tell me about {location}? I'm trying to find something important."
+            
+        if char_type == "ally":
+            response = f"I've been in {location} for a while now. The {node_data['scene_state'].get('ambient')} atmosphere makes it difficult to search properly, but I'll help you look."
+        elif char_type == "enemy":
+            response = f"You think I'd tell you where to find anything valuable in {location}? You're even more foolish than you look."
+        else:
+            response = f"Many come to {location} searching. Few find what they're looking for, especially in this {node_data['scene_state'].get('weather')} weather."
+        
+        player_followup = "I appreciate any information you can share. Time is running short."
+        
+    elif primary_action == "fighting":
+        player_opener = "Before this gets violent, is there anything you can tell me that might change my mind?"
+        
+        if char_type == "enemy":
+            response = f"Words won't save you now. This {location} will become your tomb."
+        elif char_type == "ally":
+            response = f"Stay close! These enemies know {location} better than we do. Watch for movement in the {node_data['scene_state'].get('ambient')} shadows."
+        else:
+            response = f"I'm staying out of this conflict. Fighting in {location} during {node_data['scene_state'].get('time_of_day')} is a fool's errand."
+        
+        player_followup = "Then I'll do what I must."
+    
+    elif primary_action == "escaping":
+        player_opener = f"What's the quickest way out of {location}? We need to move fast."
+        
+        if char_type == "ally":
+            response = f"Follow me! I know a hidden path through {location}. We need to hurry before the {node_data['scene_state'].get('weather')} worsens."
+        elif char_type == "enemy":
+            response = f"There's no escape from {location}. The exits are all watched, and my associates are waiting."
+        else:
+            response = f"I've survived in {location} by knowing when to leave. Head toward the {node_data['scene_state'].get('ambient')} section and don't look back."
+        
+        player_followup = "Let's not waste any more time then."
+    
+    elif primary_action == "negotiating":
+        if key_object:
+            player_opener = f"I'm interested in acquiring {key_object}. What would you want in exchange?"
+        else:
+            player_opener = f"I think we can help each other. What are your terms?"
+        
+        if char_type == "neutral":
+            response = f"My knowledge of {location} is valuable, especially during {node_data['scene_state'].get('time_of_day')}. Make it worth my while, and we have a deal."
+        elif char_type == "enemy":
+            response = f"You have nothing I want except your interference in {location} to end. Leave now, that's my only offer."
+        else:
+            response = f"No need for payment between allies. What we find in {location}, we share. That's how we survive the {node_data['scene_state'].get('weather')}."
+        
+        player_followup = "I can work with those terms. Let's proceed."
+    
+    else:  # Default/exploration dialogue
+        # Extract unique scene elements to make default dialogue more specific
+        unique_feature = ""
+        if "ancient" in story_text:
+            unique_feature = "ancient ruins"
+        elif "dark" in story_text:
+            unique_feature = "darkness"
+        elif "light" in story_text:
+            unique_feature = "strange light"
+        elif "sound" in story_text or "noise" in story_text:
+            unique_feature = "unusual sounds"
+        else:
+            # Use ambient or weather as fallback
+            unique_feature = node_data['scene_state'].get('ambient') or node_data['scene_state'].get('weather')
+        
+        player_opener = f"What can you tell me about the {unique_feature} in {location}? It seems unusual."
+        
+        if char_type == "ally":
+            response = f"I've been tracking it for days. The {unique_feature} appeared when the {node_data['scene_state'].get('time_of_day')} first changed so abruptly."
+        elif char_type == "enemy":
+            response = f"You ask too many questions. The {unique_feature} is none of your concern. Leave {location} while you still can."
+        else:
+            response = f"The {unique_feature} has been here since before my time. Some say it's a sign of what's coming to {location}. I just avoid it when the {node_data['scene_state'].get('weather')} gets bad."
+        
+        player_followup = "Interesting. I'll keep that in mind as I continue."
+    
+    # Build the final dialogue
+    dialogue_lines.append(f"[You]: {player_opener}")
+    dialogue_lines.append(f"[{char_name}]: {response}")
+    dialogue_lines.append(f"[You]: {player_followup}")
+    
+    # Format the final dialogue
+    return "\n".join(dialogue_lines)
+
+def generate_special_ability(theme, experience_level, existing_abilities=None):
+    """Generate a special ability for the player based on theme and progress"""
+    if existing_abilities is None:
+        existing_abilities = []
+    
+    # Define ability tiers based on experience level
+    tier = 1
+    if experience_level >= 100:
+        tier = 4  # Master abilities
+    elif experience_level >= 60:
+        tier = 3  # Advanced abilities
+    elif experience_level >= 30:
+        tier = 2  # Intermediate abilities
+    
+    # Define thematic abilities
+    theme_abilities = {
+        "star wars": {
+            1: [
+                {"name": "Force Sense", "description": "Detect hidden objects or dangers nearby", "effect": "detection"},
+                {"name": "Basic Blaster Training", "description": "Improved accuracy with ranged weapons", "effect": "combat"}
+            ],
+            2: [
+                {"name": "Force Push", "description": "Push enemies away or move objects", "effect": "manipulation"},
+                {"name": "Pilot Training", "description": "Better control in vehicle encounters", "effect": "skill"}
+            ],
+            3: [
+                {"name": "Jedi Mind Trick", "description": "Influence weak-minded characters", "effect": "persuasion"},
+                {"name": "Saber Deflection", "description": "Deflect blaster shots", "effect": "defense"}
+            ],
+            4: [
+                {"name": "Force Mastery", "description": "Powerful control over the Force", "effect": "special"},
+                {"name": "One with the Force", "description": "Connect deeply with the Force to reveal paths", "effect": "insight"}
+            ]
+        },
+        "fantasy": {
+            1: [
+                {"name": "Minor Healing", "description": "Heal small wounds", "effect": "healing"},
+                {"name": "Detect Magic", "description": "Sense magical auras and enchantments", "effect": "detection"}
+            ],
+            2: [
+                {"name": "Elemental Touch", "description": "Imbue attacks with elemental power", "effect": "combat"},
+                {"name": "Beast Speech", "description": "Communicate with animals", "effect": "communication"}
+            ],
+            3: [
+                {"name": "Arcane Shield", "description": "Create a magical barrier against harm", "effect": "defense"},
+                {"name": "Enchant Weapon", "description": "Temporarily enhance weapons or tools", "effect": "enhancement"}
+            ],
+            4: [
+                {"name": "Mystical Transformation", "description": "Briefly transform into a powerful creature", "effect": "transformation"},
+                {"name": "Ancient Words", "description": "Speak words of power with dramatic effects", "effect": "control"}
+            ]
+        },
+        "cyberpunk": {
+            1: [
+                {"name": "Neural Interface", "description": "Basic connection to electronic systems", "effect": "tech"},
+                {"name": "Reflex Booster", "description": "Slightly enhanced reaction time", "effect": "speed"}
+            ],
+            2: [
+                {"name": "Subdermal Armor", "description": "Damage resistance from implanted armor", "effect": "defense"},
+                {"name": "Enhanced Vision", "description": "See in darkness or analyze structures", "effect": "perception"}
+            ],
+            3: [
+                {"name": "System Infiltrator", "description": "Bypass security systems more easily", "effect": "hacking"},
+                {"name": "Nano-Healing", "description": "Nanobots repair damage to your body", "effect": "healing"}
+            ],
+            4: [
+                {"name": "Full Conversion", "description": "Major cybernetic enhancements to all systems", "effect": "enhancement"},
+                {"name": "Ghost Protocol", "description": "Temporarily become invisible to tech and cameras", "effect": "stealth"}
+            ]
+        },
+        "horror": {
+            1: [
+                {"name": "Sixth Sense", "description": "Brief warnings before danger", "effect": "warning"},
+                {"name": "Steady Nerves", "description": "Resist fear effects", "effect": "resistance"}
+            ],
+            2: [
+                {"name": "Dark Sight", "description": "See clearly in darkness", "effect": "perception"},
+                {"name": "Blood Memory", "description": "Extract memories from blood traces", "effect": "insight"}
+            ],
+            3: [
+                {"name": "Warding Sign", "description": "Create temporary protective barriers", "effect": "protection"},
+                {"name": "Voice of the Dead", "description": "Briefly communicate with the deceased", "effect": "communication"}
+            ],
+            4: [
+                {"name": "Eldritch Pact", "description": "Call upon otherworldly power at great cost", "effect": "power"},
+                {"name": "Reality Anchor", "description": "Stabilize reality against supernatural warping", "effect": "control"}
+            ]
+        },
+        "detective": {
+            1: [
+                {"name": "Keen Eye", "description": "Notice small details others miss", "effect": "observation"},
+                {"name": "Street Contacts", "description": "Access to information from the streets", "effect": "information"}
+            ],
+            2: [
+                {"name": "Deductive Reasoning", "description": "Connect clues more effectively", "effect": "deduction"},
+                {"name": "Disguise Artist", "description": "Blend in and assume different identities", "effect": "stealth"}
+            ],
+            3: [
+                {"name": "Interrogation Expert", "description": "Extract information more effectively", "effect": "persuasion"},
+                {"name": "Photographic Memory", "description": "Remember details with perfect clarity", "effect": "memory"}
+            ],
+            4: [
+                {"name": "Master Sleuth", "description": "Solve even the most complex mysteries", "effect": "insight"},
+                {"name": "Criminal Psychology", "description": "Predict actions of suspects with uncanny accuracy", "effect": "prediction"}
+            ]
+        },
+        "western": {
+            1: [
+                {"name": "Quick Draw", "description": "Fast reactions in combat situations", "effect": "speed"},
+                {"name": "Wilderness Survival", "description": "Navigate and survive harsh conditions", "effect": "survival"}
+            ],
+            2: [
+                {"name": "Dead Eye", "description": "Improved accuracy with firearms", "effect": "precision"},
+                {"name": "Horse Whisperer", "description": "Special bond with horses and other mounts", "effect": "animal"}
+            ],
+            3: [
+                {"name": "Lawbringer", "description": "Impose order and command respect", "effect": "authority"},
+                {"name": "Native Medicine", "description": "Healing techniques from indigenous knowledge", "effect": "healing"}
+            ],
+            4: [
+                {"name": "Legend of the West", "description": "Your reputation precedes you, opening many doors", "effect": "reputation"},
+                {"name": "True Grit", "description": "Continue fighting effectively even when badly wounded", "effect": "endurance"}
+            ]
+        }
+    }
+    
+    # Generic abilities that work with any theme
+    generic_abilities = {
+        1: [
+            {"name": "Quick Reflexes", "description": "React faster to sudden dangers", "effect": "speed"},
+            {"name": "Keen Senses", "description": "Notice details others might miss", "effect": "perception"}
+        ],
+        2: [
+            {"name": "Rapid Recovery", "description": "Heal faster from injuries", "effect": "healing"},
+            {"name": "Weapon Expertise", "description": "Greater skill with weapons", "effect": "combat"}
+        ],
+        3: [
+            {"name": "Iron Will", "description": "Resist mental influences and fear", "effect": "resistance"},
+            {"name": "Strategic Mind", "description": "Better planning and tactical awareness", "effect": "strategy"}
+        ],
+        4: [
+            {"name": "Hero's Resolve", "description": "Perform extraordinary feats when all seems lost", "effect": "special"},
+            {"name": "Legendary Skill", "description": "Master of your chosen path", "effect": "mastery"}
+        ]
+    }
+    
+    # Determine which ability lists to use
+    ability_lists = [generic_abilities]  # Always include generic abilities
+    
+    # Add theme-specific abilities if applicable
+    for theme_key, abilities in theme_abilities.items():
+        if theme_key in theme.lower():
+            ability_lists.append(abilities)
+            break
+    
+    # Collect all abilities at or below the current tier
+    available_abilities = []
+    for ability_list in ability_lists:
+        for t in range(1, tier + 1):
+            if t in ability_list:
+                available_abilities.extend(ability_list[t])
+    
+    # Filter out abilities the player already has
+    available_abilities = [ability for ability in available_abilities 
+                          if ability["name"] not in existing_abilities]
+    
+    # If no new abilities available, return None
+    if not available_abilities:
+        return None
+    
+    # Select a random ability
+    import random
+    new_ability = random.choice(available_abilities)
+    
+    return new_ability
+
+def enrich_story_node(node_data, node_id, theme):
+    """Add scene state and characters to a story node"""
+    # Extract information from the story text
+    story_text = node_data["story"].lower()
+    
+    # Generate a scene state with location, time of day, weather, and ambient mood
+    # Locations based on theme and story content
+    location = "unknown"
+    
+    # Determine location based on theme and content
+    if "castle" in story_text or "palace" in story_text or "fortress" in story_text:
+        location = "Castle"
+    elif "forest" in story_text or "woods" in story_text or "tree" in story_text:
+        location = "Forest"
+    elif "mountain" in story_text or "peak" in story_text or "cliff" in story_text:
+        location = "Mountains"
+    elif "ship" in story_text or "boat" in story_text or "sea" in story_text or "ocean" in story_text:
+        location = "Ship"
+    elif "cave" in story_text or "cavern" in story_text or "underground" in story_text:
+        location = "Cave"
+    elif "city" in story_text or "town" in story_text or "village" in story_text:
+        location = "Settlement"
+    elif "temple" in story_text or "shrine" in story_text or "altar" in story_text:
+        location = "Temple"
+    elif "desert" in story_text or "sand" in story_text or "dune" in story_text:
+        location = "Desert"
+    elif "jungle" in story_text or "tropical" in story_text:
+        location = "Jungle"
+    elif "lab" in story_text or "laboratory" in story_text or "facility" in story_text:
+        location = "Laboratory"
+    else:
+        # If no specific location in text, use theme-based locations
+        if "star wars" in theme.lower() or "sci-fi" in theme.lower() or "space" in theme.lower():
+            locations = ["Starship Bridge", "Alien Planet", "Space Station", "Imperial Base", "Cantina"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "fantasy" in theme.lower() or "medieval" in theme.lower() or "magic" in theme.lower():
+            locations = ["Ancient Castle", "Enchanted Forest", "Wizard's Tower", "Dragon's Lair", "Dwarven Mines"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "cyberpunk" in theme.lower() or "future" in theme.lower() or "tech" in theme.lower():
+            locations = ["Neon District", "Corporate Tower", "Hacker's Den", "Black Market", "Virtual Reality"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "horror" in theme.lower() or "scary" in theme.lower():
+            locations = ["Abandoned Mansion", "Foggy Cemetery", "Dark Basement", "Cursed Village", "Forgotten Asylum"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "western" in theme.lower() or "cowboy" in theme.lower():
+            locations = ["Dusty Saloon", "Sheriff's Office", "Desert Canyon", "Train Station", "Gold Mine"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "detective" in theme.lower() or "mystery" in theme.lower() or "noir" in theme.lower():
+            locations = ["Crime Scene", "Detective's Office", "Shady Alley", "Upscale Club", "Abandoned Warehouse"]
+            location = locations[hash(node_id) % len(locations)]
+        elif "superhero" in theme.lower() or "avengers" in theme.lower() or "hero" in theme.lower():
+            locations = ["City Rooftop", "Secret Hideout", "Villain's Lair", "Downtown Battlefield", "Research Lab"]
+            location = locations[hash(node_id) % len(locations)]
+        else:
+            # Generic interesting locations if theme doesn't match any category
+            locations = ["Crystal Caves", "Ancient Ruins", "Hidden Valley", "Forgotten Sanctuary", "Misty Lake"]
+            location = locations[hash(node_id) % len(locations)]
+                
+    # Extract time of day and weather
+    time_of_day = "day"
+    weather = "clear"
+    if "night" in story_text:
+        time_of_day = "night"
+    if "rain" in story_text or "storm" in story_text:
+        weather = "rainy"
+    elif "snow" in story_text:
+        weather = "snowy"
+    elif "wind" in story_text or "breeze" in story_text:
+        weather = "windy"
+    
+    # Extract ambient mood
+    ambient = "calm"
+    if "dark" in story_text:
+        ambient = "dark"
+    elif "noisy" in story_text or "busy" in story_text:
+        ambient = "busy"
+    elif "quiet" in story_text:
+        ambient = "quiet"
+    
+    # Add scene state to node data
+    node_data["scene_state"] = {
+        "location": location,
+        "time_of_day": time_of_day,
+        "weather": weather,
+        "ambient": ambient
+    }
+    
+    # Ensure we have a valid characters dictionary
+    if "characters" not in node_data or not isinstance(node_data["characters"], dict):
+        node_data["characters"] = {}
+    
+    # Clean up any invalid character entries
+    characters = {name: data for name, data in node_data["characters"].items() 
+                 if isinstance(data, dict)}
+    
+    # If there are no characters or only the player, add theme-appropriate characters
+    if len(characters) <= 1 and (not characters or "player" in characters):
+        # Generate additional characters based on theme and scene
+        node_depth = len(node_id.split('_')) - 1
+        
+        # Check if the story mentions specific character types
+        has_enemy = any(word in story_text for word in ["enemy", "villain", "foe", "opponent", "adversary", "antagonist"])
+        has_ally = any(word in story_text for word in ["ally", "friend", "companion", "partner", "helper", "supporter"])
+        has_neutral = any(word in story_text for word in ["stranger", "merchant", "traveler", "native", "inhabitant", "civilian"])
+        
+        # Add theme-appropriate characters
+        if "star wars" in theme.lower() or "sci-fi" in theme.lower() or "space" in theme.lower():
+            if has_enemy or hash(node_id) % 3 == 0:
+                characters["Imperial Officer"] = {
+                    "type": "enemy",
+                    "mood": "hostile",
+                    "description": "A stern officer in a gray uniform",
+                    "health": 80
+                }
+            if has_ally or hash(node_id) % 3 == 1:
+                characters["Rebel Scout"] = {
+                    "type": "ally",
+                    "mood": "cautious",
+                    "description": "A dedicated fighter for the rebellion",
+                    "health": 70
+                }
+            if has_neutral or hash(node_id) % 3 == 2:
+                characters["Cantina Patron"] = {
+                    "type": "neutral",
+                    "mood": "indifferent",
+                    "description": "A mysterious individual nursing a drink",
+                    "health": 60
+                }
+        elif "fantasy" in theme.lower() or "medieval" in theme.lower() or "magic" in theme.lower():
+            if has_enemy or hash(node_id) % 3 == 0:
+                characters["Dark Sorcerer"] = {
+                    "type": "enemy",
+                    "mood": "menacing",
+                    "description": "A robed figure with glowing eyes",
+                    "health": 75
+                }
+            if has_ally or hash(node_id) % 3 == 1:
+                characters["Elven Scout"] = {
+                    "type": "ally",
+                    "mood": "friendly",
+                    "description": "A graceful elf with keen eyes",
+                    "health": 65
+                }
+            if has_neutral or hash(node_id) % 3 == 2:
+                characters["Village Elder"] = {
+                    "type": "neutral",
+                    "mood": "wise",
+                    "description": "An aged local with vast knowledge",
+                    "health": 40
+                }
+        elif "cyberpunk" in theme.lower():
+            if has_enemy or hash(node_id) % 3 == 0:
+                characters["Corporate Enforcer"] = {
+                    "type": "enemy",
+                    "mood": "threatening",
+                    "description": "A heavily augmented security operative",
+                    "health": 90
+                }
+            if has_ally or hash(node_id) % 3 == 1:
+                characters["Rogue Netrunner"] = {
+                    "type": "ally",
+                    "mood": "paranoid",
+                    "description": "A skilled hacker with chrome implants",
+                    "health": 60
+                }
+            if has_neutral or hash(node_id) % 3 == 2:
+                characters["Street Vendor"] = {
+                    "type": "neutral",
+                    "mood": "suspicious",
+                    "description": "A local selling various wares",
+                    "health": 50
+                }
+        # Add other theme-specific characters as needed
+    
+    # Update the node's characters
+    node_data["characters"] = characters
 
 if __name__ == "__main__":
     print("Welcome to the Predetermined Story Generator!")

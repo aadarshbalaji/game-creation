@@ -2,7 +2,7 @@ import time
 import json
 import os
 import textwrap
-from arc import return_story_tree
+from arc import return_story_tree, generate_scene_dialogue, generate_special_ability
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -131,10 +131,19 @@ def print_scene_context(node_data, player_name, player_stats):
     health = player_stats["health"]
     experience = player_stats["experience"]
     inventory = player_stats["inventory"]
+    abilities = player_stats.get("abilities", [])
+    
     print(f"Health: [{'♥' * (health // 10)}] {health}/100")
     print(f"Experience: [{'♦' * (experience // 5)}] {experience}")
     print(f"🎒 Inventory: {', '.join(inventory) if inventory else 'Empty'}")
-
+    
+    # Display abilities if the player has any
+    if abilities:
+        print("\n" + "=" * 30 + " YOUR ABILITIES " + "=" * 30)
+        for ability in abilities:
+            ability_name = ability.get("name", "Unknown Ability")
+            ability_desc = ability.get("description", "No description available")
+            print(f"✨ {ability_name}: {ability_desc}")
 
 def print_box(text, width=70, padding=1):
     """Print text in a decorative box"""
@@ -147,6 +156,86 @@ def print_box(text, width=70, padding=1):
         print(f"| {str(line):<{int(width)-2}} |")
     for _ in range(padding):
         print(empty)
+    print(horizontal)
+
+def print_dialogue_box(dialogue_text, width=70):
+    """
+    Print dialogue between characters in a styled box with proper formatting.
+    Each line of dialogue is displayed with proper attribution.
+    """
+    dialogue_lines = dialogue_text.strip().split("\n")
+    
+    # Create the box
+    horizontal = "+" + "-" * width + "+"
+    empty = "|" + " " * width + "|"
+    
+    print(horizontal)
+    print(empty)
+    
+    # Process each line of dialogue
+    for line in dialogue_lines:
+        # Split into speaker and text
+        if "[" in line and "]:" in line:
+            speaker_end = line.find("]:")
+            speaker = line[:speaker_end+1]  # Include the closing bracket
+            text = line[speaker_end+2:].strip()  # Skip the ]: and any space
+            
+            # Different formatting for different speakers
+            if speaker == "[You]":
+                prefix = "❯❯ "  # Double arrow for player
+            else:
+                prefix = "➤ "  # Single arrow for NPCs
+            
+            formatted_line = f"{prefix}{speaker}: {text}"
+            
+            # Wrap the text to fit within the box
+            wrapped_text = textwrap.wrap(formatted_line, width=width-4)  # Leave some padding
+            
+            # Print each wrapped line
+            for i, text_line in enumerate(wrapped_text):
+                print(f"|  {text_line:<{width-4}}  |")
+            
+        else:
+            # Handle lines that don't follow the [Speaker]: Text format
+            wrapped_text = textwrap.wrap(line, width=width-4)
+            for text_line in wrapped_text:
+                print(f"|  {text_line:<{width-4}}  |")
+                
+        # Add a small gap between dialogue lines
+        print("|" + " " * width + "|")
+    
+    print(horizontal)
+
+def enrich_node_with_dialogue(node, theme):
+    """Add dialogue to a node if it doesn't already have it"""
+    # Skip if the node already has dialogue
+    if "dialogue" in node and node["dialogue"]:
+        return
+    
+    # Generate dialogue based on node content and theme
+    dialogue = generate_scene_dialogue(node, theme)
+    if dialogue:
+        node["dialogue"] = dialogue
+
+def print_ability_box(ability, width=70):
+    """Print a special ability notification in a decorative box"""
+    horizontal = "🔥" + "═" * width + "🔥"
+    empty = "║" + " " * width + "║"
+    
+    print(horizontal)
+    print(f"║{' SPECIAL ABILITY UNLOCKED ':=^{width}}║")
+    print(empty)
+    
+    ability_name = ability.get("name", "Unknown Ability")
+    ability_desc = ability.get("description", "No description available")
+    
+    print(f"║ ✨ {ability_name.upper():<{width-4}} ║")
+    
+    description_lines = wrap_text(ability_desc, width-4).split('\n')
+    for line in description_lines:
+        print(f"║  {line:<{width-4}}  ║")
+    
+    print(empty)
     print(horizontal)
 
 def load_game(theme, depth=3, choices_per_node=2):
@@ -174,10 +263,23 @@ def load_game(theme, depth=3, choices_per_node=2):
         # Build a simple tree for navigation
         nodes = {}
         for node_id, node_data in graph_data["nodes"].items():
+            # Store dialogue and consequence separately
+            dialogue = node_data.get("dialogue", "")
+            consequence = ""
+            
+            # If this is not the first node, the original dialogue field might contain action consequences
+            if node_id != "node_0" and isinstance(dialogue, dict):
+                consequence = dialogue
+                dialogue = ""
+            elif node_id != "node_0" and not dialogue:
+                # For older formats, use the original field as consequence text
+                consequence = node_data.get("dialogue", "")
+            
             nodes[node_id] = {
                 "story": node_data["story"],
                 "is_end": node_data.get("is_end", False),
-                "dialogue": node_data.get("dialogue", ""),
+                "dialogue": dialogue,  # Character dialogue
+                "consequence_dialogue": consequence,  # Result of choices
                 "scene_state": node_data.get("scene_state", {}),  # Include scene_state
                 "characters": node_data.get("characters", {}),    # Include characters
                 "outcome": node_data.get("outcome", {             # Include outcome data
@@ -190,19 +292,44 @@ def load_game(theme, depth=3, choices_per_node=2):
             }
         
         # Add child nodes and create action choices
+        edge_count = 0
         for edge in graph_data["edges"]:
             from_id = edge["from"]
             to_id = edge["to"]
             if from_id in nodes:
-                nodes[from_id]["children"].append(to_id)
-                
-                # Generate a concise action choice
-                action = generate_action_choice(nodes[to_id]["story"], theme)
-                nodes[from_id]["child_actions"].append(action)
+                # Check if this child is already in the list (avoid duplicates)
+                if to_id not in nodes[from_id]["children"]:
+                    nodes[from_id]["children"].append(to_id)
+                    edge_count += 1
+                    
+                    # Generate a concise action choice if needed
+                    if len(nodes[from_id]["child_actions"]) < len(nodes[from_id]["children"]):
+                        # Get action text from edge if available
+                        if "action" in edge and edge["action"]:
+                            action = edge["action"]
+                        else:
+                            # Generate action from target node's story
+                            action = generate_action_choice(nodes[to_id]["story"], theme)
+                        
+                        nodes[from_id]["child_actions"].append(action)
+        
+        print(f"Loaded {len(nodes)} nodes with {edge_count} connections")
+        
+        # Validate that all nodes with children have matching child_actions
+        for node_id, node_data in nodes.items():
+            if len(node_data["children"]) != len(node_data["child_actions"]):
+                print(f"Warning: Node {node_id} has {len(node_data['children'])} children but {len(node_data['child_actions'])} actions")
+                # Fix by adding generic actions if needed
+                while len(node_data["child_actions"]) < len(node_data["children"]):
+                    child_id = node_data["children"][len(node_data["child_actions"])]
+                    action = generate_action_choice(nodes[child_id]["story"], theme)
+                    node_data["child_actions"].append(action)
                 
         return nodes, "node_0", depth
     except Exception as e:
         print(f"Error loading game: {e}")
+        import traceback
+        traceback.print_exc()
         return None, None, None
 
 def generate_action_choice(scene_text, theme):
@@ -356,18 +483,43 @@ def main():
     player_stats = {
         "health": 100,
         "experience": 10,
-        "inventory": []
+        "inventory": [],
+        "abilities": []  # New field for special abilities
     }
+    
+    # Add a starting ability based on theme
+    starting_ability = generate_special_ability(theme, 10)
+    if starting_ability:
+        player_stats["abilities"].append(starting_ability)
     
     # Display the welcome message
     print(f"\nWelcome to your {theme} adventure, {player_name}!")
     print("Your journey is about to begin...\n")
+    
+    # Show starting ability if one was generated
+    if starting_ability:
+        print("\nAs you begin your journey, you realize you have a special ability:")
+        print_ability_box(starting_ability)
+        input("\nPress Enter to continue...")
+    
     time.sleep(1.5)
+    
+    # Track experience milestones for ability unlocks
+    ability_milestones = [30, 60, 100, 150]
+    next_ability_milestone = ability_milestones[0]
+    
+    # Keep track of player's choice path
+    choice_path = ["0"]
     
     # Game loop
     while True:
         # Clear screen
         clear_screen()
+        
+        # Display the choice path at the top
+        path_display = " → ".join(choice_path)
+        print(f"\n🧭 PATH: {path_display}")
+        print("=" * 70)
         
         # Get current node
         current_node = nodes[current_node_id]
@@ -388,6 +540,9 @@ def main():
                 "status_effects": [],
                 "inventory": player_stats["inventory"]
             }
+            
+        # Generate dialogue for this node if needed
+        enrich_node_with_dialogue(current_node, theme)
         
         # Display scene context and player status
         print_scene_context(current_node, player_name, player_stats)
@@ -396,10 +551,22 @@ def main():
         print(f"\n📜 YOUR SITUATION 📜")
         print_box(current_node["story"])
         
-        # Display result of the previous choice if there's dialogue
-        if current_node["dialogue"]:
+        # Display character dialogue in a visually distinct way
+        if "dialogue" in current_node and current_node["dialogue"]:
+            print_dialogue_box(current_node["dialogue"])
+            
+        # Display result of the previous choice if available
+        if "consequence_dialogue" in current_node and current_node["consequence_dialogue"]:
             print("\n💬 RESULT OF YOUR LAST ACTION 💬")
-            print_box(current_node["dialogue"])
+            if isinstance(current_node["consequence_dialogue"], dict):
+                consequence_text = "You see the results of your actions unfold."
+                for key, value in current_node["consequence_dialogue"].items():
+                    if isinstance(value, str) and value:
+                        consequence_text = value
+                        break
+                print_box(consequence_text)
+            else:
+                print_box(current_node["consequence_dialogue"])
         
         # Check if we've reached an ending
         if current_node["is_end"] or not current_node["children"]:
@@ -451,7 +618,16 @@ def main():
                     
                     # Update current node to the chosen one
                     current_node_id = choices[choice_index][0]
+                    
+                    # Update choice path
+                    choice_path.append(str(choice_index + 1))
+                    
                     chosen_node = nodes[current_node_id]
+                    
+                    # Move any dialogue to consequence_dialogue if it's not a character dialogue
+                    if "dialogue" in chosen_node and chosen_node["dialogue"] and not chosen_node["dialogue"].startswith("[You]"):
+                        chosen_node["consequence_dialogue"] = chosen_node["dialogue"]
+                        chosen_node["dialogue"] = ""
                     
                     # Apply outcome effects from the chosen node immediately
                     if "outcome" in chosen_node:
@@ -481,9 +657,38 @@ def main():
                         # Apply experience changes
                         exp_change = outcome.get("experience_change", 0)
                         if exp_change > 0:
+                            old_exp = player_stats["experience"]
                             player_stats["experience"] += exp_change
+                            new_exp = player_stats["experience"]
+                            
                             print(f"\n✨ EXPERIENCE GAINED ✨")
                             print_box(f"You gained {exp_change} experience points.")
+                            
+                            # Check if player reached an ability milestone
+                            current_abilities = [a["name"] for a in player_stats["abilities"]]
+                            
+                            # If we crossed a milestone, grant a new ability
+                            if old_exp < next_ability_milestone and new_exp >= next_ability_milestone:
+                                # Generate a new special ability
+                                new_ability = generate_special_ability(theme, new_exp, current_abilities)
+                                
+                                if new_ability:
+                                    # Add the ability
+                                    player_stats["abilities"].append(new_ability)
+                                    
+                                    # Notify the player
+                                    print("\n✨✨✨ NEW ABILITY UNLOCKED ✨✨✨")
+                                    print_ability_box(new_ability)
+                                    input("\nPress Enter to continue...")
+                                
+                                # Update to next milestone
+                                for milestone in ability_milestones:
+                                    if new_exp < milestone:
+                                        next_ability_milestone = milestone
+                                        break
+                                else:
+                                    # If we've passed all milestones, set a high value
+                                    next_ability_milestone = 1000
                         
                         # Apply inventory changes
                         inventory_changes = outcome.get("inventory_changes", [])
@@ -515,10 +720,22 @@ def main():
     print(f"\nFinal Stats for {player_name}:")
     print(f"Health: {player_stats['health']}/100")
     print(f"Experience: {player_stats['experience']}")
+    
+    # Show acquired abilities
+    if player_stats["abilities"]:
+        print("\nAbilities Acquired:")
+        for ability in player_stats["abilities"]:
+            print(f"✨ {ability['name']}: {ability['description']}")
+    
+    # Show collected items
     if player_stats["inventory"]:
-        print(f"Items Collected: {', '.join(player_stats['inventory'])}")
+        print(f"\nItems Collected: {', '.join(player_stats['inventory'])}")
     else:
-        print("Items Collected: None")
+        print("\nItems Collected: None")
+    
+    # Show path taken
+    print(f"\nYour journey path: {' → '.join(choice_path)}")
+    
     print("\nThanks for playing!")
 
 if __name__ == "__main__":
