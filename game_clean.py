@@ -454,17 +454,17 @@ def main():
     print("\nWelcome to the Netflix's CYOA Interactive Story Game!\n")
     
     # Ask what kind of story the player wants
-    theme = input("\nWhat kind of story would you like to experience?\n(e.g., Star Wars, Lord of the Rings, Cyberpunk): ")
+    theme = input("\nWhat kind of story would you like to experience?\n(e.g., Star Wars, Lord of the Rings, Dracula): ")
     
     # Ask for story depth
     depth = 3
     while True:
         try:
-            depth_input = input("\nHow deep should the story be? (2-5): ")
+            depth_input = input("\nHow deep should the story be?: ")
             depth = int(depth_input)
-            if 2 <= depth <= 5:
+            if 2 <= depth <= 12:
                 break
-            print("Please enter a number between 2 and 5.")
+            print("Please enter a number between 2 and 12.")
         except ValueError:
             print("Please enter a valid number.")
     
