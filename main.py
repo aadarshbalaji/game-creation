@@ -484,7 +484,7 @@ def main():
             
     except Exception as e:
         print(f"\nError: {e}")
-        print("Game initialization failed.")
+        print("Game initialization failed. FUCKCCKCKCKCKCKCK444444")
         return
 
 if __name__ == "__main__":

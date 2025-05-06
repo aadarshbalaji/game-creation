@@ -3,10 +3,10 @@ import json
 import os
 import re
 import textwrap
-from arc import return_story_arc, return_story_tree
-from storygen import StoryState, generate_initial_story, generate_story_node, save_game_state, load_game_state
-from Graph_Classes.Structure import Node, Graph
-from Graph_Classes.Interact import Player
+import traceback
+from arc import return_story_tree
+from storygen import StoryState, enrich_scene
+from json_cleaner import clean_and_parse_json
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -36,14 +36,14 @@ def print_box(text, width=70, padding=1):
     """Print text in a decorative box"""
     horizontal = "+" + "-" * width + "+"
     empty = "|" + " " * width + "|"
-    
     print(horizontal)
     for _ in range(padding):
         print(empty)
-    
-    for line in wrap_text(text, width-2).split('\n'):
-        print(f"| {line:<{width-2}} |")
-    
+    for line in wrap_text(str(text), int(width)-2).split('\n'):
+        try:
+            print(f"| {str(line):<{int(width)-2}} |")
+        except Exception as e:
+            print(f"| ERROR PRINTING LINE: {e} | {line}")
     for _ in range(padding):
         print(empty)
     print(horizontal)
@@ -54,22 +54,28 @@ def print_box_dialogue(raw_dialogue: str, width: int = 70, padding: int = 1):
     (except at start), breaking lines at literal '\\n' or real newlines, and wrapping each part
     to fit within the box width.
     """
-    dialogue = re.sub(r'\\\\n|\\n|\n', '\n', raw_dialogue)
+    dialogue = re.sub(r'\\\\n|\\n|\n', '\n', str(raw_dialogue))
     dialogue = re.sub(r'(?<!^)\[', r'\n[', dialogue)
     wrapped_lines = []
     for part in dialogue.splitlines():
         part = part.strip()
         if part:
-            wrapped = textwrap.wrap(part, width=width-4) or ['']
+            try:
+                wrapped = textwrap.wrap(str(part), width=int(width)-4) or ['']
+            except Exception as e:
+                print(f"ERROR WRAPPING DIALOGUE: {e} | {part}")
+                wrapped = [str(part)]
             wrapped_lines.extend(wrapped)
-
     horizontal = "+" + "-" * width + "+"
     empty = "|" + " " * width + "|"
     print(horizontal)
     for _ in range(padding):
         print(empty)
     for line in wrapped_lines:
-        print(f"| {line:<{width-2}} |")
+        try:
+            print(f"| {str(line):<{int(width)-2}} |")
+        except Exception as e:
+            print(f"| ERROR PRINTING DIALOGUE LINE: {e} | {line}")
     for _ in range(padding):
         print(empty)
     print(horizontal)
@@ -77,25 +83,23 @@ def print_box_dialogue(raw_dialogue: str, width: int = 70, padding: int = 1):
 def print_state(title, data, indent=2):
     """Print state information in a formatted way"""
     print(f"\n{'='*20} {title} {'='*20}")
-    
+    try:
     if title == "CHARACTERS PRESENT":
         # Check if the main data is a dictionary before using .items()
         if isinstance(data, dict):
             for char_name, char_data in data.items():
                 if char_name == "player":
                     continue  
-                
                 if char_name == "other_characters":
                     # Check if the value under 'other_characters' is also a dict
                     if isinstance(char_data, dict):
                         for npc_name, npc_data in char_data.items():
-                            print(f"\n► {npc_name.upper()}")
+                                print(f"\n► {str(npc_name).upper()}")
                             if isinstance(npc_data, dict):
-                                health = npc_data.get('health', 0)
+                                    health = int(npc_data.get('health', 0))
                                 health_bar = '♥' * (health // 10) + '░' * ((100 - health) // 10)
                                 print(f"  Health: [{health_bar}] {health}/100")
-                                
-                                mood = npc_data.get('mood', 'unknown')
+                                    mood = str(npc_data.get('mood', 'unknown'))
                                 mood_emoji = {
                                     'angry': '😠', 'happy': '😊', 'sad': '😢', 
                                     'afraid': '😨', 'determined': '😤', 'sleeping': '😴',
@@ -103,301 +107,326 @@ def print_state(title, data, indent=2):
                                     'fearful': '😨', 'panicked': '😰', 'suspicious': '🤨'
                                 }.get(mood.lower(), '❓')
                                 print(f"  Mood: {mood_emoji} {mood}")
-                            
                                 if npc_data.get('status_effects'):
-                                    effects = ', '.join(npc_data['status_effects'])
+                                        effects = ', '.join(map(str, npc_data['status_effects']))
                                     print(f"  Status Effects: ✨ {effects}")
-                                
                                 if npc_data.get('relationships'):
                                     print("  Relationships:")
-                                    # Check if relationships is a dict before iterating
                                     if isinstance(npc_data['relationships'], dict):
                                         for target, relation in npc_data['relationships'].items():
-                                            print(f"   • {target}: {relation}")
+                                                print(f"   • {str(target)}: {str(relation)}")
                                     else:
                                         print(f"    (Unexpected relationship format: {type(npc_data['relationships'])})")
                             else:
                                 print(f"  (Unexpected data format for NPC {npc_name}: {type(npc_data)})")
-                    # Handle case where 'other_characters' value is not a dict (e.g., a list)
                     elif isinstance(char_data, list):
                         print("\n► OTHER CHARACTERS (List Format)")
                         for item in char_data:
                             if isinstance(item, dict):
                                 name = item.get('name', 'Unknown NPC')
-                                print(f"  • {name}") # Basic display for list format
-                                # Add more details here if needed and format is known
+                                    print(f"  • {str(name)}")
                             else:
-                                print(f"  • Unknown item data: {item}")
+                                    print(f"  • Unknown item data: {str(item)}")
                     else:
                         print(f"\n(Unexpected format for 'other_characters': {type(char_data)})")
                 else:
-                    # Handles other top-level keys like custom character names
-                    print(f"\n► {char_name.upper()}")
-                    # Optionally print details from char_data if it's a dict
+                        print(f"\n► {str(char_name).upper()}")
                     if isinstance(char_data, dict):
-                       # Example: print mood if available
                        mood = char_data.get('mood', None)
                        if mood:
-                           print(f"  Mood: {mood}")
-                    # Add more handling as needed
-        # Handle case where the top-level 'data' is not a dictionary
+                                print(f"  Mood: {str(mood)}")
         elif isinstance(data, list):
             print("\n(Warning: Character data received in unexpected list format)")
             for item in data:
                  if isinstance(item, dict):
                      name = item.get('name', 'Unknown Character')
-                     print(f"\n► {name.upper()} (from list)")
+                        print(f"\n► {str(name).upper()} (from list)")
                  else:
-                     print(f"\n► Unknown Character Data (from list): {item}")
+                        print(f"\n► Unknown Character Data (from list): {str(item)}")
         else:
              print(f"\n(Warning: Unexpected character data format received: {type(data)})")
-    
     elif title == "CURRENT SCENE":
-        # Make sure data is a dict before accessing keys
         if isinstance(data, dict):
-            print(f"\n🌍 Location: {data.get('location', 'Unknown')}")
-            print(f"🕒 Time: {data.get('time_of_day', 'Unknown')}")
-            print(f"🌤️  Weather: {data.get('weather', 'Unknown')}")
-            print(f"💫 Ambient: {data.get('ambient', 'Unknown')}")
+                print(f"\n🌍 Location: {str(data.get('location', 'Unknown'))}")
+                print(f"🕒 Time: {str(data.get('time_of_day', 'Unknown'))}")
+                print(f"🌤️  Weather: {str(data.get('weather', 'Unknown'))}")
+                print(f"💫 Ambient: {str(data.get('ambient', 'Unknown'))}")
         else:
             print(f"\n(Warning: Unexpected scene data format: {type(data)})")
-            print(f"Raw Scene Data: {data}")
+                print(f"Raw Scene Data: {str(data)}")
+    except Exception as e:
+        print(f"[print_state ERROR]: {e}")
+    print("\n" + "=" * (42 + len(str(title))))
+
+def load_game(theme, depth=3, choices_per_node=2):
+    """Generate and load a new story tree"""
+    # Clean up old story files first
+    for f in os.listdir():
+        if f.startswith('story_') and f.endswith('.json'):
+            try:
+                os.remove(f)
+                print(f"Removed old story file: {f}")
+            except:
+                pass
+                
+    # Generate a new story tree
+    print(f"\nGenerating a {theme} story with depth {depth} and {choices_per_node} choices per node...")
+    print("This may take a minute or two while we create an interesting adventure for you...\n")
     
-    print("\n" + "=" * (42 + len(title)))
-
-
+    filename = return_story_tree(theme, depth, choices_per_node)
+    
+    # Load the saved game state
+    try:
+        with open(filename, 'r') as f:
+            save_data = json.load(f)
+            
+        # Extract graph data
+        graph_data = save_data.get("graph", {})
+        
+        # Build a proper tree structure for navigation
+        nodes = {}
+        
+        # First pass: create all nodes
+        for node_id, node_data in graph_data["nodes"].items():
+            story_text = node_data["story"]
+            
+            # Ensure the story text is complete and well-formatted
+            if not story_text.endswith(('.', '!', '?')):
+                story_text += '.'
+                
+            nodes[node_id] = {
+                "story": story_text,
+                "is_end": node_data.get("is_end", False),
+                "dialogue": node_data.get("dialogue", ""),
+                "children": []
+            }
+        
+        # Create a mapping of parent to child nodes
+        parent_to_children = {}
+        for edge in graph_data["edges"]:
+            from_id = edge["from"]
+            to_id = edge["to"]
+            if from_id not in parent_to_children:
+                parent_to_children[from_id] = []
+            parent_to_children[from_id].append(to_id)
+        
+        # Second pass: add child nodes to parents
+        for node_id in nodes:
+            if node_id in parent_to_children:
+                nodes[node_id]["children"] = parent_to_children[node_id]
+                
+                # For each child node that represents a choice, ensure it's a concise action
+                for child_id in parent_to_children[node_id]:
+                    child_text = nodes[child_id]["story"]
+                    
+                    # Create a concise, action-oriented choice text
+                    action_verbs = ["Investigate", "Explore", "Search", "Talk to", "Approach", "Examine", 
+                                   "Hide", "Ask", "Move", "Look", "Find", "Go", "Take", "Use", "Try",
+                                   "Call", "Fight", "Attack", "Defend", "Retreat", "Run", "Escape",
+                                   "Sneak", "Climb", "Jump", "Swim", "Dive", "Grab", "Push", "Pull"]
+                    
+                    # Store the original story text in a full_story field
+                    nodes[child_id]["full_story"] = child_text
+                    
+                    # Determine if the text already starts with a verb
+                    found_verb = None
+                    for verb in action_verbs:
+                        if child_text.startswith(verb):
+                            found_verb = verb
+                            break
+                    
+                    # Extract first sentence only for the choice
+                    first_sentence = ""
+                    sentences = re.split(r'(?<=[.!?])\s+', child_text)
+                    if sentences:
+                        first_sentence = sentences[0]
+                    else:
+                        first_sentence = child_text
+                    
+                    # If it doesn't start with a verb, add one
+                    if not found_verb:
+                        # Choose an appropriate verb based on the content
+                        verb_to_use = "Investigate"
+                        choice_text = f"{verb_to_use} {first_sentence}"
+                    else:
+                        # Just use the first sentence as is, since it already starts with a verb
+                        choice_text = first_sentence
+                    
+                    # Ensure choice text is appropriate length (max 80 chars)
+                    if len(choice_text) > 80:
+                        words = choice_text.split()
+                        choice_text = " ".join(words[:10])
+                        if not choice_text.endswith(('.', '!', '?')):
+                            choice_text += "..."
+                    
+                    # Store the concise choice text
+                    nodes[child_id]["choice_text"] = choice_text
+        
+        # Print debug info
+        print(f"Successfully loaded story with {len(nodes)} nodes.")
+        return nodes, "node_0", depth
+    except Exception as e:
+        print(f"Error loading game: {e}")
+        traceback.print_exc()
+        return None, None, None
 
 def main():
-    clear_screen()
-    print("Welcome to Netflix's AI-Generated CYOA!")
-    print("=" * 50)
-    
-    player_name = input("\nEnter your name: ")
-    story_theme = input("\nWhat kind of story would you like to experience?\n(e.g., Star Wars, Lord of the Rings, Dracula, your own movie idea): ")
-    while True:
-        try:
-            max_depth_str = input("\nEnter the desired depth for the pre-generated story (e.g., 5, leave blank for minimal pre-generation = 1): ")
-            if not max_depth_str:
-                max_depth = 1
-                print("Defaulting to pre-generation depth of 1.")
-                break
-            max_depth = int(max_depth_str)
-            if max_depth <= 0:
-                print("Please enter a positive number for the pre-generation depth.")
-            else:
-                break
-        except ValueError:
-            print("Invalid input. Please enter a number or leave blank.")
-
+    # Initialize story state and player
     try:
-        # Generate story arc first
-        story_arc = return_story_arc(story_theme)
+        # ASCII art title
+        title_text = """
+        █▀█ █ ▀█▀ █▀▀ █▀█   █▀▀ ▄▀█ █▀▄▀█ █▀▀   █▀▀ █▄░█ █▀▀ █ █▄░█ █▀▀
+        █▀▄ █ ░█░ █▄▄ █▀▄   █▄█ █▀█ █░▀░█ ██▄   ██▄ █░▀█ █▄█ █ █░▀█ ██▄
+        """
+        print(title_text)
+        print("\nWelcome to the Interactive Story Generator!\n")
         
-        # Generate a small story tree template
-        story_tree_file = return_story_tree(story_theme)
+        # Get user input for theme
+        theme = input("Enter a theme for your adventure (e.g., space, fantasy, mystery): ").strip()
+        if not theme:
+            theme = "adventure"
+            
+        # Get depth and choices per node from user
+        depth = 3  # Default
+        choices_per_node = 2  # Default
+        
         try:
-            with open(story_tree_file, 'r') as f:
-                story_tree = json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError) as e:
-            print(f"Error loading story tree: {e}")
-            print("Continuing without a template story tree.")
-            story_tree = {}
+            depth_input = input(f"How deep would you like your story to be? (3-5, default: {depth}): ").strip()
+            if depth_input:
+                depth = int(depth_input)
+                if depth < 3:
+                    depth = 3
+                    print("Minimum depth is 3. Using depth = 3.")
+                elif depth > 5:
+                    depth = 5
+                    print("Maximum depth is 5. Using depth = 5.")
+        except ValueError:
+            print(f"Invalid input. Using default depth = {depth}.")
+            
+        try:
+            choices_input = input(f"How many choices at each decision point? (2-4, default: {choices_per_node}): ").strip()
+            if choices_input:
+                choices_per_node = int(choices_input)
+                if choices_per_node < 2:
+                    choices_per_node = 2
+                    print("Minimum choices is 2. Using choices = 2.")
+                elif choices_per_node > 4:
+                    choices_per_node = 4
+                    print("Maximum choices is 4. Using choices = 4.")
+        except ValueError:
+            print(f"Invalid input. Using default choices = {choices_per_node}.")
         
-        # Load the game state with the correct parameter names and max_depth (for pre-generation)
-        graph, story_state = load_game_state(theme=story_theme, story_arc=story_arc, story_tree=story_tree, max_depth=max_depth)
+        # Load game state
+        nodes, current_node_id, max_depth = load_game(theme, depth, choices_per_node)
         
-        # Ensure start_node is correctly identified after loading/generation
-        if not graph or not graph.adjacency_list:
-             raise Exception("Failed to load or generate a valid starting node.")
-        start_node = next(iter(graph.adjacency_list)) # Assumes the first node added is the start
-
-        player = Player(player_name, start_node)
-
-        # Modified game loop condition - removed max_depth check
-        while not player.is_dead and \
-              not player.current_node.is_end:
+        if not nodes:
+            print("Failed to initialize game. Exiting.")
+            return
+        
+        # Game loop
+        story_state = StoryState(theme=theme, max_depth=max_depth)
+        
+        while True:
+            # Clear screen
             clear_screen()
-            print_box(player.current_node.story)
-            if player.current_node.dialogue:
-                print_box_dialogue(player.current_node.dialogue)
-            print_state("CURRENT SCENE", player.current_node.scene_state)
-            print_state("CHARACTERS PRESENT", player.current_node.characters)
-
-            print("\n🎮 YOUR STATUS 🎮")
-            print(f"╔{'═'*50}╗")
-            print(f"║ {player.name:<48} ║")
-            print(f"║ Health: [{'♥' * (player.health // 10)}{'░' * ((100 - player.health) // 10)}] {player.health:>3}/100 ║")
-            print(f"║ Experience: [{'✦' * (player.experience // 10)}{'░' * ((100 - player.experience) // 10)}] {player.experience:>3} ║")
-            if player.inventory:
-                print(f"║ 🎒 Inventory:                                          ║")
-                for item in player.inventory:
-                    print(f"║  • {item:<46} ║")
-            else:
-                print(f"║ 🎒 Inventory: Empty                                    ║")
-            print(f"╚{'═'*50}╝")
             
-            choices = list(graph.get_children(player.current_node))
-            generation_failed_or_empty = False # Flag for fallback ending
-            # Dynamic generation logic if no children exist in the (potentially pre-generated) graph
-            if not choices and not player.current_node.is_end:
-                print("\nNo pre-generated paths found. Generating new story paths dynamically...")
+            # Get current node
+            current_node = nodes[current_node_id]
+            
+            # Update story state
+            story_state.current_scene = current_node["story"]
+            story_state.visited_nodes.append(current_node_id)
+            
+            # Display the scene
+            print(f"\n📜 CURRENT SCENE 📜")
+            print_box(current_node["story"])
+            
+            # Add dialogue if available
+            scene_dialogue = current_node.get("dialogue", "")
+            if not scene_dialogue and current_node_id != "node_0":
+                # Generate scene dialogue using AI for non-start nodes
                 try:
-                    # Get current step count
-                    current_step_count = len(player.traversed_nodes)
-
-                    story_context = {
-                        "previous_scene": player.current_node.story,
-                        "current_location": player.current_node.scene_state['location'],
-                        "time_of_day": player.current_node.scene_state['time_of_day'],
-                        "weather": player.current_node.scene_state['weather'],
-                        "player_status": {
-                            "health": player.health,
-                            "inventory": player.inventory
-                        },
-                        "characters": player.current_node.characters,
-                        "recent_events": [node.story for node in player.traversed_nodes[-3:]],
-                        # Add step count to context
-                        "current_step_count": current_step_count
-                    }
-                    
-                    choice_data = generate_story_node(story_context, story_state, story_arc, story_tree)
-                    
-                    # Check if generation actually yielded choices
-                    if not choice_data or not choice_data.get("choices"):
-                        print("\nWarning: AI generation returned no valid choices.")
-                        generation_failed_or_empty = True
-                    else:
-                        # Process valid choices
-                        for choice in choice_data["choices"]:
-                            new_node = Node(choice["text"], choice_data.get("is_ending", False), choice.get("dialogue", ""))
-                            new_node.scene_state = choice_data["scene_state"]
-                            new_node.characters = choice_data["characters"]
-                            new_node.consequences = choice["consequences"]
-                            new_node.backtrack = choice.get("can_backtrack", False)
-                            # Add ending type and reason if this is an ending node
-                            if choice_data.get("is_ending"):
-                                new_node.ending_type = choice_data.get("ending_type", "neutral")
-                                new_node.ending_reason = choice_data.get("ending_reason", "The story has reached its conclusion.")
-                            graph.add_node(new_node)
-                            graph.add_edge(player.current_node, new_node)
-                    
-                    choices = list(graph.get_children(player.current_node))
+                    scene_dialogue = enrich_scene(story_state)
+                    current_node["dialogue"] = scene_dialogue
                 except Exception as e:
-                    print(f"\nError in choice generation: {e}")
-                    # Instead of break, set flag for fallback ending
-                    generation_failed_or_empty = True
+                    print(f"Could not generate dialogue: {e}")
             
-            if choices and not generation_failed_or_empty: # Proceed only if choices exist and generation was ok
-                print("\n🎲 AVAILABLE CHOICES 🎲")
-                print(f"╔{'═'*68}╗")
-                for i, choice in enumerate(choices, 1):
-                    print(f"║ {i}. {wrap_text(choice.story, 64):<64} ║")
-                    if hasattr(choice, 'consequences'):
-                        consequences = choice.consequences
-                        if consequences.get('health_change'):
-                            health_change = consequences['health_change']
-                            health_symbol = '❤️ +' if health_change > 0 else '💔 '
-                            # print(f"║    {health_symbol}{health_change:<61} ║")
-                        if consequences.get('item_changes'):
-                            for item in consequences['item_changes']:
-                                if item.startswith('add_'):
-                                    continue
-                                    # print(f"║    📦 Get: {item[4:]:<57} ║")
-                                elif item.startswith('remove_'):
-                                    continue
-                                    # print(f"║    ❌ Lose: {item[7:]:<56} ║")
-                    if getattr(choice, 'backtrack', False):
-                        continue
-                        # print(f"║    🔙 Can backtrack{' '*52} ║")
-                    print(f"║{'-'*68}║")
-                print(f"╚{'═'*68}╝")
-        
-                while True:
-                    try:
-                        choice = int(input(f"\nEnter your choice (1-{len(choices)}): "))
-                        if 1 <= choice <= len(choices):
-                            chosen_node = choices[choice - 1]
-                            if hasattr(chosen_node, 'consequences'):
-                                health_change = chosen_node.consequences.get('health_change', 0)
-                                if health_change < 0:
-                                    print(f"\nYou took {abs(health_change)} damage!")
-                                player.health += health_change
-                                if player.health <= 0:
-                                    player.is_dead = True
-                                    player.health = 0
-                                    death_reason = chosen_node.story
-                                    break
-
-                                for item in chosen_node.consequences.get('item_changes', []):
-                                    if item.startswith('add_'):
-                                        player.inventory.append(item[4:])
-                                        print(f"\nYou obtained: {item[4:]}")
-                                    elif item.startswith('remove_'):
-                                        if item[7:] in player.inventory:
-                                            player.inventory.remove(item[7:])
-                                            print(f"\nYou lost: {item[7:]}")
-                            
-                            player.move(graph, chosen_node)
-                            story_state.current_scene = chosen_node.scene_state
-                            story_state.characters = chosen_node.characters
-                            story_state.visited_nodes.add(chosen_node.id)
-                            break
-                        else:
-                            print(f"Please enter a number between 1 and {len(choices)}")
-                    except ValueError:
-                        print("Please enter a valid number.")
+            if scene_dialogue:
+                print("\n💬 REACTION 💬")
+                print_box(scene_dialogue)
+            
+            # Check if we've reached an ending
+            if current_node["is_end"] or not current_node["children"]:
+                print("\nYou've reached the end of your journey!")
+                break
+            
+            # Get child nodes (choices) for the current node
+            choices = []
+            for child_id in current_node["children"]:
+                # Use the concise choice_text if available, otherwise fallback to story
+                choice_text = nodes[child_id].get("choice_text", nodes[child_id]["story"])
+                choices.append((child_id, choice_text))
+            
+            # Display choices
+            print("\n🎲 AVAILABLE CHOICES 🎲")
+            print(f"╔{'═'*68}╗")
+            
+            for i, (_, choice_text) in enumerate(choices):
+                # Wrap the choice text to fit within the box
+                wrapped_lines = textwrap.wrap(choice_text, width=66)
                 
-                save_game_state(graph, story_state)
-            elif not player.current_node.is_end: # Handles the case where generation failed/empty AND it wasn't already an end node
-                 print("\nYou've reached an unexpected end to this path!")
+                # Print the first line with the choice number
+                first_line = wrapped_lines[0] if wrapped_lines else ""
+                print(f"║ {i+1}. {first_line:<65} ║")
+                
+                # Print any additional lines
+                for line in wrapped_lines[1:]:
+                    print(f"║    {line:<65} ║")
+                
+                # Add a separator between choices
+                if i < len(choices) - 1:
+                    print(f"║{'-'*68}║")
+                else:
+                    print(f"╚{'═'*68}╝")
             
-            # The main loop condition (while not player.is_dead and not player.current_node.is_end)
-            # will now catch the forced end state from generation failure or depth limit
-            time.sleep(1)
-    
-        # --- End of Main Loop ---
-
-        clear_screen()
+            # Get player choice
+            valid_choice = False
+            while not valid_choice:
+                try:
+                    choice_input = input("\nEnter your choice (number): ").strip()
+                    choice_index = int(choice_input) - 1
+                    
+                    if 0 <= choice_index < len(choices):
+                        # Get the child node ID
+                        child_id = choices[choice_index][0]
+                        
+                        # When we select a choice, use the full story text for display in the next scene
+                        if "full_story" in nodes[child_id]:
+                            nodes[child_id]["story"] = nodes[child_id]["full_story"]
+                            
+                        # Update current node
+                        current_node_id = child_id
+                        valid_choice = True
+                    else:
+                        print(f"Please enter a number between 1 and {len(choices)}.")
+                except ValueError:
+                    print("Please enter a valid number.")
+        
+        # Game over screen
         print("\nGame Over!")
         print("=" * 50)
-        if player.is_dead:
-            print("\nYou have perished in your adventure!")
-            print(f"Cause of death: {death_reason}")
-            print(f"Final Health: {player.health}")
-        elif player.current_node.is_end:
-            ending_type = getattr(player.current_node, 'ending_type', 'neutral')
-            ending_reason = getattr(player.current_node, 'ending_reason', 'Your journey has concluded.')
-            
-            # Ending type symbols
-            ending_symbols = {
-                'victory': '🏆 VICTORY',
-                'defeat': '💔 DEFEAT',
-                'neutral': '🔄 CONCLUSION',
-                'bittersweet': '🌅 BITTERSWEET',
-                'tragic': '⚰️ TRAGIC'
-            }
-            
-            symbol = ending_symbols.get(ending_type, '🔄 CONCLUSION')
-            
-            print(f"\n{symbol} ENDING!")
-            print_box(ending_reason)
-            
-            # Add specific message if it was a fallback ending due to generation failure
-            if generation_failed_or_empty:
-                print("(Note: The narrative thread frayed, concluding the adventure unexpectedly.)")
+        print("\nThanks for playing!")
         
-        print(f"\nFinal Status:")
-        print(f"Health: {player.health}")
-        print(f"Experience: {player.experience}")
-        print(f"Final Inventory: {', '.join(player.inventory) if player.inventory else 'Empty'}")
-            
     except Exception as e:
-        print(f"\nError: {e}")
-        print("Game initialization failed.")
-        return
+        print(f"An error occurred: {e}")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     if os.path.exists("game_save.json"):
         os.remove("game_save.json")
         
+    try:
     main()
+    except Exception as e:
+        print(f"\nError: {e}")
+        print("Game initialization failed. Please try again.")

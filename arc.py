@@ -3,9 +3,12 @@ import json
 import os
 import time
 import hashlib
+import traceback
 from Graph_Classes.Structure import Node, Graph
+import re
+from clean_and_parse_json import clean_and_parse_json
 
-GOOGLE_API_KEY = "AIzaSyBQjg0r1vHzO3MNg_8zg18DyCTV8K-cJdE"
+GOOGLE_API_KEY = "AIzaSyAEcjdAjZjmecdsKIb21-Gu2bq6m7zfKaE"
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
@@ -36,433 +39,24 @@ class StoryState:
         return state
 
 def generate_story_arc(theme):
-    """Generate a general story arc structure for the given theme"""
-    
+    """Generate a high-level story arc for the given theme"""
     prompt = f"""
-    Create a detailed story arc for an interactive narrative in the {theme} universe/setting.
-    The story should follow the classic hero's journey structure with 8 distinct phases:
+    Generate a rich story arc for an interactive narrative based on the {theme} theme.
+    Include the major stages of the narrative journey, from introduction to conclusion.
+    Structure it similarly to a classic hero's journey with challenges, setbacks, and growth.
     
-    1. The Ordinary World: Establish the protagonist and their normal life
-    2. The Call to Adventure: Introduce the inciting incident
-    3. Crossing the Threshold: Protagonist enters the world of adventure
-    4. Tests, Allies, and Enemies: Protagonist faces challenges and meets key characters
-    5. The Approach: Preparation for the major challenge
-    6. The Ordeal: The main conflict or challenge
-    7. The Reward: Protagonist achieves something valuable
-    8. Return and Resolution: The conclusion and return to a new normal
+    Your response should include:
+    - An initial hook or inciting incident that draws players in
+    - Major plot points that would form the backbone of the story
+    - Important character development moments
+    - At least two potential branching narrative paths 
+    - Several key decision points where the story could meaningfully diverge
+    - Both successes and setbacks the player might experience
+    - Multiple possible endings based on player choices
+    - Setting-specific details that incorporate the {theme} theme throughout
     
-    For each stage, provide:
-    - A brief description of what happens
-    - Main characters involved
-    - Key plot points
-    - Potential branching paths (different choices that could occur)
-    - Thematic elements specific to {theme}
-    
-    Make all elements consistent with the {theme} setting and style.
-    
-    Return ONLY valid JSON in this exact format:
-    {{
-        "theme": "{theme}",
-        "golden_path": "the ideal/optimal storyline that will serve as the golden path for the generated story in 5-8 sentences",
-        "arc": [
-            {{
-                "stage": "The Ordinary World",
-                "description": "detailed description of this stage",
-                "characters": ["character1", "character2"],
-                "key_plot_points": ["plot point 1", "plot point 2"],
-                "potential_branches": ["decision point 1", "decision point 2"],
-                "thematic_elements": ["element1", "element2"]
-            }},
-            ... (repeat for all 8 stages)
-        ]
-    }}
-    """
-    
-    max_retries = 7
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                contents=[prompt],
-                model="gemini-2.0-flash",
-            )
-            
-            if not response.text:
-                print(f"Empty response from API (attempt {attempt+1}/{max_retries})")
-                if attempt == max_retries - 1:
-                    raise Exception("Received empty response from API after all attempts")
-                continue
-                
-            raw_text = response.text.strip()
-            
-            # Clean up response to extract valid JSON
-            if raw_text.startswith("```"):
-                lines = raw_text.split('\n')
-                if lines[0].startswith("```") and lines[-1].startswith("```"):
-                    raw_text = '\n'.join(lines[1:-1])
-                elif lines[0].startswith("```"):
-                    raw_text = '\n'.join(lines[1:])
-                    
-            raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-            
-            # Find JSON boundaries
-            start_idx = raw_text.find('{')
-            end_idx = raw_text.rfind('}') + 1
-            if start_idx < 0 or end_idx <= 0:
-                print(f"Invalid JSON format (attempt {attempt+1}/{max_retries})")
-                if attempt == max_retries - 1:
-                    raise Exception("Invalid JSON format after all attempts")
-                continue
-                
-            json_text = raw_text[start_idx:end_idx]
-            
-            # Try to fix common JSON errors
-            json_text = json_text.replace(",\n}", "\n}")
-            json_text = json_text.replace(",\n]", "\n]")
-            
-            # Try to parse the JSON
-            try:
-                arc_data = json.loads(json_text)
-            except json.JSONDecodeError as e:
-                print(f"JSON parsing error: {e} (attempt {attempt+1}/{max_retries})")
-                if attempt == max_retries - 1:
-                    raise
-                continue
-            
-            # Validate required fields
-            required_fields = ["theme", "golden_path", "arc"]
-            if not all(field in arc_data for field in required_fields):
-                print(f"Missing required fields (attempt {attempt+1}/{max_retries})")
-                if attempt == max_retries - 1:
-                    raise Exception("Missing required fields in generated story arc")
-                continue
-            
-            # Validate arc structure
-            if not isinstance(arc_data["arc"], list) or len(arc_data["arc"]) != 8:
-                print(f"Invalid arc structure (attempt {attempt+1}/{max_retries})")
-                if attempt == max_retries - 1:
-                    raise Exception("Invalid arc structure in generated story arc")
-                continue
-            
-            for stage in arc_data["arc"]:
-                required_stage_fields = ["stage", "description", "characters", "key_plot_points", "potential_branches", "thematic_elements"]
-                if not all(field in stage for field in required_stage_fields):
-                    print(f"Missing required stage fields (attempt {attempt+1}/{max_retries})")
-                    if attempt == max_retries - 1:
-                        raise Exception("Missing required stage fields in generated story arc")
-                    continue
-            
-            print(f"Successfully generated story arc for {theme}")
-            return arc_data
-            
-        except Exception as e:
-            print(f"Error in attempt {attempt+1}/{max_retries}: {e}")
-            if attempt == max_retries - 1:
-                print(f"Failed to generate story arc after {max_retries} attempts")
-                
-                # Provide a fallback story arc
-                return generate_fallback_arc(theme)
-
-def generate_fallback_arc(theme):
-    """Generate a fallback story arc if API generation fails"""
-    print(f"Generating fallback story arc for {theme}...")
-    
-    fallback_arc = {
-        "theme": theme,
-        "golden_path": f"A hero in the {theme} universe embarks on a journey, faces challenges, makes allies, confronts enemies, and ultimately succeeds in their quest, returning changed from the experience.",
-        "arc": [
-            {
-                "stage": "The Ordinary World",
-                "description": f"The protagonist lives their normal life in the {theme} setting.",
-                "characters": ["Protagonist", "Mentor"],
-                "key_plot_points": ["Establish protagonist's normal life", "Hint at the coming adventure"],
-                "potential_branches": ["Accept the call", "Delay the adventure"],
-                "thematic_elements": ["Normalcy", "Foreshadowing"]
-            },
-            {
-                "stage": "The Call to Adventure",
-                "description": "Something disrupts the protagonist's normal life, pushing them toward adventure.",
-                "characters": ["Protagonist", "Messenger", "Ally"],
-                "key_plot_points": ["Receive call to adventure", "Initial reluctance"],
-                "potential_branches": ["Accept the call", "Refuse the call"],
-                "thematic_elements": ["Disruption", "Choice"]
-            },
-            {
-                "stage": "Crossing the Threshold",
-                "description": "The protagonist leaves their comfort zone and enters the world of adventure.",
-                "characters": ["Protagonist", "Threshold Guardian", "Mentor"],
-                "key_plot_points": ["Leave familiar surroundings", "Enter new territory"],
-                "potential_branches": ["Cautious approach", "Bold entry"],
-                "thematic_elements": ["Transition", "Leaving comfort"]
-            },
-            {
-                "stage": "Tests, Allies, and Enemies",
-                "description": "The protagonist faces various challenges and meets key characters.",
-                "characters": ["Protagonist", "Allies", "Enemies"],
-                "key_plot_points": ["Face initial tests", "Form alliances", "Identify enemies"],
-                "potential_branches": ["Fight", "Negotiate", "Avoid conflict"],
-                "thematic_elements": ["Challenge", "Friendship", "Conflict"]
-            },
-            {
-                "stage": "The Approach",
-                "description": "The protagonist prepares for the major challenge ahead.",
-                "characters": ["Protagonist", "Allies", "Mentor"],
-                "key_plot_points": ["Gather resources", "Create plan", "Final preparations"],
-                "potential_branches": ["Careful planning", "Immediate action"],
-                "thematic_elements": ["Preparation", "Strategy"]
-            },
-            {
-                "stage": "The Ordeal",
-                "description": "The protagonist faces their greatest challenge.",
-                "characters": ["Protagonist", "Main Antagonist", "Allies"],
-                "key_plot_points": ["Confrontation with main challenge", "Moment of crisis", "Transformation"],
-                "potential_branches": ["Direct confrontation", "Clever solution"],
-                "thematic_elements": ["Crisis", "Transformation", "Climax"]
-            },
-            {
-                "stage": "The Reward",
-                "description": "The protagonist achieves something valuable from their ordeal.",
-                "characters": ["Protagonist", "Allies"],
-                "key_plot_points": ["Obtain reward", "Celebrate victory", "Face consequences"],
-                "potential_branches": ["Accept reward", "Reject reward"],
-                "thematic_elements": ["Achievement", "Growth"]
-            },
-            {
-                "stage": "Return and Resolution",
-                "description": "The protagonist returns to their old world, changed by the adventure.",
-                "characters": ["Protagonist", "Home Characters"],
-                "key_plot_points": ["Return journey", "Apply lessons learned", "New equilibrium"],
-                "potential_branches": ["Complete return", "Start new adventure"],
-                "thematic_elements": ["Resolution", "Change", "New beginning"]
-            }
-        ]
-    }
-    
-    return fallback_arc
-
-def generate_story_tree(arc_data, max_depth=8):
-    """Generate a complete story tree based on the story arc"""
-    
-    # Initialize graph structure
-    graph = Graph()
-    story_state = StoryState()
-    story_state.theme = arc_data["theme"]
-    
-    # Generate root node (level 0)
-    root_prompt = f"""
-    Create the opening scene for a {arc_data['theme']} adventure based on this story context:
-    
-    Stage: {arc_data['arc'][0]['stage']}
-    Description: {arc_data['arc'][0]['description']}
-    Characters: {', '.join(arc_data['arc'][0]['characters'])}
-    Key Plot Points: {', '.join(arc_data['arc'][0]['key_plot_points'])}
-    Thematic Elements: {', '.join(arc_data['arc'][0]['thematic_elements'])}
-    
-    Create a rich, detailed opening scene that:
-    1. Introduces the protagonist
-    2. Establishes the setting
-    3. Hints at the coming adventure
-    4. Sets the tone and atmosphere for {arc_data['theme']}
-    
-    Do not include choices. Focus on crafting a compelling introduction scene only.
-    
-    Return ONLY valid JSON in this format:
-    {{
-        "story": "detailed opening scene description",
-        "scene_state": {{
-            "location": "specific location",
-            "time_of_day": "time period",
-            "weather": "conditions",
-            "ambient": "mood"
-        }},
-        "characters": {{
-            "player": {{
-                "health": 100,
-                "mood": "initial state",
-                "status_effects": []
-            }},
-            "others": [
-                {{
-                    "name": "character name",
-                    "description": "brief description",
-                    "relationship": "relationship to player"
-                }}
-            ]
-        }}
-    }}
-    """
-    
-    try:
-        response = client.models.generate_content(
-            contents=[root_prompt],
-            model="gemini-2.0-flash",
-        )
-        
-        raw_text = clean_response(response.text)
-        root_data = json.loads(raw_text)
-        
-        # Create the root node
-        root_node = Node(root_data["story"])
-        root_node.scene_state = root_data["scene_state"]
-        root_node.characters = root_data["characters"]
-        graph.add_node(root_node)
-        
-        # Track nodes by level and position for organized generation
-        nodes_by_level = {0: {0: root_node}}
-        
-        # Generate all levels of the tree (depth 8, binary choices)
-        for level in range(1, max_depth):
-            nodes_by_level[level] = {}
-            parent_level = level - 1
-            
-            # For each node in the previous level
-            for parent_pos, parent_node in nodes_by_level[parent_level].items():
-                # Calculate current stage in the story arc
-                current_stage = min(level, 7)  # Stage index (0-7)
-                # Generate two choices for this parent
-                for choice_idx in range(2):
-                    # Generate node content based on the current stage and previous choice
-                    node_data = generate_story_node(
-                        arc_data, 
-                        current_stage,
-                        parent_level,
-                        choice_idx,
-                        parent_node
-                    )
-                    
-                    # Create choice node
-                    # NODE DATA HAS CHOICES -> DIALOGUE
-                    child_node = Node(node_data["story"], node_data.get("is_ending", False), node_data["choices"][choice_idx].get("dialogue", ""))
-                    child_node.scene_state = node_data["scene_state"]
-                    child_node.characters = node_data["characters"]
-                    
-                    # Add consequences data
-                    if "choices" in node_data and len(node_data["choices"]) > choice_idx:
-                        child_node.consequences = node_data["choices"][choice_idx]["consequences"]
-                    
-                    # Allow backtracking for first choices
-                    child_node.backtrack = (choice_idx == 0)
-                    
-                    # Add to graph
-                    graph.add_node(child_node)
-                    graph.add_edge(parent_node, child_node)
-                    
-                    # Store in level tracking dictionary
-                    child_pos = parent_pos * 2 + choice_idx
-                    nodes_by_level[level][child_pos] = child_node
-                
-                # Print progress
-                progress = sum(len(nodes) for _, nodes in nodes_by_level.items()) / (2**8 - 1) * 100
-                print(f"Progress: {progress:.1f}% complete - Generated level {level}")
-            
-            # Avoid rate limiting
-            time.sleep(0.2)
-    
-        return graph, story_state
-        
-    except Exception as e:
-        print(f"Error generating story tree: {e}")
-        raise
-
-def generate_story_node(arc_data, current_stage, parent_level, choice_variant, parent_node):
-    """Generate a story node based on the current stage in the arc"""
-    
-    # Determine if this is a transition between major story stages
-    stage_data = arc_data["arc"][current_stage]
-    
-    # Extract previous state information
-    previous_location = parent_node.scene_state.get("location", "unknown")
-    previous_characters = []
-    if parent_node.characters.get("others"):
-        previous_characters = [char.get("name") for char in parent_node.characters.get("others", [])]
-    
-    # Build a context-aware prompt
-    context_description = f"""
-    Previous scene: {parent_node.story}
-    Previous location: {previous_location}
-    Story stage: {stage_data['stage']}
-    Stage description: {stage_data['description']}
-    Characters in this stage: {', '.join(stage_data['characters'])}
-    Key plot points: {', '.join(stage_data['key_plot_points'])}
-    """
-    
-    # Add branch-specific context
-    branch_choice = stage_data['potential_branches'][min(choice_variant, len(stage_data['potential_branches'])-1)]
-    context_description += f"\nThe story follows this branch: {branch_choice}"
-    
-    # Generate the node content
-    prompt = f"""
-    Create the next scene in a {arc_data['theme']} story with these details:
-    
-    {context_description}
-    
-    This scene must:
-    1. Advance the plot according to the current stage: {stage_data['stage']}
-    2. Incorporate the thematic elements: {', '.join(stage_data['thematic_elements'])}
-    3. Present exactly 2 meaningful choices that could lead to different outcomes
-    4. Maintain consistency with the {arc_data['theme']} setting and tone
-    5. Reference previous characters and locations when appropriate
-    6. For each choice, include three to five full sentences of spoken dialogue that reveal new plot or character information tied to that choice’s outcome.
-        - Dialogue lines must use brackets **only** around speaker tags—`[You]: “…”`, `[Arin]: “…”`, `[Crowd]: “…”`
-            - When the player speaks, use `[You]:`.
-            - Other speakers must be existing character names or sensible generic roles (e.g., `[Crowd]:`).
-            - Place each speaker’s line on its own line.
-                ```
-                [You]: “I’ve never seen ruins so alive with magic. Every shadow flickers with intent. I must stay vigilant.”
-                [Arin]: “These stones whisper of an ancient pact. We tread on promises older than kingdoms. Be wary of their echoes.”
-                ```
-        - If spoken dialogue doesn’t fit naturally, supply a three-sentence inner reflection without brackets, beginning with one of:
-                - `You think: `
-                - `You realize: `
-                - `Your mind races: `
-                - `You thought`
-        - Ensure the entire block directly advances the plot, reveals a clue, or deepens a character’s motivation in connection with the choice’s consequences.
-    
-    
-    Return ONLY valid JSON in this format:
-    {{
-        "story": "detailed scene description that advances the plot",
-        "scene_state": {{
-            "location": "specific location fitting the stage",
-            "time_of_day": "time period",
-            "weather": "conditions",
-            "ambient": "mood fitting the scene"
-        }},
-        "characters": {{
-            "player": {{
-                "health": number,
-                "mood": "state fitting the scene",
-                "status_effects": []
-            }},
-            "others": [
-                {{
-                    "name": "character name",
-                    "description": "brief description",
-                    "relationship": "relationship to player"
-                }}
-            ]
-        }},
-        "choices": [
-            {{
-                "text": "first choice description",
-                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
-                "consequences": {{
-                    "health_change": number,
-                    "item_changes": ["add_item", "remove_item"]
-                }}
-            }},
-            {{
-                "text": "second choice description",
-                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
-                "consequences": {{
-                    "health_change": number,
-                    "item_changes": ["add_item", "remove_item"]
-                }}
-            }}
-        ],
-        "is_ending": false
-    }}
-      
-    For the final stage (Return and Resolution), set "is_ending" to true and make the choices represent different conclusions to the story.
+    Format your response as a clear outline with numbered sections and bullet points.
+    Focus on creating a compelling narrative framework that will engage players.
     """
     
     try:
@@ -471,250 +65,436 @@ def generate_story_node(arc_data, current_stage, parent_level, choice_variant, p
             model="gemini-2.0-flash",
         )
         
-        raw_text = clean_response(response.text)
-        node_data = json.loads(raw_text)
+        if not response.text:
+            raise Exception("Empty response from API")
+            
+        return response.text
+    except Exception as e:
+        print(f"\nError generating story arc: {e}")
+        return f"Basic adventure with a {theme} setting featuring a hero who must overcome challenges and make critical choices."
+
+def generate_story_tree(theme, story_arc, depth=3, choices_per_node=4):
+    """Generate a story tree with the specified depth and number of choices per node"""
+    # Define the root prompt
+    root_prompt = f"""
+    Create a story node for an interactive narrative game set in the world of {theme}.
+    Use the following story arc as a guide:
+    {story_arc}
+    
+    This should be the introduction to our story, establishing the setting, main character, and initial situation.
+    Don't add any meta-text about JSON - just provide the valid JSON object directly.
+    
+    EXTREMELY IMPORTANT: For each choice, create a clear ACTION that the PLAYER can take - something they DO, not what they see.
+    Each choice MUST:
+    1. Start with a strong action verb (e.g., "Climb the...", "Confront the...", "Sabotage the...")
+    2. Be written in 2nd person perspective ("you")
+    3. Include 1-2 sentences that describe WHAT the player does, not what happens next
+    4. Focus on the player's agency and decision-making
+    
+    BAD CHOICE EXAMPLES (DO NOT USE THESE FORMATS):
+    - "The corridor leads to a control room" (describes scene, not action)
+    - "A guard approaches from the shadows" (describes event, not player action)
+    - "The area seems dangerous" (observation, not action)
+    
+    GOOD CHOICE EXAMPLES (USE THESE FORMATS):
+    - "Sneak past the guards using the ventilation shaft, hoping your stealth training pays off."
+    - "Confront the imperial officer directly, demanding answers about the rebel base location."
+    - "Hack into the security terminal to disable the alarm systems before proceeding further."
+    
+    Return a valid JSON object with this structure:
+    {{
+        "story": "rich descriptive text that introduces the story",
+        "is_ending": false,
+        "choices": [
+            {{
+                "text": "Action the player takes (1-2 sentences starting with a verb)",
+                "consequences": "brief description of immediate results"
+            }},
+            {{
+                "text": "Different action the player takes (1-2 sentences starting with a verb)",
+                "consequences": "brief description of immediate results"
+            }}
+            ... additional choices as needed ...
+        ]
+    }}
+    """
+    
+    # Generate the root node first
+    print(f"Generating root node for {theme} story...")
+    root_data = generate_story_node(root_prompt, is_root=True)
+    if not root_data:
+        print("Failed to generate root node!")
+        return None
+    
+    # Create the story graph
+    story_graph = {"nodes": {}, "edges": []}
+    
+    # Add root node
+    root_id = "node_0"
+    story_graph["nodes"][root_id] = {
+        "story": root_data.get("story", f"You begin your {theme} adventure!"),
+        "is_end": False,
+        "dialogue": ""
+    }
+    
+    # Process each child node up to the specified depth
+    nodes_to_process = []
+    
+    # Add initial choices from the root
+    root_choices = root_data.get("choices", [])
+    
+    # Make sure we have exactly choices_per_node choices
+    if len(root_choices) < choices_per_node:
+        print(f"Root node has fewer than {choices_per_node} choices. Adding generic choices...")
+        # Add generic choices to reach choices_per_node
+        action_verbs = ["Investigate", "Scout", "Approach", "Examine", "Search", "Challenge", "Confront", "Infiltrate"]
+        objects = ["mysterious door", "nearby structure", "strange artifact", "shadowy figure", "central area", "control panel", "hidden passage"]
+        methods = ["cautiously", "boldly", "stealthily", "carefully", "quickly", "methodically", "decisively", "tactically"]
         
-        # Force exactly 2 choices
-        if "choices" in node_data and len(node_data["choices"]) != 2:
-            if len(node_data["choices"]) < 2:
-                # Add generic choices if needed
-                while len(node_data["choices"]) < 2:
-                    node_data["choices"].append({
-                        "text": f"Take an alternative path",
-                        "consequences": {
-                            "health_change": 0,
-                            "item_changes": []
-                        }
-                    })
+        while len(root_choices) < choices_per_node:
+            choice_idx = len(root_choices)
+            verb = action_verbs[choice_idx % len(action_verbs)]
+            obj = objects[(choice_idx + 2) % len(objects)]
+            method = methods[(choice_idx + 4) % len(methods)]
+            
+            root_choices.append({
+                "text": f"{verb} the {obj} {method}, looking for any clues or advantages you can find.",
+                "consequences": f"You take action, staying alert to any potential dangers."
+            })
+    elif len(root_choices) > choices_per_node:
+        print(f"Root node has more than {choices_per_node} choices. Truncating...")
+        root_choices = root_choices[:choices_per_node]
+    
+    # Validate that choices are action-oriented
+    for i, choice in enumerate(root_choices):
+        choice_text = choice["text"]
+        # Ensure choice starts with a verb
+        first_word = choice_text.split()[0].lower()
+        action_verbs = ["search", "investigate", "approach", "examine", "open", "enter", "take", "grab", "talk", "speak", 
+                        "fight", "attack", "run", "flee", "hide", "sneak", "climb", "jump", "use", "activate", "deactivate", 
+                        "hack", "break", "repair", "craft", "create", "destroy", "help", "save", "rescue", "abandon", 
+                        "follow", "lead", "explore", "scout", "observe", "analyze", "study", "question", "interrogate"]
+        
+        if not any(first_word == verb or first_word.startswith(verb) for verb in action_verbs):
+            # Fix the choice to be action-oriented
+            action_verb = action_verbs[i % len(action_verbs)]
+            if "the" in choice_text or "a " in choice_text:
+                # Try to extract an object from the existing text
+                parts = choice_text.split()
+                for j, word in enumerate(parts):
+                    if word.lower() in ["the", "a", "an"] and j < len(parts) - 1:
+                        object_word = parts[j:j+2]
+                        choice["text"] = f"{action_verb.capitalize()} {' '.join(object_word)} to learn more about what's happening."
+                        break
+                else:
+                    choice["text"] = f"{action_verb.capitalize()} the area to discover what opportunities lie ahead."
             else:
-                # Keep only the first two choices
-                node_data["choices"] = node_data["choices"][:2]
+                choice["text"] = f"{action_verb.capitalize()} the surrounding area to gather more information."
+    
+    for i, choice in enumerate(root_choices):
+        choice_id = f"node_0_{i+1}"
+        story_graph["nodes"][choice_id] = {
+            "story": choice["text"],
+            "is_end": False,
+            "dialogue": choice.get("consequences", "")
+        }
+        story_graph["edges"].append({"from": root_id, "to": choice_id})
         
-        # Set ending flag for the final level
-        if current_stage == 7:
-            node_data["is_ending"] = True
+        if depth > 1:  # Only add to processing queue if depth > 1
+            nodes_to_process.append((choice_id, 1))  # Depth starts at 1
+    
+    # BFS traversal to generate the full tree
+    total_nodes = 1 + len(root_choices)  # Root + initial choices
+    print(f"Generated {total_nodes} nodes so far")
+    
+    while nodes_to_process:
+        current_id, current_depth = nodes_to_process.pop(0)
         
-        return node_data
+        print(f"Processing node {current_id} at depth {current_depth}")
         
+        if current_depth >= depth:
+            # Mark as an ending node if we've reached max depth
+            story_graph["nodes"][current_id]["is_end"] = True
+            print(f"Node {current_id} marked as ending (at max depth {depth})")
+            continue
+            
+        # Generate children for this node
+        node_prompt = f"""
+        Create a continuation of our {theme} interactive story.
+        
+        Previous scene: {story_graph["nodes"][current_id]["story"]}
+        Narrative arc: {story_arc}
+        
+        EXTREMELY IMPORTANT: For each choice, create a clear ACTION that the PLAYER can take - something they DO, not what they see.
+        Each choice MUST:
+        1. Start with a strong action verb (e.g., "Climb the...", "Confront the...", "Sabotage the...")
+        2. Be written in 2nd person perspective ("you")
+        3. Include 1-2 sentences that describe WHAT the player does, not what happens next
+        4. Focus on the player's agency and decision-making
+        
+        BAD CHOICE EXAMPLES (DO NOT USE THESE FORMATS):
+        - "The corridor leads to a control room" (describes scene, not action)
+        - "A guard approaches from the shadows" (describes event, not player action)
+        - "The area seems dangerous" (observation, not action)
+        
+        GOOD CHOICE EXAMPLES (USE THESE FORMATS):
+        - "Sneak past the guards using the ventilation shaft, hoping your stealth training pays off."
+        - "Confront the imperial officer directly, demanding answers about the rebel base location."
+        - "Hack into the security terminal to disable the alarm systems before proceeding further."
+        
+        The AI assistant should provide EXACTLY {choices_per_node} action choices, each representing something the player ACTIVELY DOES.
+                
+        Return a valid JSON object with exactly {choices_per_node} choices:
+        {{
+            "story": "rich descriptive text that continues from the previous node",
+            "is_ending": {"true" if current_depth >= depth-1 else "false"},
+            "choices": [
+                {{
+                    "text": "Action the player takes (1-2 sentences starting with a verb)",
+                    "consequences": "brief description of immediate results"
+                }},
+                // EXACTLY {choices_per_node-1} MORE CHOICES HERE, ALL ACTION-ORIENTED
+            ]
+        }}
+        """
+    
+        child_data = generate_story_node(node_prompt)
+        if not child_data:
+            print(f"Failed to generate children for node {current_id}. Using fallback.")
+            action_verbs = ["Investigate", "Scout", "Approach", "Examine", "Search", "Challenge", "Confront", "Infiltrate"]
+            objects = ["mysterious door", "nearby structure", "strange artifact", "shadowy figure", "central area", "control panel", "hidden passage"]
+            methods = ["cautiously", "boldly", "stealthily", "carefully", "quickly", "methodically", "decisively", "tactically"]
+            
+            child_data = {
+                "story": "The story continues as you consider your next move.",
+                "is_ending": current_depth >= depth-1,
+                "choices": [
+                    {
+                        "text": f"{action_verbs[i % len(action_verbs)]} the {objects[(i+2) % len(objects)]} {methods[(i+4) % len(methods)]}, looking for any advantages you can gain.",
+                        "consequences": f"You take decisive action, ready for whatever comes next."
+                    }
+                    for i in range(choices_per_node)
+                ]
+            }
+        
+        # Process choices for this node
+        child_choices = child_data.get("choices", [])
+        
+        # Ensure we have the right number of choices
+        if len(child_choices) < choices_per_node:
+            # Add generic choices to reach choices_per_node
+            print(f"Node {current_id}: Adding generic choices ({len(child_choices)} → {choices_per_node})")
+            action_verbs = ["Investigate", "Scout", "Approach", "Examine", "Search", "Challenge", "Confront", "Infiltrate"]
+            objects = ["mysterious door", "nearby structure", "strange artifact", "shadowy figure", "central area", "control panel", "hidden passage"]
+            methods = ["cautiously", "boldly", "stealthily", "carefully", "quickly", "methodically", "decisively", "tactically"]
+            
+            while len(child_choices) < choices_per_node:
+                choice_idx = len(child_choices)
+                verb = action_verbs[choice_idx % len(action_verbs)]
+                obj = objects[(choice_idx + 2) % len(objects)]
+                method = methods[(choice_idx + 4) % len(methods)]
+                
+                child_choices.append({
+                    "text": f"{verb} the {obj} {method}, looking for any clues or advantages you can find.",
+                    "consequences": f"You take action, staying alert to any potential dangers."
+                })
+            print(f"Node {current_id}: Now has {len(child_choices)} choices")
+        elif len(child_choices) > choices_per_node:
+            print(f"Node {current_id}: Truncating choices ({len(child_choices)} → {choices_per_node})")
+            child_choices = child_choices[:choices_per_node]
+            
+        # Double-check we have exactly choices_per_node choices
+        if len(child_choices) != choices_per_node and not (current_depth >= depth-1):
+            print(f"WARNING: Node {current_id} still has {len(child_choices)} choices (expected {choices_per_node})")
+            # Force exactly choices_per_node choices
+            while len(child_choices) < choices_per_node:
+                choice_idx = len(child_choices)
+                verb = action_verbs[choice_idx % len(action_verbs)]
+                obj = objects[(choice_idx + 2) % len(objects)]
+                method = methods[(choice_idx + 4) % len(methods)]
+                
+                child_choices.append({
+                    "text": f"{verb} the {obj} {method}, looking for any advantages you can gain.",
+                    "consequences": f"You take decisive action, ready for whatever comes next."
+                })
+            child_choices = child_choices[:choices_per_node]
+        
+        # Validate that choices are action-oriented
+        for i, choice in enumerate(child_choices):
+            choice_text = choice["text"]
+            # Ensure choice starts with a verb
+            first_word = choice_text.split()[0].lower()
+            action_verbs = ["search", "investigate", "approach", "examine", "open", "enter", "take", "grab", "talk", "speak", 
+                            "fight", "attack", "run", "flee", "hide", "sneak", "climb", "jump", "use", "activate", "deactivate", 
+                            "hack", "break", "repair", "craft", "create", "destroy", "help", "save", "rescue", "abandon", 
+                            "follow", "lead", "explore", "scout", "observe", "analyze", "study", "question", "interrogate"]
+            
+            if not any(first_word == verb or first_word.startswith(verb) for verb in action_verbs):
+                # Fix the choice to be action-oriented
+                action_verb = action_verbs[i % len(action_verbs)]
+                if "the" in choice_text or "a " in choice_text:
+                    # Try to extract an object from the existing text
+                    parts = choice_text.split()
+                    for j, word in enumerate(parts):
+                        if word.lower() in ["the", "a", "an"] and j < len(parts) - 1:
+                            object_word = parts[j:j+2]
+                            choice["text"] = f"{action_verb.capitalize()} {' '.join(object_word)} to learn more about what's happening."
+                            break
+                    else:
+                        choice["text"] = f"{action_verb.capitalize()} the area to discover what opportunities lie ahead."
+                else:
+                    choice["text"] = f"{action_verb.capitalize()} the surrounding area to gather more information."
+        
+        # Update the story text for current node if we have a better one
+        if child_data.get("story"):
+            story_graph["nodes"][current_id]["story"] = child_data["story"]
+            
+        # Add children
+        for i, choice in enumerate(child_choices):
+            # Create child node ID that preserves path information (appending to parent ID)
+            choice_id = f"{current_id}_{i+1}"
+            
+            # Determine if this should be an ending node based on depth
+            is_ending = current_depth >= depth-1
+            if is_ending:
+                print(f"Node {choice_id} will be an ending (depth {current_depth+1} >= max_depth-1 {depth-1})")
+            
+            story_graph["nodes"][choice_id] = {
+                "story": choice["text"],
+                "is_end": is_ending,
+                "dialogue": choice.get("consequences", "")
+            }
+            story_graph["edges"].append({"from": current_id, "to": choice_id})
+            
+            # Add to total node count
+            total_nodes += 1
+            
+            if not is_ending:  # Only process non-ending nodes
+                nodes_to_process.append((choice_id, current_depth + 1))
+    
+    print(f"Story tree generation complete with {len(story_graph['nodes'])} nodes and {len(story_graph['edges'])} edges")
+    
+    # Verify all nodes at depth are marked as endings
+    for node_id, node_data in story_graph["nodes"].items():
+        node_depth = len(node_id.split('_')) - 1
+        if node_depth >= depth:
+            if not node_data["is_end"]:
+                print(f"Correcting node {node_id} at depth {node_depth} to be an ending")
+                node_data["is_end"] = True
+        elif node_depth < depth and node_data["is_end"]:
+            # Only correct if this node has children
+            has_children = False
+            for edge in story_graph["edges"]:
+                if edge["from"] == node_id:
+                    has_children = True
+                    break
+            
+            if has_children:
+                print(f"Correcting node {node_id} at depth {node_depth} to NOT be an ending")
+                node_data["is_end"] = False
+    
+    return story_graph
+
+def generate_story_node(prompt, is_root=False):
+    """Generate a story node with rich content based on current context"""
+    try:
+        response = client.models.generate_content(
+            contents=[prompt],
+            model="gemini-2.0-flash",
+        )
+        
+        if not response.text:
+            print("Error: Empty response from API")
+            return None
+            
+        raw_text = response.text.strip()
+        
+        if raw_text.startswith("```"):
+            lines = raw_text.split('\n')
+            if lines[0].startswith("```") and lines[-1].startswith("```"):
+                raw_text = '\n'.join(lines[1:-1])
+            elif lines[0].startswith("```"):
+                raw_text = '\n'.join(lines[1:])
+        
+        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+        
+        # Try to extract the JSON portion
+        start_idx = raw_text.find('{')
+        end_idx = raw_text.rfind('}') + 1
+        if start_idx < 0 or end_idx <= 0:
+            print(f"JSON boundaries not found in: {raw_text[:100]}...")
+            return None
+            
+        json_text = raw_text[start_idx:end_idx]
+        
+        # Try to clean and parse the JSON to ensure it's valid
+        cleaned_json = clean_and_parse_json(json_text)
+        if cleaned_json is None:
+            print("Failed to parse node JSON")
+            return None
+            
+        print("Node generated successfully")
+        return cleaned_json
     except Exception as e:
         print(f"Error generating story node: {e}")
-        # Return a fallback node if generation fails
-        return generate_fallback_node(arc_data, current_stage)
+        print(traceback.format_exc())
+        return None
 
-def clean_response(raw_text):
-    """Clean an API response to extract valid JSON"""
-    if not raw_text:
-        raise Exception("Empty response received")
-        
-    raw_text = raw_text.strip()
-    
-    # Handle code blocks
-    if raw_text.startswith("```"):
-        lines = raw_text.split('\n')
-        if lines[0].startswith("```") and lines[-1].startswith("```"):
-            raw_text = '\n'.join(lines[1:-1])
-        elif lines[0].startswith("```"):
-            raw_text = '\n'.join(lines[1:])
-    
-    raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-    
-    # Find JSON boundaries
-    start_idx = raw_text.find('{')
-    end_idx = raw_text.rfind('}') + 1
-    if start_idx < 0 or end_idx <= 0:
-        raise Exception("Invalid JSON format - cannot find JSON boundaries")
-    
-    json_str = raw_text[start_idx:end_idx]
-    
-    # Try to fix common JSON syntax errors
-    json_str = json_str.replace(",\n}", "\n}")
-    json_str = json_str.replace(",\n]", "\n]")
-    json_str = json_str.replace(",,", ",")
-    json_str = json_str.replace(",}", "}")
-    json_str = json_str.replace(",]", "]")
-    
-    # Attempt to validate JSON
-    try:
-        # Test if the JSON is valid
-        json.loads(json_str)
-    except json.JSONDecodeError as e:
-        print(f"Warning: JSON validation failed: {e}")
-        print(f"Attempting to continue with potentially invalid JSON...")
-        # The calling function will handle this exception
-        
-    return json_str
+def return_story_arc(theme):
+    """Wrapper function to get story arc"""
+    return generate_story_arc(theme)
 
-def generate_fallback_node(arc_data, current_stage):
-    """Generate a fallback node if regular generation fails"""
-    stage_data = arc_data["arc"][current_stage]
+def return_story_tree(theme, depth=3, choices_per_node=4):
+    """
+    Generate and save a story tree for the given theme
+    Returns the path to the saved JSON file
+    """
+    story_arc = generate_story_arc(theme)
+    story_graph = generate_story_tree(theme, story_arc, depth, choices_per_node)
     
-    return {
-        "story": f"You continue your adventure in the {arc_data['theme']} world. {stage_data['description']}",
-        "scene_state": {
-            "location": "unknown location",
+    # Create scene states and character data
+    for node_id, node_data in story_graph["nodes"].items():
+        # Add placeholder scene state
+        node_data["scene_state"] = {
+            "location": "unknown",
             "time_of_day": "day",
             "weather": "clear",
             "ambient": "mysterious"
-        },
-        "characters": {
+        }
+        
+        # Add placeholder character data
+        node_data["characters"] = {
             "player": {
-                "health": 80,
+                "health": 100,
                 "mood": "determined",
                 "status_effects": []
-            },
-            "others": [
-                {
-                    "name": stage_data["characters"][0] if stage_data["characters"] else "Guide",
-                    "description": "A helpful character",
-                    "relationship": "neutral"
-                }
-            ]
-        },
-        "choices": [
-            {
-                "text": "Continue cautiously forward",
-                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
-                "consequences": {
-                    "health_change": 0,
-                    "item_changes": []
-                }
-            },
-            {
-                "text": "Take a different approach",
-                "dialogue": "Provide three to five full sentences of spoken dialogue in the format `[Name]: “…”`. One line per speaker, using `[You]:` for the player and existing names or roles for others. If dialogue isn’t natural, supply a two to four sentences of inner reflection starting with `You think:`, `You realize:`, or `Your mind races`",
-                "consequences": {
-                    "health_change": 0,
-                    "item_changes": []
-                }
             }
-        ],
-        "is_ending": (current_stage == 7)
-    }
-
-def save_game_state(graph, story_state, filepath="game_save.json"):
-    """Save the game state to a file"""
+        }
+    
+    # Create the full save data structure
     save_data = {
-        "story_state": story_state.to_dict(),
-        "graph": {
-            "nodes": {},
-            "edges": []
-        }
+        "story_state": {
+            "characters": {},
+            "current_scene": {},
+            "inventory": [],
+            "visited_nodes": ["node_0"],
+            "theme": theme,
+            "max_depth": depth
+        },
+        "graph": story_graph
     }
     
-    for node in graph.adjacency_list:
-        save_data["graph"]["nodes"][node.id] = {
-            "story": node.story,
-            "dialogue": node.dialogue,
-            "scene_state": getattr(node, "scene_state", {}),
-            "characters": getattr(node, "characters", {}),
-            "is_end": node.is_end
-        }
-        
-        for child in graph.get_children(node):
-            save_data["graph"]["edges"].append({
-                "from": node.id,
-                "to": child.id,
-                "backtrack": getattr(child, "backtrack", False)
-            })
-    
-    with open(filepath, 'w') as f:
+    # Save to a file
+    filename = f"{theme.lower().replace(' ', '_')}_story.json"
+    with open(filename, 'w') as f:
         json.dump(save_data, f, indent=2)
-    print(f"Game state saved to {filepath}")
-
-def generate_predetermined_story(theme):
-    """Generate a full predetermined story tree for the given theme"""
-    output_file = f"{theme.lower().replace(' ', '_')}_story.json"
-    
-    arc_data = generate_story_arc(theme)
-    with open('arc_data.json', 'w') as file:
-        json.dump(arc_data, file, indent=4)
-    
-    #print(f"\nGenerating complete story tree with depth 8 and 2 choices per node...")
-    depth = int(input("Enter the depth of the sample story tree (default is 8): "))
-    print("This may take some time. Progress will be displayed below:")
-    graph, story_state = generate_story_tree(arc_data, max_depth=depth)
-    
-    # Save the complete story tree
-    save_game_state(graph, story_state, output_file)
-    
-    # Count the total number of nodes
-    node_count = len(graph.adjacency_list)
-    print(f"\nSuccess! Story tree for '{theme}' has been generated.")
-    print(f"Total nodes: {node_count}")
-    print(f"File saved as: {output_file}")
-    
-    return graph, story_state, output_file
-
-def load_game_state(filepath=None, theme=None):
-    """Load game state from file or create initial state with predetermined story"""
-    try:
-        # If theme is provided but no filepath, look for a themed file
-        if theme and not filepath:
-            potential_file = f"{theme.lower().replace(' ', '_')}_story.json"
-            if os.path.exists(potential_file):
-                filepath = potential_file
-                
-        # If a valid filepath is provided, load the game state
-        if filepath and os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-            print(f"\nLoading game from {filepath}...")
-            with open(filepath, 'r') as f:
-                try:
-                    save_data = json.load(f)
-                except json.JSONDecodeError:
-                    print("\nCorrupted save file. Creating new game...")
-                    if theme:
-                        return generate_predetermined_story(theme)
-                    else:
-                        raise Exception("Cannot create new game without theme")
-            
-            graph = Graph()
-            story_state = StoryState.from_dict(save_data["story_state"])
-
-            # Create all nodes first
-            for node_id, node_data in save_data["graph"]["nodes"].items():
-                node = Node(node_data["story"], node_data["is_end"], node_data.get("dialogue", ""))
-                node.scene_state = node_data["scene_state"]
-                node.characters = node_data["characters"]
-                graph.add_node(node)
-            
-            # Add edges
-            for edge in save_data["graph"]["edges"]:
-                from_node = graph.get_node_with_id(edge["from"])
-                to_node = graph.get_node_with_id(edge["to"])
-                if from_node and to_node:
-                    graph.add_edge(from_node, to_node)
-                    if edge.get("backtrack"):
-                        to_node.backtrack = True
-            
-            return graph, story_state
         
-        # If we can't load from a file but have a theme, generate a new story
-        elif theme:
-            print(f"\nGenerating new {theme} adventure...")
-            return generate_predetermined_story(theme)
-        
-        # No valid file and no theme
-        else:
-            raise Exception("Either filepath or theme must be provided")
-            
-    except Exception as e:
-        print(f"\nError loading/creating game: {e}")
-        raise
-
-def return_story_arc(theme):
-    """Returns the story arc for the given theme"""
-    print(f"\nGenerating story arc for {theme}...")
-    arc_data = generate_story_arc(theme)
-    return arc_data
-
-def return_story_tree(theme, depth=8):
-    """Returns the story tree for the given theme"""
-    graph, story_state, output_file = generate_predetermined_story(theme)
-    return output_file
+    print(f"Story tree saved to {filename}")
+    return filename
 
 if __name__ == "__main__":
     print("Welcome to the Predetermined Story Generator!")
     print("=" * 50)
     
     theme = input("\nWhat kind of story would you like to generate?\n(e.g., Star Wars, Lord of the Rings, Dracula, Cyberpunk): ")
-    generate_predetermined_story(theme)
+    return_story_tree(theme)
