@@ -42,6 +42,7 @@ def generate_story_arc(theme):
     """Generate a high-level story arc for the given theme"""
     prompt = f"""
     Generate a rich story arc for an interactive narrative based on the {theme} theme.
+    Be sure to keep the characters/names the same as in the original theme.
     Include the major stages of the narrative journey, from introduction to conclusion.
     Structure it similarly to a classic hero's journey with challenges, setbacks, and growth.
     
@@ -482,7 +483,7 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
     
     # Process the root node (introduction)
     root_data = generate_story_node(f"""
-    Create an introduction for an interactive narrative game set in the world of {theme}.
+    Create an introduction for an interactive narrative game set in the world of {theme}.Be sure to keep the characters/names the same as in the original theme.
     You should be sticking to the story arc provided as much as possible, but feel free to deviate if you must:
     Here is the story arc:
     {story_arc}
