@@ -1,0 +1,364 @@
+{
+  "story_state": {
+    "characters": {
+      "player": {
+        "health": 100,
+        "experience": 10,
+        "mood": "determined",
+        "status_effects": [],
+        "inventory": []
+      }
+    },
+    "current_scene": {},
+    "inventory": [],
+    "visited_nodes": [
+      "node_0"
+    ],
+    "theme": "ninjago",
+    "max_depth": 3
+  },
+  "graph": {
+    "nodes": {
+      "node_0": {
+        "story": "Ninjago. A land forged in elemental power, tempered by trials, and now\u2026 bathed in a fragile peace. The rebuilt Monastery of Spinjitzu, perched high in the clouds above Jamanakai Village, stands as a testament to that peace. Here, the legendary ninja \u2013 Lloyd, Kai, Jay, Cole, Zane, and Nya \u2013 train a new generation, shaping protectors from potential. You are one of these initiates, eager to prove your worth, to master your elemental potential. Days are filled with grueling training regimens, sparring sessions that leave you bruised but exhilarated, and lectures on the history of Ninjago, tales of heroes and villains, of balance and destruction. Today is no different, or so you thought. Master Lloyd, green energy crackling around his hands, leads your group through a particularly challenging obstacle course designed to test your agility and focus. As you navigate a series of precarious platforms and elemental barriers, something strange occurs. When you touch a seemingly innocuous stone, a surge of energy courses through you, unlike anything you\u2019ve ever experienced. Images flash before your eyes \u2013 swirling colours, fragmented landscapes, and a feeling of immense power, both terrifying and intoxicating. You stumble back, clutching your head as the vision subsides. The stone glows faintly, an echo of the energy that now thrums within you. Master Lloyd approaches, his expression a mixture of concern and curiosity. \u201cWhat happened? Are you alright?\u201d he asks, his voice laced with genuine worry.",
+        "is_end": false,
+        "dialogue": "",
+        "scene_state": {
+          "location": "Settlement",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_1": {
+        "story": "Tell Master Lloyd about the surge of energy and the visions.",
+        "is_end": false,
+        "dialogue": "Lloyd observes the stone and suggests further investigation, intrigued by the anomaly.",
+        "scene_state": {
+          "location": "Ancient Ruins",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_2": {
+        "story": "Downplay the incident, claiming you just lost your balance.",
+        "is_end": false,
+        "dialogue": "Lloyd remains vigilant, but the training continues. However, you can feel the energy building inside you, hinting at something more significant.",
+        "scene_state": {
+          "location": "Crystal Caves",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_1_1": {
+        "story": "Relay the visions and energy surge to Master Lloyd immediately, detailing every sensation and image, hoping for his experienced insight.",
+        "is_end": true,
+        "dialogue": "Lloyd listens intently, his brow furrowed. He reveals a previously unknown detail about the Amulet of Harmony: it's said to amplify existing elemental abilities but can also corrupt them if the user's heart isn't pure. He urges caution and assigns Kai to train with you, focusing on controlling the energy surge.",
+        "scene_state": {
+          "location": "Hidden Valley",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {},
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        }
+      },
+      "node_0_1_2": {
+        "story": "Hide the full extent of the visions, only mentioning the energy surge to Master Lloyd, fearing the potential consequences of revealing the disturbing imagery you witnessed.",
+        "is_end": true,
+        "dialogue": "Lloyd expresses concern about the energy surge, but your hesitation makes him suspicious. He advises caution and assigns Nya to observe you closely, focusing on meditation and mental clarity to manage the energy. Your deception might hinder your training, but could also protect you from unwanted attention if the visions are dangerous.",
+        "scene_state": {
+          "location": "Hidden Valley",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {},
+        "outcome": {
+          "health_change": -10,
+          "experience_change": 25,
+          "inventory_changes": [
+            {
+              "add": "Scrap of ninjago Lore"
+            }
+          ]
+        }
+      },
+      "node_0_2_1": {
+        "story": "Scour Stiix's rooftops for the Serpent's Shadow assassins, hoping to catch them off guard and learn more about their motives before they can regroup.",
+        "is_end": true,
+        "dialogue": "You manage to track down a lone assassin, leading to a rooftop chase and a tense interrogation. You discover they were hired specifically to target you and retrieve the amulet fragment, but they don't know who issued the order, only receiving instructions through a coded message.",
+        "scene_state": {
+          "location": "Misty Lake",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {},
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the ninjago Conclusion"
+            }
+          ]
+        }
+      },
+      "node_0_2_2": {
+        "story": "Barricade yourself inside the nearest tea shop, using your newfound elemental abilities and the shop's resources to create a makeshift defense against further attacks, while sending a coded message to Nya for immediate assistance.",
+        "is_end": true,
+        "dialogue": "You successfully secure the tea shop and create several clever traps. While waiting for Nya's arrival, a group of Stiix's local gang members, seeing an opportunity, attempt to loot the shop. You are forced to defend your position against them, attracting unwanted attention but buying you time until Nya arrives with reinforcements.",
+        "scene_state": {
+          "location": "Forgotten Sanctuary",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {},
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        }
+      },
+      "node_0_1_1_1": {
+        "story": "Lloyd, deeply concerned by your account, recognizes the Amulet's influence far surpasses any threat they've faced. He guides you through a ritual, focusing your elemental energy to sever the bond with the fragment. The connection breaks, the surge dissipates, and the Amulet's fragments, now inert, are entrusted to the monastery for safekeeping, their power neutralized but ever-watched, as Ninjago enters a guarded, perhaps fragile, peace. Your journey, though, has just begun.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Crystal Caves",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_1_1_2": {
+        "story": "Your recounting of the visions sparks a revelation within Lloyd, connecting the Amulet's power to a forgotten technique known to the First Spinjitzu Master. He initiates a dangerous process to channel the energy surge, amplifying your abilities to a level unseen before. Empowered, you are now ready to face Morvus, the Amulet's volatile power now coursing through you, as the fate of Ninjago hangs in the balance, dependent on your choices and control.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -10,
+          "experience_change": 25,
+          "inventory_changes": [
+            {
+              "add": "Scrap of ninjago Lore"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Forgotten Sanctuary",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_1_2_1": {
+        "story": "The Amulet's fragments are secured, but a seed of doubt lingers. You bury the visions, hoping their source was a mere fluke. However, the energy surges continue, now subtle tremors beneath the surface of your carefully constructed normalcy, a constant reminder that the true danger may only be dormant, not defeated, and that the full truth remains shrouded in the shadows of what you chose not to reveal.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the ninjago Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Misty Lake",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_1_2_2": {
+        "story": "Morvus is defeated, and the fragments are scattered, their locations known only to you. Despite Lloyd's gratitude, the burden of your secret weighs heavily. You dedicate yourself to rigorous training, determined to master the lingering power within you and prepare for the day the visions resurface, knowing that when they do, you must face the darkness alone, or risk exposing Ninjago to a threat no one else understands.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Ancient Ruins",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "dark"
+        },
+        "characters": {}
+      },
+      "node_0_2_1_1": {
+        "story": "Pursuing the assassins across the rain-slicked rooftops of Stiix, you manage to corner their leader. With swift strikes and a strategic interrogation, you uncover Morvus's plan to claim the First Spinjitzu Master's power. The knowledge gained allows you to anticipate his next move, setting the stage for a decisive confrontation at the First Spinjitzu Master's tomb, where you'll face him prepared for his dark ambition.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Hidden Valley",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "dark"
+        },
+        "characters": {}
+      },
+      "node_0_2_1_2": {
+        "story": "The rooftop chase proves more treacherous than anticipated. While you eliminate the assassins, their numbers overwhelm you, forcing a retreat. Wounded and empty-handed, you narrowly escape capture, but the Serpent's Shadow disappears into the city's underbelly. Though the immediate threat is neutralized, Morvus's plans remain shrouded in mystery, leaving you with a chilling uncertainty about the future.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the ninjago Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Settlement",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_2_2_1": {
+        "story": "Nya arrives with a squadron of Samurai X mechs, shattering the Serpent's Shadow assault. Knowing Morvus is close to claiming the final Amulet fragment, you use a newly discovered transportation ability granted by your element to teleport directly to the First Spinjitzu Master's tomb, ready to confront him. Your allies clear the path while you prepare for a decisive showdown that will determine the fate of Ninjago.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the ninjago Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Hidden Valley",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {}
+      },
+      "node_0_2_2_2": {
+        "story": "The defense holds, but barely. Your coded message reaches Nya, but her arrival is delayed by a coordinated attack on Ninjago City. Realizing you are on your own, and that Morvus is about to achieve his goal, you make a daring choice. Using the chaotic energy of the tea shop's defenses, you overload your fragment\u2019s power, creating a surge that weakens Morvus's hold on the tomb, buying Nya precious time, but leaving you drained and vulnerable for the final confrontation.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -10,
+          "experience_change": 25,
+          "inventory_changes": [
+            {
+              "add": "Scrap of ninjago Lore"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Settlement",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {}
+      }
+    },
+    "edges": [
+      {
+        "from": "node_0",
+        "to": "node_0_1",
+        "action": "Tell Master Lloyd about the surge of energy and the visions."
+      },
+      {
+        "from": "node_0",
+        "to": "node_0_2",
+        "action": "Downplay the incident, claiming you just lost your balance."
+      },
+      {
+        "from": "node_0_1",
+        "to": "node_0_1_1",
+        "action": "Relay the visions and energy surge to Master Lloyd immediately, detailing every sensation and image, hoping for his experienced insight."
+      },
+      {
+        "from": "node_0_1",
+        "to": "node_0_1_2",
+        "action": "Hide the full extent of the visions, only mentioning the energy surge to Master Lloyd, fearing the potential consequences of revealing the disturbing imagery you witnessed."
+      },
+      {
+        "from": "node_0_2",
+        "to": "node_0_2_1",
+        "action": "Scour Stiix's rooftops for the Serpent's Shadow assassins, hoping to catch them off guard and learn more about their motives before they can regroup."
+      },
+      {
+        "from": "node_0_2",
+        "to": "node_0_2_2",
+        "action": "Barricade yourself inside the nearest tea shop, using your newfound elemental abilities and the shop's resources to create a makeshift defense against further attacks, while sending a coded message to Nya for immediate assistance."
+      },
+      {
+        "from": "node_0_1_1",
+        "to": "node_0_1_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_1",
+        "to": "node_0_1_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_1_2",
+        "to": "node_0_1_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_2",
+        "to": "node_0_1_2_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_1",
+        "to": "node_0_2_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_1",
+        "to": "node_0_2_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_2",
+        "to": "node_0_2_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_2",
+        "to": "node_0_2_2_2",
+        "action": "Pursue Ending Path 2"
+      }
+    ]
+  }
+}
