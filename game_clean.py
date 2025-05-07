@@ -856,7 +856,7 @@ def main():
                             print_box(f"You found: {', '.join(items_added)}")
                         
                         # A brief pause to let the player read the updates
-                        time.sleep(3)
+                        time.sleep(2.2)
                     
                     valid_choice = True
                 else:
