@@ -2,7 +2,7 @@ import time
 import json
 import os
 import textwrap
-from arc import return_story_tree, generate_scene_dialogue, generate_special_ability
+from arc import return_story_tree, generate_scene_dialogue, generate_special_ability, generate_story_node
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -597,7 +597,121 @@ def main():
                 print_box(current_node["consequence_dialogue"])
         
         # Check if we've reached an ending
-        if current_node["is_end"] or not current_node["children"]:
+        is_last_pregenerated = current_node["is_end"] or not current_node["children"]
+        at_max_depth = len(choice_path) == max_depth
+        dynamic_ending_node = None
+        dynamic_ending_choices = None
+        dynamic_ending_id = None
+        dynamic_conclusion_node = None
+        dynamic_conclusion_id = None
+        dynamic_ending_context = None
+
+        if is_last_pregenerated and at_max_depth:
+            # Dynamically generate the 'ending-pointed' node
+            # Gather context: path, choices, results
+            story_so_far = []
+            node_id = "node_0"
+            for idx in range(1, len(choice_path)):
+                node_id = node_id + f"_{choice_path[idx]}"
+                node = nodes.get(node_id)
+                if node:
+                    story_so_far.append(f"Step {idx}: {node['story']}")
+                    if node.get('consequence_dialogue'):
+                        story_so_far.append(f"Result: {node['consequence_dialogue']}")
+            context_text = "\n".join(story_so_far)
+            # Use the same number of choices as the user selected at the start
+            num_choices = choices_per_node
+            prompt = f"""
+            The player has reached the climax of their interactive story. Here is the journey so far:
+            {context_text}
+            
+            Now, generate a climactic scene that feels like the penultimate moment before the story's true ending. The scene should be highly specific to the events and choices so far. Offer exactly {num_choices} action-oriented choices, each clearly leading to a final outcome. Make it rich but concise: 5 sentences maximum. Format as a JSON object:
+            {{
+                "story": "Rich, dramatic text for the climactic scene",
+                "choices": [
+                    {{"text": "Action the player takes (verb first)", "consequences": "Immediate result"}},
+                    ...
+                ]
+            }}
+            """
+            dynamic_ending_node = generate_story_node(prompt)
+            if not dynamic_ending_node:
+                # Fallback if Gemini fails
+                fallback_choices = [
+                    {"text": "Face your destiny head-on.", "consequences": "You brace yourself for the outcome."},
+                    {"text": "Try to escape fate.", "consequences": "You look for a way out, but the end draws near."},
+                    {"text": "Seek help from an unexpected ally.", "consequences": "You call out, hoping someone will answer."},
+                    {"text": "Reflect on your journey and prepare for the end.", "consequences": "You gather your thoughts for what comes next."}
+                ]
+                dynamic_ending_node = {
+                    "story": "You stand at the threshold of your final challenge.",
+                    "choices": fallback_choices[:num_choices]
+                }
+            dynamic_ending_choices = dynamic_ending_node.get("choices", [])
+            dynamic_ending_id = "dynamic_ending_node"
+            dynamic_ending_context = context_text
+
+            # Present the dynamic ending node
+            print(f"\n📜 FINAL CHALLENGE 📜")
+            print_box(dynamic_ending_node["story"])
+            # Show choices
+            max_box_width = 70
+            choice_prefixes = [f"{i+1}. " for i in range(len(dynamic_ending_choices))]
+            wrapped_choices = []
+            for i, choice in enumerate(dynamic_ending_choices):
+                prefix = choice_prefixes[i]
+                wrapped = textwrap.wrap(choice["text"], width=max_box_width - len(prefix) - 3)
+                if not wrapped:
+                    wrapped = [""]
+                lines = []
+                for idx, line in enumerate(wrapped):
+                    if idx == 0:
+                        lines.append(prefix + line)
+                    else:
+                        lines.append(" " * len(prefix) + line)
+                wrapped_choices.append(lines)
+            print(f"╔{'═'*max_box_width}╗")
+            for i, lines in enumerate(wrapped_choices):
+                for line in lines:
+                    print(f"║ {line:<{max_box_width-1}}║")
+                if i < len(wrapped_choices) - 1:
+                    print(f"║{'-'*max_box_width}║")
+            print(f"╚{'═'*max_box_width}╝")
+
+            # Get player choice for the dynamic ending node
+            valid_choice = False
+            while not valid_choice:
+                try:
+                    choice_input = input("\nEnter your choice (number): ").strip()
+                    choice_index = int(choice_input) - 1
+                    if 0 <= choice_index < len(dynamic_ending_choices):
+                        chosen_ending_choice = dynamic_ending_choices[choice_index]
+                        valid_choice = True
+                    else:
+                        print(f"Please enter a number between 1 and {len(dynamic_ending_choices)}.")
+                except ValueError:
+                    print("Please enter a valid number.")
+
+            # Now, generate the final conclusion node
+            final_context = context_text + f"\nFinal Choice: {chosen_ending_choice['text']}\nResult: {chosen_ending_choice.get('consequences','')}"
+            conclusion_prompt = f"""
+            The player has completed their interactive story. Here is the full journey:
+            {final_context}
+            
+            Write a powerful, natural conclusion to the story. The ending should reflect the player's choices and actions, and can be positive, negative, or mixed. Make the ending concise: keep it to 2-4 sentences maximum. Format as a JSON object:
+            {{
+                "ending": "A rich but brief, satisfying conclusion to the story (2-4 sentences)."
+            }}
+            """
+            dynamic_conclusion_node = generate_story_node(conclusion_prompt)
+            if not dynamic_conclusion_node or "ending" not in dynamic_conclusion_node:
+                dynamic_conclusion_node = {"ending": "Your journey comes to an end. The consequences of your actions echo into the future."}
+            print(f"\n🏁 STORY CONCLUSION 🏁")
+            print_box(dynamic_conclusion_node["ending"])
+            break
+
+        # (rest of the original loop follows as before)
+        if is_last_pregenerated and not at_max_depth:
             print("\nYou've reached the end of your journey!")
             break
         
