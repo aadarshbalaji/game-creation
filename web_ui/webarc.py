@@ -570,7 +570,7 @@ def return_story_tree(theme, depth=3, choices_per_node=4):
     visited.add(root_id)
     
     # BFS to generate the rest of the tree
-    while queue and len(visited) < 150: # Increased safety limit slightly
+    while queue and len(visited) < 4**12: # Increased safety limit slightly
         node_id, current_depth = queue.pop(0)
 
         # Skip if we've visited this node (check visited size for safety limit)
