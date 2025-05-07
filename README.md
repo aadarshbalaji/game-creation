@@ -138,3 +138,5 @@ The game automatically saves progress after each choice in `game_save.json`. Pro
 - Story generation may take a few moments
 - Each playthrough creates a unique narrative
 - Story adapts to player choices
+
+https://deepwiki.com/aadarshbalaji/game-creation
