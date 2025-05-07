@@ -61,7 +61,7 @@ python3 app.py
 ```
 Then open your browser to `http://localhost:5000`
 
-> **Note:** The web version is currently in beta and may have limited functionality compared to the CLI version.
+> **Note:** The web version is currently in beta and will have limited functionality compared to the CLI version.
 
 ## Project Structure
 
@@ -78,38 +78,6 @@ Then open your browser to `http://localhost:5000`
 - `web_ui/webarc.py` - Web-specific story arc handling
 - `web_ui/templates/` - HTML templates
 - `web_ui/static/` - CSS, JavaScript, and static assets
-
-### Key Classes
-
-#### StoryState
-- Tracks game state including:
-  - Characters and their states
-  - Current scene information
-  - Player inventory
-  - Visited nodes
-  - Story theme
-
-#### Node
-- Represents a story segment with:
-  - Story text
-  - Scene state
-  - Character information
-  - Consequences of choices
-  - Connection to other nodes
-
-#### Graph
-- Manages story structure:
-  - Tracks node connections
-  - Handles navigation between scenes
-  - Maintains story progression
-
-#### Player
-- Manages player state:
-  - Health (0-100)
-  - Inventory
-  - Experience points
-  - Current location
-  - Traversal history
 
 ## Gameplay
 
