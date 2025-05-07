@@ -823,25 +823,54 @@ def generate_scene_dialogue(node_data, theme):
         location = scene_state.get("location", "this mysterious place")
         ambient = scene_state.get("ambient", "the quiet air")
         weather = scene_state.get("weather", "calm")
+        time_of_day = scene_state.get("time_of_day", "day")
 
-        thoughts = [
-            f"You take a moment to consider your surroundings in {location}. The {ambient} offers little comfort as you feel {player_mood}.",
-            f"A wave of {player_mood} washes over you as you contemplate the path ahead in {location}, the {weather} weather doing little to change your focus.",
-            f"The silence in {location} is heavy, broken only by the sound of your own breathing. What should you do next?",
-            f"This {location} feels particularly {weather} today. You try to focus on your objective, despite the {ambient} atmosphere.",
-            f"Surveying {location}, you can't shake the feeling of being watched. The {ambient} and {player_mood} state make it hard to concentrate."
-        ]
-        import random
-        return f"[Player's Thoughts]: {random.choice(thoughts)}"
+        # Use Gemini to generate more dynamic player thoughts
+        prompt = f"""
+        Generate a single, immersive thought for the player character in a {theme} setting.
+        The character is in {location} during {time_of_day} with {weather} weather.
+        The ambient atmosphere is {ambient} and the character's mood is {player_mood}.
+        The thought should be natural, atmospheric, and reflect the character's current state.
+        Keep it to 1-2 sentences maximum.
+        Format: Just the thought text, no additional formatting or quotes.
+        """
+        
+        try:
+            response = client.models.generate_content(
+                contents=[prompt],
+                model="gemini-2.0-flash",
+            )
+            
+            if response.text:
+                thought = response.text.strip()
+                return f"[Player's Thoughts]: {thought}"
+        except Exception as e:
+            print(f"Error generating player thoughts: {e}")
+            # Fallback to generic thoughts if Gemini fails
+            thoughts = [
+                f"You take a moment to consider your surroundings in {location}. The {ambient} offers little comfort as you feel {player_mood}.",
+                f"A wave of {player_mood} washes over you as you contemplate the path ahead in {location}, the {weather} weather doing little to change your focus.",
+                f"The silence in {location} is heavy, broken only by the sound of your own breathing. What should you do next?",
+                f"This {location} feels particularly {weather} today. You try to focus on your objective, despite the {ambient} atmosphere.",
+                f"Surveying {location}, you can't shake the feeling of being watched. The {ambient} and {player_mood} state make it hard to concentrate."
+            ]
+            import random
+            return f"[Player's Thoughts]: {random.choice(thoughts)}"
 
     # Extract key elements from the story text to make dialogue more relevant
     location = node_data.get("scene_state", {}).get("location", "this place")
+    time_of_day = node_data.get("scene_state", {}).get("time_of_day", "day")
+    weather = node_data.get("scene_state", {}).get("weather", "clear")
+    ambient = node_data.get("scene_state", {}).get("ambient", "quiet")
     
     # Extract key nouns and concepts from the story
     nouns = []
     important_objects = ["sword", "key", "door", "map", "artifact", "treasure", "weapon", "book", 
                         "device", "machine", "creature", "monster", "ship", "vehicle", "potion", 
-                        "scroll", "computer", "terminal", "gold", "jewel", "crystal", "orb"]
+                        "scroll", "computer", "terminal", "gold", "jewel", "crystal", "orb",
+                        "data", "file", "code", "program", "system", "network", "core", "power",
+                        "energy", "shield", "armor", "tool", "equipment", "supplies", "rations",
+                        "medicine", "herb", "plant", "animal", "beast", "spirit", "ghost", "undead"]
     
     for word in story_text.split():
         # Remove punctuation
@@ -855,14 +884,17 @@ def generate_scene_dialogue(node_data, theme):
     # Extract primary action/activity in the scene
     actions = []
     action_verbs = {
-        "searching": ["search", "look", "seek", "hunt", "explore"],
-        "fighting": ["fight", "battle", "combat", "attack", "defend", "struggle"],
-        "escaping": ["escape", "flee", "run", "evade", "avoid"],
-        "investigating": ["investigate", "examine", "inspect", "study", "analyze"],
-        "meeting": ["meet", "encounter", "find", "discover"],
-        "travelling": ["travel", "journey", "trek", "voyage", "expedition"],
-        "hiding": ["hide", "conceal", "stealth", "sneak"],
-        "negotiating": ["negotiate", "bargain", "deal", "trade", "barter"]
+        "searching": ["search", "look", "seek", "hunt", "explore", "scan", "survey", "probe"],
+        "fighting": ["fight", "battle", "combat", "attack", "defend", "struggle", "clash", "engage"],
+        "escaping": ["escape", "flee", "run", "evade", "avoid", "retreat", "withdraw", "bolt"],
+        "investigating": ["investigate", "examine", "inspect", "study", "analyze", "probe", "research"],
+        "meeting": ["meet", "encounter", "find", "discover", "greet", "approach", "confront"],
+        "travelling": ["travel", "journey", "trek", "voyage", "expedition", "move", "advance"],
+        "hiding": ["hide", "conceal", "stealth", "sneak", "lurk", "skulk", "creep"],
+        "negotiating": ["negotiate", "bargain", "deal", "trade", "barter", "haggle", "discuss"],
+        "hacking": ["hack", "crack", "breach", "infiltrate", "access", "override", "bypass"],
+        "healing": ["heal", "cure", "mend", "restore", "revive", "treat", "nurse"],
+        "crafting": ["craft", "create", "build", "forge", "construct", "assemble", "fashion"]
     }
     
     for action_type, verbs in action_verbs.items():
@@ -906,7 +938,54 @@ def generate_scene_dialogue(node_data, theme):
     char_mood = char_data.get("mood", "neutral")
     char_desc = char_data.get("description", "")
     
-    # Generate dialogue based on scene context
+    # Use Gemini to generate dynamic dialogue
+    prompt = f"""
+    Here is the node data:
+    {node_data}
+    Generate a natural dialogue exchange between the player and {char_name} in a {theme} setting.
+    The scene takes place in {location} during {time_of_day} with {weather} weather.
+    The ambient atmosphere is {ambient}.
+    {char_name} is a {char_type} character who is {char_mood}.
+    The primary action in the scene is {primary_action}.
+    {f"The conversation could involve {key_object}." if key_object else ""}
+    
+    Generate exactly 3 lines of dialogue in this format:
+    1. Player's opening line
+    2. Character's response
+    3. Player's follow-up
+    
+    You can/should be a little creative with the dialogue but strictly follow the format.
+    Keep each line concise (1-2 sentences) and natural.
+    Make the dialogue specific to the scene context and character type.
+    Format each line with the speaker in brackets, like: 
+    [You]: Player's line
+    [Character]: Character's line
+    [You]: Player's line
+    """
+    
+    try:
+        response = client.models.generate_content(
+            contents=[prompt],
+            model="gemini-2.0-flash",
+        )
+        
+        if response.text:
+            # Clean up the response to ensure proper formatting
+            dialogue_lines = response.text.strip().split('\n')
+            cleaned_lines = []
+            
+            for line in dialogue_lines:
+                line = line.strip()
+                if line.startswith('[You]') or line.startswith(f'[{char_name}]'):
+                    cleaned_lines.append(line)
+            
+            # Ensure we have exactly 3 lines
+            if len(cleaned_lines) == 3:
+                return '\n'.join(cleaned_lines)
+    except Exception as e:
+        print(f"Error generating dialogue: {e}")
+    
+    # Fallback to template-based dialogue if Gemini fails
     dialogue_lines = []
     
     # Create dialogue that specifically references scene elements
@@ -917,11 +996,11 @@ def generate_scene_dialogue(node_data, theme):
             player_opener = f"What can you tell me about {location}? I'm trying to find something important."
             
         if char_type == "ally":
-            response = f"I've been in {location} for a while now. The {node_data['scene_state'].get('ambient')} atmosphere makes it difficult to search properly, but I'll help you look."
+            response = f"I've been in {location} for a while now. The {ambient} atmosphere makes it difficult to search properly, but I'll help you look."
         elif char_type == "enemy":
             response = f"You think I'd tell you where to find anything valuable in {location}? You're even more foolish than you look."
         else:
-            response = f"Many come to {location} searching. Few find what they're looking for, especially in this {node_data['scene_state'].get('weather')} weather."
+            response = f"Many come to {location} searching. Few find what they're looking for, especially in this {weather} weather."
         
         player_followup = "I appreciate any information you can share. Time is running short."
         
@@ -931,9 +1010,9 @@ def generate_scene_dialogue(node_data, theme):
         if char_type == "enemy":
             response = f"Words won't save you now. This {location} will become your tomb."
         elif char_type == "ally":
-            response = f"Stay close! These enemies know {location} better than we do. Watch for movement in the {node_data['scene_state'].get('ambient')} shadows."
+            response = f"Stay close! These enemies know {location} better than we do. Watch for movement in the {ambient} shadows."
         else:
-            response = f"I'm staying out of this conflict. Fighting in {location} during {node_data['scene_state'].get('time_of_day')} is a fool's errand."
+            response = f"I'm staying out of this conflict. Fighting in {location} during {time_of_day} is a fool's errand."
         
         player_followup = "Then I'll do what I must."
     
@@ -941,11 +1020,11 @@ def generate_scene_dialogue(node_data, theme):
         player_opener = f"What's the quickest way out of {location}? We need to move fast."
         
         if char_type == "ally":
-            response = f"Follow me! I know a hidden path through {location}. We need to hurry before the {node_data['scene_state'].get('weather')} worsens."
+            response = f"Follow me! I know a hidden path through {location}. We need to hurry before the {weather} worsens."
         elif char_type == "enemy":
             response = f"There's no escape from {location}. The exits are all watched, and my associates are waiting."
         else:
-            response = f"I've survived in {location} by knowing when to leave. Head toward the {node_data['scene_state'].get('ambient')} section and don't look back."
+            response = f"I've survived in {location} by knowing when to leave. Head toward the {ambient} section and don't look back."
         
         player_followup = "Let's not waste any more time then."
     
@@ -956,11 +1035,11 @@ def generate_scene_dialogue(node_data, theme):
             player_opener = f"I think we can help each other. What are your terms?"
         
         if char_type == "neutral":
-            response = f"My knowledge of {location} is valuable, especially during {node_data['scene_state'].get('time_of_day')}. Make it worth my while, and we have a deal."
+            response = f"My knowledge of {location} is valuable, especially during {time_of_day}. Make it worth my while, and we have a deal."
         elif char_type == "enemy":
             response = f"You have nothing I want except your interference in {location} to end. Leave now, that's my only offer."
         else:
-            response = f"No need for payment between allies. What we find in {location}, we share. That's how we survive the {node_data['scene_state'].get('weather')}."
+            response = f"No need for payment between allies. What we find in {location}, we share. That's how we survive the {weather}."
         
         player_followup = "I can work with those terms. Let's proceed."
     
@@ -982,11 +1061,11 @@ def generate_scene_dialogue(node_data, theme):
         player_opener = f"What can you tell me about the {unique_feature} in {location}? It seems unusual."
         
         if char_type == "ally":
-            response = f"I've been tracking it for days. The {unique_feature} appeared when the {node_data['scene_state'].get('time_of_day')} first changed so abruptly."
+            response = f"I've been tracking it for days. The {unique_feature} appeared when the {time_of_day} first changed so abruptly."
         elif char_type == "enemy":
             response = f"You ask too many questions. The {unique_feature} is none of your concern. Leave {location} while you still can."
         else:
-            response = f"The {unique_feature} has been here since before my time. Some say it's a sign of what's coming to {location}. I just avoid it when the {node_data['scene_state'].get('weather')} gets bad."
+            response = f"The {unique_feature} has been here since before my time. Some say it's a sign of what's coming to {location}. I just avoid it when the {weather} gets bad."
         
         player_followup = "Interesting. I'll keep that in mind as I continue."
     
@@ -994,7 +1073,7 @@ def generate_scene_dialogue(node_data, theme):
     dialogue_lines.append(f"[You]: {player_opener}")
     dialogue_lines.append(f"[{char_name}]: {response}")
     dialogue_lines.append(f"[You]: {player_followup}")
-    
+    print('Manual Dialogue')
     # Format the final dialogue
     return "\n".join(dialogue_lines)
 
@@ -1397,13 +1476,13 @@ def generate_ending_outcome(node_id, theme):
     """Generates a basic outcome dictionary for an ending node."""
     outcome_hash = hash(node_id)
     if outcome_hash % 4 == 0: # Bad ending
-        return {"health_change": -30, "experience_change": 5, "inventory_changes": []}
+        return {"health_change": -30, "experience_change": 50, "inventory_changes": []}
     elif outcome_hash % 4 == 1: # Good ending
-         return {"health_change": 25, "experience_change": 40, "inventory_changes": [{"add": f"Memento of the {theme} Conclusion"}]}
+         return {"health_change": 25, "experience_change": 400, "inventory_changes": [{"add": f"Memento of the {theme} Conclusion"}]}
     elif outcome_hash % 4 == 2: # Neutral ending
-         return {"health_change": 0, "experience_change": 20, "inventory_changes": []}
+         return {"health_change": 0, "experience_change": 200, "inventory_changes": []}
     else: # Mixed ending
-         return {"health_change": -10, "experience_change": 25, "inventory_changes": [{"add": f"Scrap of {theme} Lore"}]}
+         return {"health_change": -10, "experience_change": 250, "inventory_changes": [{"add": f"Scrap of {theme} Lore"}]}
 
 def generate_intermediate_outcome(node_id, theme, story_text):
     """Generates a small, randomized outcome for intermediate nodes."""
@@ -1416,7 +1495,7 @@ def generate_intermediate_outcome(node_id, theme, story_text):
     story_text_lower = story_text.lower()
 
     # Experience: Small amount for progressing
-    outcome["experience_change"] = random.choices([0, 1, 2, 3, 5], weights=[0.2, 0.3, 0.2, 0.2, 0.1], k=1)[0]
+    outcome["experience_change"] = random.choices([0, 10, 20, 30, 50], weights=[0.2, 0.3, 0.2, 0.2, 0.1], k=1)[0]
 
     # Health: Chance of small changes based on context
     if any(keyword in story_text_lower for keyword in ["danger", "fight", "trap", "struggle", "injury", "wound", "attack", "battle"]):
@@ -1425,40 +1504,6 @@ def generate_intermediate_outcome(node_id, theme, story_text):
         outcome["health_change"] = random.choices([0, 1, 2, 3], weights=[0.5, 0.2, 0.2, 0.1], k=1)[0]
     else:  # Neutral or general exploration
         outcome["health_change"] = random.choices([-1, 0, 1], weights=[0.15, 0.7, 0.15], k=1)[0]
-
-
-    # Inventory: Small chance of finding a common item based on theme and action
-    if random.random() < 0.08:  # 8% chance
-        common_items_by_theme = {
-            "fantasy": ["Old Coin", "Torn Parchment", "Shiny Pebble", "Herb", "Simple Lockpick"],
-            "star wars": ["Damaged Credit Chip", "Power Cell (low)", "Scrap Metal", "Ration Pack", "Droid Caller Part"],
-            "cyberpunk": ["Broken Data Shard", "Flickering LED", "Loose Wire", "Stim-Patch (used)", "Corroded Connector"],
-            "horror": ["Rusty Nail", "Faded Photograph", "Dusty Rag", "Chipped Bone", "Creepy Doll Eye"],
-            "detective": ["Spent Casing", "Muddy Footprint Sketch", "Crumpled Note", "Lost Button", "Magnifying Glass Lens"],
-            "western": ["Empty Bullet Shell", "Worn Leather Strap", "Smooth Stone", "Dried Jerky Bit", "Tarnished Spur"]
-        }
-        
-        default_items = ["Mysterious Trinket", "Small Oddity", "Useful Scrap", "Curious Bauble"]
-        
-        items_to_use = default_items
-        for theme_key, themed_items in common_items_by_theme.items():
-            if theme_key in theme.lower():
-                items_to_use = themed_items
-                break
-        
-        # Contextual item based on story text
-        if any(keyword in story_text_lower for keyword in ["search", "look", "explore", "investigate", "find", "discover"]):
-            if "tech" in story_text_lower or "computer" in story_text_lower:
-                items_to_use.append("Bundle of Wires")
-            elif "nature" in story_text_lower or "forest" in story_text_lower or "cave" in story_text_lower:
-                items_to_use.append("Strange Plant Sample")
-            elif "old" in story_text_lower or "ruin" in story_text_lower:
-                 items_to_use.append("Ancient Pottery Shard")
-
-
-        if items_to_use: # Ensure list is not empty
-            item_found = random.choice(items_to_use)
-            outcome["inventory_changes"].append({"add": item_found})
 
     return outcome
 
