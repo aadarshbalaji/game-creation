@@ -7,8 +7,13 @@ import traceback
 from Graph_Classes.Structure import Node, Graph
 import re
 from clean_and_parse_json import clean_and_parse_json
+from dotenv import load_dotenv
+# Load environment variables from keys.env
+load_dotenv('keys.env')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found in keys.env")
 
-GOOGLE_API_KEY = "AIzaSyAEcjdAjZjmecdsKIb21-Gu2bq6m7zfKaE"
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:

@@ -1,42 +1,83 @@
 # Netflix Games Choose Your Own Adventure Game
 
-An interactive text-based adventure game that generates unique stories based on user input themes using Google Gemini. The game creates rich narratives with branching paths, character interactions, and consequences for player choices.
+An interactive text-based adventure game that generates unique stories based on user input themes using Google Gemini. The game creates rich narratives with branching paths, character interactions, and consequences for player choices. Available in both CLI and web interface versions (web version currently in beta).
+
+## Features
+
+- 🎮 **Multiple Interfaces**
+  - Command-line interface (CLI) version (Recommended)
+  - Web-based interface with Flask (Beta)
+  - Rich text formatting and emoji support
+
+- 📖 **Dynamic Story Generation**
+  - AI-powered story creation using Google Gemini
+  - Unique narratives for each playthrough
+  - Branching story paths based on choices
+  - Character relationship system
+  - Health and inventory management
+
+- 🎯 **Game Elements**
+  - Health bars with hearts (♥)
+  - Experience points with stars (✦)
+  - Character moods with emojis
+  - Formatted text boxes
+  - Scene information with icons
+  - Save/load functionality
 
 ## Setup
 
-1. Install required dependencies:
+### Prerequisites
+- Python 3.7+
+- Google Gemini API key
+
+### Installation
+
+1. Clone the repository:
 ```bash
-pip install google-genai
+git clone <repository-url>
+cd game-creation
 ```
 
-2. Add your Google API key in `storygen.py`:
-```python
-GOOGLE_API_KEY = "YOUR-API-KEY-HERE"
+2. Install required dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-3. Launch the game:
+3. Set up your Google API key:
+   - Create a `keys.env` file in the root directory
+   - Add your API key: `GOOGLE_API_KEY=your-api-key-here`
+
+### Running the Game
+
+#### CLI Version (Recommended)
 ```bash
-python3 game.py
+python3 game_clean.py
 ```
+
+#### Web Version (Beta)
+```bash
+cd web_ui
+python3 app.py
+```
+Then open your browser to `http://localhost:5000`
+
+> **Note:** The web version is currently in beta and may have limited functionality compared to the CLI version.
 
 ## Project Structure
 
-### Main Components
+### Core Components
 
-#### 1. game.py
-- Main game loop and user interface
-- Handles player input and game state
-- Displays story content and choices
-- Manages game progression
+#### CLI Version
+- `game_clean.py` - Main game loop and CLI interface
+- `storygen.py` - Story generation using Gemini AI
+- `arc.py` - Story arc management and progression
+- `Graph_Classes/` - Core game mechanics classes
 
-#### 2. storygen.py
-- Story generation using Gemini AI
-- Manages game state persistence
-- Handles save/load functionality
-- Generates initial and continuation stories
-
-#### 3. Graph_Classes/
-- Contains core game mechanics classes
+#### Web Version
+- `web_ui/app.py` - Flask web application
+- `web_ui/webarc.py` - Web-specific story arc handling
+- `web_ui/templates/` - HTML templates
+- `web_ui/static/` - CSS, JavaScript, and static assets
 
 ### Key Classes
 
@@ -70,73 +111,15 @@ python3 game.py
   - Current location
   - Traversal history
 
-### Key Functions
-
-#### generate_initial_story(theme)
-- Creates opening scene based on user's theme
-- Sets up initial characters and environment
-- Generates first set of choices
-
-#### generate_story_node(context, story_state)
-- Generates continuation of story based on player choices
-- Creates new scenes and choices
-- Maintains story consistency
-
-#### print_state(title, data)
-- Displays formatted game information
-- Shows character status with emojis
-- Presents scene details
-
-#### print_box(text)
-- Creates decorated text boxes for story display
-- Handles text wrapping and formatting
-
 ## Gameplay
 
-1. Start the game
+1. Start the game (CLI or web version)
 2. Enter your name
 3. Choose a story theme (e.g., "Star Wars", "Dracula", "Fantasy")
 4. Navigate through the story by selecting choices
 5. Manage health and inventory
 6. Reach different endings based on choices
 
-## Features
-
-- Dynamic story generation
-- Character interaction system
-- Health and inventory management
-- Save/load functionality
-- Rich text formatting
-- Emoji-enhanced display
-- Themed story generation
-- Branching narrative paths
-
-## Game Elements
-
-### Display Features
-- Health bars with hearts (♥)
-- Experience points with stars (✦)
-- Character moods with emojis
-- Formatted text boxes
-- Scene information with icons
-
-### Gameplay Elements
-- Health management
-- Item collection/loss
-- Character relationships
-- Multiple story paths
-- Consequences for choices
-- Backtracking options
-
 ## Save System
 
-The game automatically saves progress after each choice in `game_save.json`. Progress is automatically loaded when returning to a previous session.
-
-## Notes
-
-- Requires active internet connection for AI story generation
-- Story generation may take a few moments
-- Each playthrough creates a unique narrative
-- Story adapts to player choices
-
-https://deepwiki.com/aadarshbalaji/game-creation
+The game automatically saves progress after each choice. Progress is automatically loaded when returning to a previous session (beta).
