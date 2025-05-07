@@ -613,25 +613,33 @@ def main():
         
         # Display choices
         print("\n🎲 WHAT WILL YOU DO? 🎲")
-        print(f"╔{'═'*68}╗")
-        
+
+        max_box_width = 70  # Set the maximum width for the box
+        choice_prefixes = [f"{i+1}. " for i in range(len(choices))]
+        wrapped_choices = []
         for i, (_, choice_text) in enumerate(choices):
-            # Wrap the choice text to fit within the box
-            wrapped_lines = textwrap.wrap(choice_text, width=66)
-            
-            # Print the first line with the choice number
-            first_line = wrapped_lines[0] if wrapped_lines else ""
-            print(f"║ {i+1}. {first_line:<65} ║")
-            
-            # Print any additional lines (max one more line to keep it concise)
-            if len(wrapped_lines) > 1:
-                print(f"║    {wrapped_lines[1]:<65} ║")
-            
-            # Add a separator between choices
-            if i < len(choices) - 1:
-                print(f"║{'-'*68}║")
-            else:
-                print(f"╚{'═'*68}╝")
+            prefix = choice_prefixes[i]
+            # The first line gets the prefix, subsequent lines are indented
+            wrapped = textwrap.wrap(choice_text, width=max_box_width - len(prefix) - 3)  # 3 for space and borders
+            if not wrapped:
+                wrapped = [""]
+            lines = []
+            for idx, line in enumerate(wrapped):
+                if idx == 0:
+                    lines.append(prefix + line)
+                else:
+                    lines.append(" " * len(prefix) + line)
+            wrapped_choices.append(lines)
+        # Draw the top border
+        print(f"╔{'═'*max_box_width}╗")
+        for i, lines in enumerate(wrapped_choices):
+            for line in lines:
+                print(f"║ {line:<{max_box_width-1}}║")
+            # Add a separator between choices, except after the last one
+            if i < len(wrapped_choices) - 1:
+                print(f"║{'-'*max_box_width}║")
+        # Draw the bottom border
+        print(f"╚{'═'*max_box_width}╝")
         
         # Get player choice
         valid_choice = False
