@@ -2,6 +2,8 @@
 
 An interactive text-based adventure game that generates unique stories based on user input themes using Google Gemini. The game creates rich narratives with branching paths, character interactions, and consequences for player choices. Available in both CLI and web interface versions (web version currently in beta).
 
+DeepWiki with in depth explanations: https://deepwiki.com/jronit/netflix-cyoa
+
 ## Features
 
 - 🎮 **Multiple Interfaces**
