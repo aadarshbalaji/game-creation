@@ -1,0 +1,1049 @@
+{
+  "story_state": {
+    "characters": {
+      "player": {
+        "health": 100,
+        "experience": 80,
+        "mood": "determined",
+        "status_effects": [],
+        "inventory": []
+      }
+    },
+    "current_scene": {
+      "story": "Uncover the Mechanism: Investigate a series of intricate gears and levers hidden behind a movable mural, believing they control some ancient defense system within the temple that could be used against Apophis.",
+      "is_end": true,
+      "dialogue": "Activating the mechanism reveals a hidden chamber containing a powerful energy focusing lens, potentially capable of amplifying the Ninja's elemental powers against Apophis, but triggering it also awakens dormant temple guardians \u2013 powerful stone constructs animated by the desert sands, posing a significant combat challenge.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_2_1",
+        "node_0_2_1_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ],
+      "visited": true
+    },
+    "inventory": [],
+    "visited_nodes": [
+      "0",
+      "2",
+      "1",
+      "2"
+    ],
+    "theme": "Ninjago",
+    "max_depth": 4
+  },
+  "graph": {
+    "node_0": {
+      "story": "The salty air of Ninjago City is usually a welcome change after a hard-won battle, but today it stings with an unnatural grit. Just weeks ago, you and the Ninja \u2013 Kai, Jay, Zane, Cole, Lloyd, and Nya \u2013 were celebrating another victory, enjoying the peace that rarely lasts. But as you relax at the docks, a monstrous sandstorm erupts from the horizon. It's unlike anything you've ever seen, a swirling vortex of ochre that swallows the sky. The air vibrates with a low, guttural hum, and whispers carried on the wind speak of a name long forgotten: Apophis, the Eater of Worlds. The storm intensifies, burying everything in its path. You struggle to stand, sand blasting against your face as a glint of gold catches your eye. It's a crumbling mural, unearthed by the storm, depicting a serpentine deity consuming everything in its path. This is no ordinary sandstorm. It's a harbinger. The Ninja gather, faces grim. Lloyd, ever the leader, points towards the Shifting Sands Desert. \"The storm's source...it's coming from an ancient ruin, buried deep within. We have to stop it, before it consumes all of Ninjago.\"",
+      "is_end": false,
+      "dialogue": "[You]: This storm is relentless, have you seen anything like it before, friend?\n[Wandering Helper]: I have not, traveler. But the ancients spoke of golden idols buried in these mountains, said to calm raging spirits.\n[You]: Perhaps finding one could help us against this...Apophis. Lead the way!",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Mountains",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        },
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        },
+        "player": {
+          "health": 100,
+          "experience": 10,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": -3,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1",
+        "node_0_2"
+      ],
+      "child_actions": [
+        "Volunteer to lead the expedition into the Shifting Sands Desert.",
+        "Suggest a strategic planning session before venturing into the desert."
+      ]
+    },
+    "node_0_1": {
+      "story": "Volunteer to lead the expedition into the Shifting Sands Desert.",
+      "is_end": false,
+      "dialogue": "You step forward, offering to guide the Ninja into the unknown.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": 1,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1",
+        "node_0_1_2"
+      ],
+      "child_actions": [
+        "Volunteer Kai to lead the expedition, trusting in his fiery spirit and decisive action to cut through the immediate dangers.",
+        "Nominate Nya as the leader, believing her strategic mind and adaptable nature will be crucial for navigating the unpredictable desert and uncovering the mysteries behind the storm."
+      ]
+    },
+    "node_0_2": {
+      "story": "Suggest a strategic planning session before venturing into the desert.",
+      "is_end": false,
+      "dialogue": "[You]: This desert air hums with secrets; perhaps a wise strategy is needed before we venture further, wouldn't you agree?\n[Local Inhabitant]: The sands whisper warnings to those who don't listen. Planning is wise, if you truly seek survival.\n[You]: Indeed. Tell me, what precautions do seasoned travelers take in these parts?",
+      "consequence_dialogue": "You propose a detailed assessment of the situation and a well-defined plan.",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        },
+        "player": {
+          "health": 100,
+          "experience": 60,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1",
+        "node_0_2_2"
+      ],
+      "child_actions": [
+        "Analyze the Temple Murals: Study the newly unearthed temple murals for clues about Apophis's weaknesses and potential countermeasures.",
+        "Gather Supplies: Immediately prepare a survival kit focusing on desert survival essentials like water, durable equipment, and protective gear for the desert's harsh elements."
+      ],
+      "visited": true
+    },
+    "node_0_1_1": {
+      "story": "Volunteer Kai to lead the expedition, trusting in his fiery spirit and decisive action to cut through the immediate dangers.",
+      "is_end": false,
+      "dialogue": "Kai confidently steps forward, rallying the team with a fiery speech. The Ninja prepare to depart, Kai immediately focusing on identifying the most direct route through the encroaching sandstorm, potentially overlooking subtle warnings or dangers.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_1",
+        "node_0_1_1_2"
+      ],
+      "child_actions": [
+        "Charge straight through the sand raider ambush, using Kai's fire to create a diversion and scatter the enemy ranks, relying on the element of surprise and overwhelming force to secure a path through the dunes.",
+        "Carefully flank the sand raiders, utilizing Nya's water techniques to create illusions and conceal the team's movement, attempting to stealthily bypass the ambush and minimize confrontation to conserve energy and resources for the challenges ahead."
+      ]
+    },
+    "node_0_1_2": {
+      "story": "Nominate Nya as the leader, believing her strategic mind and adaptable nature will be crucial for navigating the unpredictable desert and uncovering the mysteries behind the storm.",
+      "is_end": false,
+      "dialogue": "Nya accepts the responsibility, her gaze steady and determined. She gathers the team, emphasizing the need for caution and observation, prioritizing information gathering and strategic planning over brute force, potentially delaying their immediate progress but minimizing risks.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_1",
+        "node_0_1_2_2"
+      ],
+      "child_actions": [
+        "Venture deeper into the desert, following Nya's lead, prioritizing speed and bypassing the ravaged village to reach the Apophis temple quicker.",
+        "Attempt to aid the villagers trapped in nightmares, following Nya's plan to use her water powers to enter the dreamscape and offer support."
+      ]
+    },
+    "node_0_2_1": {
+      "story": "Analyze the Temple Murals: Study the newly unearthed temple murals for clues about Apophis's weaknesses and potential countermeasures.",
+      "is_end": false,
+      "dialogue": "[You]: What can you tell me about Temple? I'm trying to find something important.\n[Mysterious Adversary]: You think I'd tell you where to find anything valuable in Temple? You're even more foolish than you look.\n[You]: I appreciate any information you can share. Time is running short.",
+      "consequence_dialogue": "Gain valuable information about Apophis, potentially unlocking a hidden advantage later in the game, but delay the immediate departure and risk the sandstorm worsening.",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        },
+        "player": {
+          "health": 100,
+          "experience": 80,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_1",
+        "node_0_2_1_2"
+      ],
+      "child_actions": [
+        "Decipher the Prophecy: Focus all efforts on translating the complex hieroglyphs surrounding a large mural depicting Apophis's origin, hoping to find a weakness or method of containment foretold in ancient texts.",
+        "Uncover the Mechanism: Investigate a series of intricate gears and levers hidden behind a movable mural, believing they control some ancient defense system within the temple that could be used against Apophis."
+      ],
+      "visited": true
+    },
+    "node_0_2_2": {
+      "story": "Gather Supplies: Immediately prepare a survival kit focusing on desert survival essentials like water, durable equipment, and protective gear for the desert's harsh elements.",
+      "is_end": false,
+      "dialogue": "The team gains a boost to resource management at the cost of losing time, potentially making the journey through the desert more bearable. ",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Quiet Observer": {
+          "type": "neutral",
+          "mood": "observant",
+          "description": "Someone is watching from a distance.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_1",
+        "node_0_2_2_2"
+      ],
+      "child_actions": [
+        "Scour Ninjago City's Markets: Dive into the bustling marketplace, bartering for the best deals on vital supplies. Prioritize water canteens, sturdy ropes for navigating dunes, and sun-reflecting fabrics to protect against the intense heat, risking delays but potentially securing superior quality items.",
+        "Raid the Bounty's Armory: Forego extensive shopping and immediately break into the Ninja's airship, the Bounty, to secure pre-existing equipment, focusing on speed and efficiency. Salvage durable weapons, existing water reserves, and navigation tools, saving time but potentially using subpar or damaged goods."
+      ]
+    },
+    "node_0_1_1_1": {
+      "story": "Charge straight through the sand raider ambush, using Kai's fire to create a diversion and scatter the enemy ranks, relying on the element of surprise and overwhelming force to secure a path through the dunes.",
+      "is_end": true,
+      "dialogue": "Risk: High chance of injuries to the team. Reward: Quick and decisive victory, saving time and resources. The sand raiders, caught off guard, are scattered, but the Ninja sustain minor burns and cuts. Morale is high, but Kai's impulsiveness is noted by the team.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_1_1",
+        "node_0_1_1_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_1_2": {
+      "story": "Carefully flank the sand raiders, utilizing Nya's water techniques to create illusions and conceal the team's movement, attempting to stealthily bypass the ambush and minimize confrontation to conserve energy and resources for the challenges ahead.",
+      "is_end": true,
+      "dialogue": "Risk: Time-consuming and requires precise coordination. Reward: Avoids direct combat and preserves resources. The Ninja successfully bypass the sand raiders, but the delay allows the raiders to signal ahead, potentially alerting other threats in the area. Nya's stealth skills are praised, but Kai expresses frustration with the slow pace.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_2_1",
+        "node_0_1_1_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_2_1": {
+      "story": "Venture deeper into the desert, following Nya's lead, prioritizing speed and bypassing the ravaged village to reach the Apophis temple quicker.",
+      "is_end": true,
+      "dialogue": "The Ninja move swiftly, avoiding the emotional toll of the village. However, they gain no insights into Apophis's weaknesses or the villagers' nightmares, resulting in a morale decrease and a permanent penalty to their ability to cooperate with the desert people. They also miss a potential opportunity to gain an advantage over Apophis from the nightmares.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_1_1",
+        "node_0_1_2_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_2_2": {
+      "story": "Attempt to aid the villagers trapped in nightmares, following Nya's plan to use her water powers to enter the dreamscape and offer support.",
+      "is_end": true,
+      "dialogue": "The Ninja spend valuable time and energy helping the villagers. Each Ninja confronts personal fears within the dreamscape, potentially becoming stronger or weaker depending on their success. This could provide insight into Apophis's weaknesses or uncover hidden abilities, while risking significant delays and emotional exhaustion, potentially weakening the team if they fail.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "night",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_2_1",
+        "node_0_1_2_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_1_1": {
+      "story": "Decipher the Prophecy: Focus all efforts on translating the complex hieroglyphs surrounding a large mural depicting Apophis's origin, hoping to find a weakness or method of containment foretold in ancient texts.",
+      "is_end": true,
+      "dialogue": "Success reveals a ritual involving pure elemental energy that can weaken Apophis, but it requires precise execution and a rare desert bloom found only in the deepest, most dangerous part of the desert. Failure yields no new information, wasting valuable time but preserving resources.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ancient Ruins",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_1_1",
+        "node_0_2_1_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_1_2": {
+      "story": "Uncover the Mechanism: Investigate a series of intricate gears and levers hidden behind a movable mural, believing they control some ancient defense system within the temple that could be used against Apophis.",
+      "is_end": true,
+      "dialogue": "Activating the mechanism reveals a hidden chamber containing a powerful energy focusing lens, potentially capable of amplifying the Ninja's elemental powers against Apophis, but triggering it also awakens dormant temple guardians \u2013 powerful stone constructs animated by the desert sands, posing a significant combat challenge.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_2_1",
+        "node_0_2_1_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ],
+      "visited": true
+    },
+    "node_0_2_2_1": {
+      "story": "Scour Ninjago City's Markets: Dive into the bustling marketplace, bartering for the best deals on vital supplies. Prioritize water canteens, sturdy ropes for navigating dunes, and sun-reflecting fabrics to protect against the intense heat, risking delays but potentially securing superior quality items.",
+      "is_end": true,
+      "dialogue": "Acquire high-quality supplies, gaining a bonus to resource management during desert traversal. However, the added time reduces the Ninja's lead time before the storm intensifies, potentially increasing the difficulty of the initial desert challenges due to depleted resources or injuries.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 1,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_1_1",
+        "node_0_2_2_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_2_2": {
+      "story": "Raid the Bounty's Armory: Forego extensive shopping and immediately break into the Ninja's airship, the Bounty, to secure pre-existing equipment, focusing on speed and efficiency. Salvage durable weapons, existing water reserves, and navigation tools, saving time but potentially using subpar or damaged goods.",
+      "is_end": true,
+      "dialogue": "Gain a significant head start into the Shifting Sands, bypassing the market altogether. However, the pre-existing supplies are limited and potentially worn, imposing a penalty on equipment durability and water reserves throughout the journey. You are now vulnerable to surprise attacks.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_2_1",
+        "node_0_2_2_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_1_1_1": {
+      "story": "Kai's fiery assault decimated the Sand Raiders, leaving a scorched path through the dunes. This brazen act, while effective, left the Ninja exposed and depleted of resources, forcing them to ration carefully for the remaining journey, and they arrived at the temple weakened, facing Apophis with diminished strength and limited options. Ultimately, though they prevailed, the cost was high, with Zane sacrificing his elemental power and the team barely escaping the temple's collapse.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of Ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_1_2": {
+      "story": "The initial burst of flame panicked the Sand Raiders, creating an opening for the Ninja to exploit. However, this reckless charge alerted Apophis to their arrival sooner than anticipated. While the Ninja reached the temple quickly, they faced a more prepared and powerful Apophis. The speed allowed them to reach Apophis before he was at full power and the elemental seals were still able to work. The Ninja were able to defeat Apophis at the cost of Nya sacrificing herself in order to forever seal him within the Eternal Dream.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the Ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_2_1": {
+      "story": "The illusion holds. The sand raiders, fooled by the shimmering mirages, never notice the ninja slip past their ambush. Reaching the temple ahead with resources intact, Nya's strategic thinking and precise elemental control have given the team a crucial advantage, allowing them to face Apophis with renewed vigor and a fighting chance.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_2_2": {
+      "story": "Despite Nya's clever illusions, a stray gust of wind betrays the team's position. The sand raiders, though initially surprised, quickly regroup and attack. The Ninja, forced into a chaotic battle, defeat the raiders but suffer injuries and expend valuable elemental energy. Though they survive and can proceed, the trials to come will be even more difficult given their depleted state, placing the mission's success into greater doubt.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "windy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        },
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_1_1": {
+      "story": "Rushing into the Apophis temple, the Ninja found themselves woefully unprepared for the fully empowered deity. Without the strength and wisdom gained from aiding the villagers, Apophis swiftly overwhelmed them, consuming Ninjago and plunging the world into an eternal, sand-swept nightmare. The Ninja's legacy became one of haste and failure, a cautionary tale whispered on the desolate winds.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "night",
+        "weather": "windy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_1_2": {
+      "story": "Arriving swiftly at the heart of the temple, Nya's strategic choices had granted them a speed advantage, but at a cost. Facing Apophis, they lacked the emotional strength to deliver the final blow. Lloyd sacrificed his elemental energy trapping Apophis in the eternal dream; his fellow ninja could only mourn the empty space, feeling the weight of the villagers that they could not save.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_2_1": {
+      "story": "The Ninja, guided by Nya's unwavering compassion, successfully soothe the villagers' nightmares, confronting their fears alongside them. Apophis, weakened by the diminished darkness feeding him, is ultimately defeated, sealed away with the combined power of the Ninja's elements and the villagers' restored hope. Ninjago is saved, the bonds between the Ninja strengthened, and a new era of understanding and empathy dawns, forever changing the way they approach protecting their world.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "night",
+        "weather": "clear",
+        "ambient": "dark"
+      },
+      "characters": {
+        "Quiet Observer": {
+          "type": "neutral",
+          "mood": "observant",
+          "description": "Someone is watching from a distance.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of Ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_2_2": {
+      "story": "While the Ninja manage to alleviate the villagers' immediate torment within the dreamscape, the residual nightmares linger, a constant reminder of the darkness Apophis unleashed. Though victorious in sealing away the Eater of Worlds, the Ninja realize that true healing requires addressing the underlying fears that fueled his power. They dedicate themselves to supporting the villagers' long-term recovery, establishing a sanctuary within Ninjago City where others can confront their inner demons, ensuring that the legacy of the Shifting Sands is one of resilience and growth, not just survival.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "night",
+        "weather": "clear",
+        "ambient": "dark"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_1_1": {
+      "story": "The prophecy reveals Apophis can only be defeated within a dream realm, a prison of the mind. With heavy hearts, the ninja enact their plan, luring Apophis into the dreamscape but trapping themselves and him inside. Though Ninjago is saved, the price of freedom is an eternal slumber.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_1_2": {
+      "story": "Deciphering the hieroglyphs exposes a critical weakness: Apophis is sustained by fear. The ninja broadcast messages of hope and resilience across Ninjago, diminishing Apophis's power and creating an opening for a final, decisive strike. The Eater of Worlds is vanquished, replaced by a renewed sense of unity and courage among the people.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of Ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_2_1": {
+      "story": "The gears whir to life, activating a network of sand-filled pipes throughout the temple. With a final push, the Ninja redirect the desert sands, collapsing the temple upon Apophis, entombing him in the very earth he sought to consume. Ninjago is safe, though the Shifting Sands now mark Apophis's final resting place, a constant reminder of the darkness they faced.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Temple",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "dark"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of Ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_2_2": {
+      "story": "As the final lever clicks into place, the mechanism hums with energy, not of defense, but of amplification. Apophis' power surges, his influence spreading across the desert. The Ninja have inadvertently strengthened their enemy, leading to a desperate final stand where victory is uncertain, and the fate of Ninjago hangs precariously in the balance.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Desert",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of Ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_1_1": {
+      "story": "The Ninja successfully navigated the Ninjago City markets, securing superior supplies that would prove crucial in the Shifting Sands. Their careful bartering and prioritization, though time-consuming, ensured they were well-equipped to face the desert's trials, ultimately leading to the defeat of Apophis and a return to prosperity for Ninjago. The market vendors, forever grateful, named a new district in their honor: 'The Ninja's Bargain'.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_1_2": {
+      "story": "Despite their best efforts, the Ninja's pursuit of superior supplies in Ninjago City's markets proved too lengthy. Arriving at the desert with the best gear, they were met with an immediate attack, their tardiness giving Apophis the upper hand. Though they fought valiantly, their fatigue and Apophis' enhanced power led to a pyrrhic victory, the desert forever scarred, and Ninjago diminished despite their survival.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Settlement",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -30,
+        "experience_change": 50,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_2_1": {
+      "story": "Raiding the Bounty proved just enough. Armed with repurposed weapons and a stroke of ingenuity, the ninja confronted Apophis, utilizing the Bounty\u2019s navigational tools to disrupt his elemental balance and weaken him. The subsequent fight was a near loss, however, as multiple structural areas of the ship started to degrade. The decision to sacrifice one of the Ninja to a dream realm and their personal fears sealed away the Eater of Worlds forever, but the Bounty, damaged beyond repair and no one on board to repair it, crashes into the sands, now a tomb for the sacrificed hero.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the Ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_2_2": {
+      "story": "Desperation fueled their haste to the Bounty, but the salvaged gear was ultimately insufficient. While the ninja displayed remarkable skill, the inferior weaponry crumbled under Apophis's onslaught. The decision to trap Apophis in the dream realm was only a temporary solution as the ship's systems were failing rapidly. With Ninjago now on the verge of eternal nightmares, the ninja were forced to retreat to the failing Bounty, only to watch the storm swallow the ship and the world, a silent testament to their flawed preparation.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "night",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    }
+  }
+}
