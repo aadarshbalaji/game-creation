@@ -1,0 +1,943 @@
+{
+  "story_state": {
+    "characters": {
+      "player": {
+        "health": 100,
+        "experience": 10,
+        "mood": "determined",
+        "status_effects": [],
+        "inventory": []
+      }
+    },
+    "current_scene": {},
+    "inventory": [],
+    "visited_nodes": [
+      "node_0"
+    ],
+    "theme": "Star Wars",
+    "max_depth": 4
+  },
+  "graph": {
+    "nodes": {
+      "node_0": {
+        "story": "The deafening whine of your TIE fighter\u2019s ion engines fills the cockpit as you streak through the inky blackness. Stars, like scattered diamonds, glitter against the void, a stark contrast to the sterile grey of your Imperial flight suit. You're fresh out of the Academy on Carida, barely a cadet anymore, and this is it: your first real patrol. Assigned to the Ryloth sector \u2013 a dusty, backwater world teeming with smugglers and Separatist holdouts \u2013 you're tasked with maintaining order, a noble goal in the eyes of the Empire.\n\nSuddenly, a jarring jolt throws you against your harness. Alarms blare, bathing the cockpit in a harsh red light. On your scanner, a swarm of contacts erupts \u2013 too many to count, and definitely not Imperial. They're fast, heavily armed, and bearing down on you and your wingmates like hungry predators. A desperate comm crackle from Gamma Squadron confirms your worst fears: Crimson Dawn. The notorious crime syndicate, emboldened by chaos and armed with scavenged tech, has set a trap. Green laser fire streaks past your viewport, followed by the sickening explosion of your wingmate's TIE. You're alone now, caught in the crosshairs of a ruthless ambush. Survival is no longer a certainty. It is a choice.",
+        "is_end": false,
+        "dialogue": "[You]: Before this gets violent, is there anything you can tell me that might change my mind?\n[Cantina Patron]: I'm staying out of this conflict. Fighting in Cave during day is a fool's errand.\n[You]: Then I'll do what I must.",
+        "scene_state": {
+          "location": "Cave",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_1": {
+        "story": "Fight valiantly and attempt to retreat to the nearby Imperial outpost.",
+        "is_end": false,
+        "dialogue": "Engage the Crimson Dawn fighters, hoping to hold them off long enough to reach safety.",
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2": {
+        "story": "Eject and attempt to evade capture in the Ryloth wilderness.",
+        "is_end": false,
+        "dialogue": "Abandon your TIE and take your chances on the hostile planet below.",
+        "scene_state": {
+          "location": "Starship Bridge",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_1_1": {
+        "story": "Execute a barrel roll and break formation, attempting to draw Crimson Dawn fighters away from the damaged wing.",
+        "is_end": false,
+        "dialogue": "You successfully evade initial fire, but now find yourself the sole target of two Crimson Dawn fighters. Your gamble might buy the other pilot some time, but your own situation just became much more perilous.",
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_1_2": {
+        "story": "Initiate emergency power reroute to shields and target the lead fighter, hoping to cripple their attack and buy time to escape.",
+        "is_end": false,
+        "dialogue": "Shields flare momentarily, absorbing a volley of laser fire. Your return fire strikes true, disabling the lead fighter's engines, but overloads your own systems, causing your TIE to shudder violently.",
+        "scene_state": {
+          "location": "Space Station",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_2_1": {
+        "story": "Follow the smoke: Head towards a plume of smoke rising in the distance, hoping it indicates a settlement or source of help, despite the risk of encountering Imperials or Crimson Dawn.",
+        "is_end": false,
+        "dialogue": "You cautiously navigate the rocky terrain towards the smoke. It seems to be coming from a small canyon... as you approach you hear voices speaking Twi'leki, but also the distinct crackle of blaster fire.",
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2_2": {
+        "story": "Seek cover: Immediately find the nearest defensible position among the large rock formations and establish a hidden observation post to assess the immediate danger and plan your next move.",
+        "is_end": false,
+        "dialogue": "You scramble towards a cluster of jagged rocks, finding a narrow crevice offering decent cover. From here, you can see scattered wreckage from the dogfight and the faint trails of Imperial patrol speeders in the distance. The immediate area seems clear, but you know they'll be back.",
+        "scene_state": {
+          "location": "Starship Bridge",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_1_1_1": {
+        "story": "Divert power to engines and attempt a daring escape through a narrow asteroid field, using its chaotic gravity to shake off pursuers.",
+        "is_end": true,
+        "dialogue": "The TIE fighter accelerates, dodging laser fire as it plunges into the asteroid field. Maneuvering becomes incredibly challenging, requiring constant adjustments. A lucky shot grazes the TIE's wing, causing a momentary loss of control. Success depends on a series of difficult piloting checks. Failure means certain destruction against an asteroid.",
+        "scene_state": {
+          "location": "Space Station",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        },
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        }
+      },
+      "node_0_1_1_2": {
+        "story": "Activate the TIE fighter's emergency distress beacon while simultaneously engaging in a hit-and-run attack against the Crimson Dawn fighters, hoping to buy enough time for Imperial reinforcements to arrive.",
+        "is_end": true,
+        "dialogue": "The distress beacon sends a signal while the TIE fighter weaves between Crimson Dawn fighters, launching short bursts of laser fire. The Crimson Dawn fighters, angered by the attack, focus their firepower on the player. Imperial reinforcements are likely hours away, but buying time now could be the only hope for survival. Risking death for a possible rescue.",
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        },
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        }
+      },
+      "node_0_1_2_1": {
+        "story": "Divert all remaining power to the TIE's forward cannons and attempt a desperate, high-risk head-on attack against the lead fighter, hoping to score a critical hit and scatter the formation.",
+        "is_end": true,
+        "dialogue": "Your shields buckle under the incoming fire, but your cannons, overloaded with power, unleash a devastating barrage. The lead fighter is critically damaged, spinning wildly out of control, but your TIE is also heavily damaged, losing altitude rapidly.",
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        },
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        }
+      },
+      "node_0_1_2_2": {
+        "story": "Execute a series of daring evasive maneuvers, weaving through the asteroid field while broadcasting a distress signal to the nearest Imperial outpost, gambling that you can survive long enough for reinforcements to arrive.",
+        "is_end": true,
+        "dialogue": "You expertly navigate the treacherous asteroid field, dodging laser fire and debris. The distress signal is sent, but the response is delayed, and Crimson Dawn is relentless. Your TIE sustains damage, but you\u2019re still operational, albeit barely, and deeper within the asteroid field.",
+        "scene_state": {
+          "location": "Alien Planet",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        },
+        "outcome": {
+          "health_change": -10,
+          "experience_change": 25,
+          "inventory_changes": [
+            {
+              "add": "Scrap of Star Wars Lore"
+            }
+          ]
+        }
+      },
+      "node_0_2_1_1": {
+        "story": "Approach Cautiously: Use the terrain to conceal your movements, scouting ahead with your meager Imperial-issue survival kit's macrobinoculars to identify any hostiles before committing to the location. Prioritize stealth and evasion over direct engagement.",
+        "is_end": true,
+        "dialogue": "You move slowly, but undetected. You spot a small Twi'lek village under attack by Crimson Dawn mercenaries. Villagers are being rounded up, and supplies are being looted. You remain unseen, but now face a moral dilemma: intervene or remain hidden.",
+        "scene_state": {
+          "location": "Alien Planet",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        },
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        }
+      },
+      "node_0_2_1_2": {
+        "story": "Rush Forward: Ignore the risks and move directly towards the smoke, prioritizing speed to reach the potential settlement quickly. Trust in the element of surprise or the possibility of finding allies to defend yourself.",
+        "is_end": true,
+        "dialogue": "You move fast, covering ground quickly, but the noise of your passage alerts a Crimson Dawn patrol. Two Nikto guards on speeder bikes intercept you. You must now fight or flee.",
+        "scene_state": {
+          "location": "Starship Bridge",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        },
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        }
+      },
+      "node_0_2_2_1": {
+        "story": "Activate the TIE fighter's emergency beacon and transmit a distress call to the nearest Imperial listening post, hoping for a swift rescue despite the risk of Crimson Dawn intercepting the signal.",
+        "is_end": true,
+        "dialogue": "Alerts the Empire to your location, potentially drawing reinforcements and aid, but also paints a target on your back for Crimson Dawn. Success in contacting the Empire depends on signal strength and Crimson Dawn's jamming capabilities. May trigger a larger Imperial response force arriving, changing the local power dynamics.",
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        },
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        }
+      },
+      "node_0_2_2_2": {
+        "story": "Scavenge what you can from the wreckage of your downed TIE fighter and your fallen comrades, including weapons, rations, and communication devices, to prepare for a long trek through the harsh terrain.",
+        "is_end": true,
+        "dialogue": "Provides you with essential resources for survival, increasing your chances of evading capture and reaching civilization. Discovering specific items (like a long-range comlink or a rare power cell) could open up new avenues of escape or contact, though the weight of the salvaged equipment might hinder your movement.",
+        "scene_state": {
+          "location": "Cave",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        },
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        }
+      },
+      "node_0_1_1_1_1": {
+        "story": "The TIE fighter, pushed to its limits, bucked and weaved through the asteroid field. Miraculously, the maneuver worked; the pursuers, caught in the gravitational crosscurrents, slammed into asteroids or lost control, spinning into the void. Exhausted but alive, the pilot emerged on the other side, a ghost ship slipping away to join the Rebellion, carrying crucial intelligence on Crimson Dawn's movements and a newfound resolve to fight for freedom.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Ship",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_1_1_1_2": {
+        "story": "Despite the pilot's skill, the damaged TIE fighter couldn't withstand the asteroid field's brutal gauntlet. A glancing blow crippled the engines, sending the craft spiraling towards a large asteroid. With a final, desperate transmission sent to the Rebel Alliance \u2013 detailing Crimson Dawn's plans and the location of the artifact \u2013 the pilot braced for impact, their sacrifice buying the Rebellion valuable time in the fight against the encroaching darkness.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "dark"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_1_1_2_1": {
+        "story": "The gamble paid off. Imperial reinforcements arrived just as your TIE sputtered its last, crimson fighters scattering before the might of Star Destroyers. Though branded a maverick for your unorthodox tactics, your survival and the crippling of Crimson Dawn earned you a commendation and a fast track to piloting advanced craft, ensuring a promising future within the Empire, yet whispering doubts still linger about the cost of your unwavering loyalty.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_1_1_2_2": {
+        "story": "Despite your desperate efforts, the distress beacon remained unanswered. The Crimson Dawn fighters, relentless and brutal, finally overwhelmed your damaged TIE. As your ship succumbed to enemy fire, a wave of regret washed over you, knowing your last act was a futile attempt to uphold a crumbling ideal, lost in the vast, uncaring expanse of the Outer Rim.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 0,
+          "experience_change": 20,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Ship",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          },
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_1_2_1_1": {
+        "story": "Adrenaline surging, you divert all power to the TIE's forward cannons. The lead fighter, a mangled, Crimson Dawn modified Z-95 Headhunter, fills your viewscreen. You unleash a devastating barrage; a lucky shot connects, ripping through the Headhunter's engines in a blinding explosion. The enemy formation scatters, their momentum broken, allowing you to limp back to Imperial space, hailed as a hero for turning the tide against overwhelming odds, though forever haunted by the cost of survival.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_1_2_1_2": {
+        "story": "You pour every last iota of energy into your TIE's weapons, bracing for impact. The Headhunter's return fire is immediate and devastating. Your cockpit explodes in a shower of sparks and alarms as the TIE fighter buckles and spins wildly. Though your desperate attack damages the lead fighter, slowing their advance, you succumb to the inferno. Your sacrifice buys the Imperial outpost precious time, allowing them to prepare for the inevitable onslaught, a delay for which they will be eternally grateful.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -10,
+          "experience_change": 25,
+          "inventory_changes": [
+            {
+              "add": "Scrap of Star Wars Lore"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Space Station",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          },
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_1_2_2_1": {
+        "story": "The TIE fighter bucked violently as laser fire chipped away at its hull. Just as your shields failed, a squadron of Imperial fighters roared into view, their cannons blazing. You had survived, bought time with your skill and a desperate gamble. Hailed as a hero for holding off Crimson Dawn until reinforcements arrived, you are promoted and celebrated, your initial brush with death solidifying your unwavering loyalty to the Empire.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_1_2_2_2": {
+        "story": "Each twist and turn through the asteroid field was a dance with death, the TIE fighter groaning under the strain. The distress signal finally pierced through the chaos, but before reinforcements could arrive, a lucky shot crippled your engine. Drifting helplessly amidst the asteroids, the Crimson Dawn raiders closed in, their boarding craft locking onto your damaged fighter. Capture was inevitable; your Imperial career, along with your freedom, was over before it truly began.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2_1_1_1": {
+        "story": "Careful scouting reveals the Crimson Dawn stronghold is far larger and more heavily fortified than anticipated. Realizing a direct assault is suicide, you use your knowledge of Imperial tactics and the surrounding terrain to orchestrate a daring raid, disrupting their supply lines and weakening their defenses. This act of defiance, though small, buys valuable time for the scattered Twi'lek rebels and inspires a flicker of hope in the oppressed sector, proving that even one person can make a difference against overwhelming odds.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Imperial Officer": {
+            "type": "enemy",
+            "mood": "hostile",
+            "description": "A stern officer in a gray uniform",
+            "health": 80
+          }
+        }
+      },
+      "node_0_2_1_1_2": {
+        "story": "Despite your meticulous planning, a patrol spots you just outside the Crimson Dawn perimeter. A desperate firefight ensues, drawing the attention of the entire garrison. Though you fight bravely, using every trick you learned in the Academy, the superior numbers and weaponry of Crimson Dawn overwhelm you. Your last sight is the crimson glow of their energy weapons as they close in, a testament to the brutal efficiency of the underworld syndicate you sought to outwit.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Starship Bridge",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_2_1_2_1": {
+        "story": "The speed proves advantageous initially, allowing the player to bypass Crimson Dawn's outer defenses. However, the 'settlement' is a trap; Crimson Dawn anticipated this recklessness. Ambushed and overwhelmed, the player is captured, their knowledge of the Rebel plans extracted under duress, solidifying Crimson Dawn's victory and the Outer Rim's subjugation. The echoes of rebellion are silenced as a new dawn of darkness rises, fueled by stolen secrets and reckless ambition.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "dark"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2_1_2_2": {
+        "story": "Rushing ahead, the player discovers the smoke originates not from a settlement, but a crashed Crimson Dawn supply ship. A small group of survivors, wounded and desperate, are engaged in a bitter infighting over the remaining resources. Exploiting their disarray, the player seizes control of the salvaged weaponry and remaining fuel, escaping the planet and delivering vital intel to the Rebel Alliance, turning the tide in a crucial sector and earning commendation, though the cost of such impetuous decisions will haunt future engagements.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Ship",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_2_2_1_1": {
+        "story": "The Imperial signal is intercepted by a Star Destroyer, but Crimson Dawn is already upon you. A chaotic space battle erupts, the TIE fighter a fragile pawn in the larger conflict. Miraculously, you survive, your actions hailed as heroic defiance against the pirates, but the lingering fear of Crimson Dawn's relentless pursuit and the horrors witnessed during the ambush leave an indelible mark, turning the celebrated pilot into a hardened warrior forever haunted by the echoes of rebellion.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Cantina",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2_2_1_2": {
+        "story": "Crimson Dawn intercepts the Imperial distress call, arriving to capture the pilot before Imperial reinforcements can. Under the brutal interrogation of the lieutenant, the pilot cracks, revealing sensitive Imperial secrets and aiding Crimson Dawn's growing campaign. The Empire suffers a series of devastating blows as a result, and the pilot, now a pawn in a game much bigger than themselves, is left to grapple with the consequences of their survival and the knowledge that they have inadvertently fueled the darkness consuming the Outer Rim.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Imperial Base",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "dark"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          }
+        }
+      },
+      "node_0_2_2_2_1": {
+        "story": "Driven by a desperate need to survive, you press on, using your Imperial training to your advantage. Weeks turn into months, and you manage to make contact with a remote Rebel outpost. However, the harsh experience has fundamentally changed you; the ideals of the Empire seem hollow, and the promise of freedom feels equally distant. You choose to remain in the outpost, a ghost of your former self, forever caught between two worlds, a silent observer of a war you no longer feel a part of.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": -30,
+          "experience_change": 5,
+          "inventory_changes": []
+        },
+        "scene_state": {
+          "location": "Starship Bridge",
+          "time_of_day": "day",
+          "weather": "rainy",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Rebel Scout": {
+            "type": "ally",
+            "mood": "cautious",
+            "description": "A dedicated fighter for the rebellion",
+            "health": 70
+          },
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      },
+      "node_0_2_2_2_2": {
+        "story": "Weak and delirious, hope seems lost. Stumbling through the alien landscape, you collapse, the last vestiges of your Imperial allegiance fading with the setting sun. A band of scavenging Jawas find you, and in their cryptic way, offer sustenance and transport. You awaken aboard their sandcrawler, your future uncertain, but one thing is clear: the Empire is a distant memory. Perhaps a new life among the desert folk awaits, a life far removed from the galactic conflict.",
+        "is_end": true,
+        "dialogue": "",
+        "outcome": {
+          "health_change": 25,
+          "experience_change": 40,
+          "inventory_changes": [
+            {
+              "add": "Memento of the Star Wars Conclusion"
+            }
+          ]
+        },
+        "scene_state": {
+          "location": "Cave",
+          "time_of_day": "day",
+          "weather": "clear",
+          "ambient": "calm"
+        },
+        "characters": {
+          "Cantina Patron": {
+            "type": "neutral",
+            "mood": "indifferent",
+            "description": "A mysterious individual nursing a drink",
+            "health": 60
+          }
+        }
+      }
+    },
+    "edges": [
+      {
+        "from": "node_0",
+        "to": "node_0_1",
+        "action": "Fight valiantly and attempt to retreat to the nearby Imperial outpost."
+      },
+      {
+        "from": "node_0",
+        "to": "node_0_2",
+        "action": "Eject and attempt to evade capture in the Ryloth wilderness."
+      },
+      {
+        "from": "node_0_1",
+        "to": "node_0_1_1",
+        "action": "Execute a barrel roll and break formation, attempting to draw Crimson Dawn fighters away from the damaged wing."
+      },
+      {
+        "from": "node_0_1",
+        "to": "node_0_1_2",
+        "action": "Initiate emergency power reroute to shields and target the lead fighter, hoping to cripple their attack and buy time to escape."
+      },
+      {
+        "from": "node_0_2",
+        "to": "node_0_2_1",
+        "action": "Follow the smoke: Head towards a plume of smoke rising in the distance, hoping it indicates a settlement or source of help, despite the risk of encountering Imperials or Crimson Dawn."
+      },
+      {
+        "from": "node_0_2",
+        "to": "node_0_2_2",
+        "action": "Seek cover: Immediately find the nearest defensible position among the large rock formations and establish a hidden observation post to assess the immediate danger and plan your next move."
+      },
+      {
+        "from": "node_0_1_1",
+        "to": "node_0_1_1_1",
+        "action": "Divert power to engines and attempt a daring escape through a narrow asteroid field, using its chaotic gravity to shake off pursuers."
+      },
+      {
+        "from": "node_0_1_1",
+        "to": "node_0_1_1_2",
+        "action": "Activate the TIE fighter's emergency distress beacon while simultaneously engaging in a hit-and-run attack against the Crimson Dawn fighters, hoping to buy enough time for Imperial reinforcements to arrive."
+      },
+      {
+        "from": "node_0_1_2",
+        "to": "node_0_1_2_1",
+        "action": "Divert all remaining power to the TIE's forward cannons and attempt a desperate, high-risk head-on attack against the lead fighter, hoping to score a critical hit and scatter the formation."
+      },
+      {
+        "from": "node_0_1_2",
+        "to": "node_0_1_2_2",
+        "action": "Execute a series of daring evasive maneuvers, weaving through the asteroid field while broadcasting a distress signal to the nearest Imperial outpost, gambling that you can survive long enough for reinforcements to arrive."
+      },
+      {
+        "from": "node_0_2_1",
+        "to": "node_0_2_1_1",
+        "action": "Approach Cautiously: Use the terrain to conceal your movements, scouting ahead with your meager Imperial-issue survival kit's macrobinoculars to identify any hostiles before committing to the location. Prioritize stealth and evasion over direct engagement."
+      },
+      {
+        "from": "node_0_2_1",
+        "to": "node_0_2_1_2",
+        "action": "Rush Forward: Ignore the risks and move directly towards the smoke, prioritizing speed to reach the potential settlement quickly. Trust in the element of surprise or the possibility of finding allies to defend yourself."
+      },
+      {
+        "from": "node_0_2_2",
+        "to": "node_0_2_2_1",
+        "action": "Activate the TIE fighter's emergency beacon and transmit a distress call to the nearest Imperial listening post, hoping for a swift rescue despite the risk of Crimson Dawn intercepting the signal."
+      },
+      {
+        "from": "node_0_2_2",
+        "to": "node_0_2_2_2",
+        "action": "Scavenge what you can from the wreckage of your downed TIE fighter and your fallen comrades, including weapons, rations, and communication devices, to prepare for a long trek through the harsh terrain."
+      },
+      {
+        "from": "node_0_1_1_1",
+        "to": "node_0_1_1_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_1_1",
+        "to": "node_0_1_1_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_1_1_2",
+        "to": "node_0_1_1_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_1_2",
+        "to": "node_0_1_1_2_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_1_2_1",
+        "to": "node_0_1_2_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_2_1",
+        "to": "node_0_1_2_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_1_2_2",
+        "to": "node_0_1_2_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_1_2_2",
+        "to": "node_0_1_2_2_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_1_1",
+        "to": "node_0_2_1_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_1_1",
+        "to": "node_0_2_1_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_1_2",
+        "to": "node_0_2_1_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_1_2",
+        "to": "node_0_2_1_2_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_2_1",
+        "to": "node_0_2_2_1_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_2_1",
+        "to": "node_0_2_2_1_2",
+        "action": "Pursue Ending Path 2"
+      },
+      {
+        "from": "node_0_2_2_2",
+        "to": "node_0_2_2_2_1",
+        "action": "Pursue Ending Path 1"
+      },
+      {
+        "from": "node_0_2_2_2",
+        "to": "node_0_2_2_2_2",
+        "action": "Pursue Ending Path 2"
+      }
+    ]
+  }
+}
