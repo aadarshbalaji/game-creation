@@ -552,6 +552,7 @@ def main():
         # Get current node
         current_node = nodes[current_node_id]
         
+        
         # Update character data with latest player stats
         if "characters" in current_node and "player" in current_node["characters"]:
             current_node["characters"]["player"]["health"] = player_stats["health"]
@@ -771,6 +772,36 @@ def main():
                     
                     # Update choice path
                     choice_path.append(str(choice_index + 1))
+                    
+                    # Get the current node and mark it as visited
+                    current_node = nodes[current_node_id]
+                    current_node["visited"] = True
+                    
+                    # Save the current state to JSON
+                    save_data = {
+                        "story_state": {
+                            "characters": {
+                                "player": {
+                                    "health": player_stats["health"],
+                                    "experience": player_stats["experience"],
+                                    "mood": "determined",
+                                    "status_effects": [],
+                                    "inventory": player_stats["inventory"]
+                                }
+                            },
+                            "current_scene": current_node,
+                            "inventory": player_stats["inventory"],
+                            "visited_nodes": choice_path,
+                            "theme": theme,
+                            "max_depth": max_depth
+                        },
+                        "graph": nodes
+                    }
+                    
+                    # Save to a file
+                    filename = f"{theme.lower().replace(' ', '_')}_story.json"
+                    with open(filename, 'w') as f:
+                        json.dump(save_data, f, indent=2)
                     
                     chosen_node = nodes[current_node_id]
                     
