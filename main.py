@@ -465,7 +465,7 @@ def main():
                 print("\nYou've reached the end of this path!")
                 break
             
-            time.sleep(1)
+            time.sleep(1.5)
     
         clear_screen()
         print("\nGame Over!")
@@ -484,7 +484,7 @@ def main():
             
     except Exception as e:
         print(f"\nError: {e}")
-        print("Game initialization failed.")
+        print("Game initialization failed")
         return
 
 if __name__ == "__main__":

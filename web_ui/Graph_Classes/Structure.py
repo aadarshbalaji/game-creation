@@ -12,7 +12,6 @@ class Node:
         self.characters = {}
         self.consequences = {}
         self.backtrack = False
-        self.visited = False
 
     def generate_id(self, story):
         return hashlib.sha256(story.encode()).hexdigest()
@@ -53,30 +52,7 @@ class Graph:
         return None
     
     def _build_json_structure(self, node):
-        return {
-            str(node): {
-                "story": node.story,
-                "dialogue": node.dialogue,
-                "is_end": node.is_end,
-                "visited": node.visited,
-                "scene_state": node.scene_state,
-                "characters": node.characters,
-                "consequences": node.consequences,
-                "children": [self._build_json_structure(child) for child in self.adjacency_list[node]['children']]
-            }
-        }
-
-    def save_state(self, filename):
-        root_nodes = [node for node in self.adjacency_list if not self.adjacency_list[node]['parents']]
-        state = {
-            str(node): self._build_json_structure(node)[str(node)] 
-            for node in root_nodes
-        }
-        with open(filename, 'w') as f:
-            json.dump(state, f, indent=4)
-
+        return {str(node): {"children": [self._build_json_structure(child) for child in self.adjacency_list[node]['children']]}}
     def __repr__(self):
         root_nodes = [node for node in self.adjacency_list if not self.adjacency_list[node]['parents']]
-        return json.dumps({str(node): self._build_json_structure(node)[str(node)] for node in root_nodes}, indent=4)
-
-
+        return json.dumps({str(node): self._build_json_structure(node)[str(node)] for node in root_nodes}, indent=4) 

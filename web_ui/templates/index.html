@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYOA Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body, .container {
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        h1, .primary-btn {
+            font-family: 'Montserrat', 'Roboto', Arial, sans-serif;
+            letter-spacing: 1px;
+        }
+        .netflix-red {
+            color: #e50914;
+        }
+        .choice-btn {
+            border: 2px solid #e50914 !important;
+            background: #181818 !important;
+            color: #fff !important;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(229,9,20,0.08);
+        }
+        .choice-btn:hover {
+            background: #e50914 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 16px rgba(229,9,20,0.18);
+        }
+        .game-section h3 {
+            color: #e50914;
+        }
+        .primary-btn {
+            background: linear-gradient(90deg, #e50914 60%, #b0060f 100%) !important;
+        }
+        .primary-btn:hover {
+            background: linear-gradient(90deg, #b0060f 60%, #e50914 100%) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="netflix-red">Interactive CYOA Game</h1>
+        </header>
+        <!-- Game Setup Form -->
+        <div id="game-setup" class="centered-box">
+            <h2>Start Your Adventure</h2>
+            <label for="player-name">Player Name:</label>
+            <input type="text" id="player-name" name="player-name" value="Adventurer">
+            <label for="story-theme">Story Theme:</label>
+            <input type="text" id="story-theme" name="story-theme" value="Sci-Fi Space Opera">
+            <label for="story-depth">Story Depth (2-12):</label>
+            <input type="number" id="story-depth" name="story-depth" value="3" min="2" max="12">
+            <label for="choices-per-node">Choices per Node (2-4):</label>
+            <input type="number" id="choices-per-node" name="choices-per-node" value="2" min="2" max="4">
+            <button id="start-game-btn" class="primary-btn">Start Game</button>
+        </div>
+        <!-- Loading Message -->
+        <div id="loading-message" style="display:none;">
+            <p>Generating your adventure, please wait... This might take a moment.</p>
+            <div class="loader"></div> 
+        </div>
+        <!-- Main Game Content -->
+        <div id="game-content" style="display:none;">
+            <div id="game-header-info" class="game-section">
+                <p><strong>Player:</strong> <span id="display-player-name"></span> | <strong>Theme:</strong> <span id="display-theme"></span></p>
+                <p><strong>Path:</strong> <span id="display-path"></span></p>
+            </div>
+            <div id="scene-section" class="game-section">
+                <h3>Scene</h3>
+                <div id="scene-context"></div>
+            </div>
+            <div id="player-status-section" class="game-section">
+                <h3>Status</h3>
+                <div id="player-status"></div>
+            </div>
+            <div id="story-section" class="game-section">
+                <h3>Story</h3>
+                <div id="story-display"></div>
+            </div>
+            <div id="dialogue-section" class="game-section">
+                <h3>Dialogue</h3>
+                <div id="dialogue-display"></div>
+            </div>
+            <div id="consequence-section" class="game-section">
+                <h3>Consequences</h3>
+                <div id="consequence-display"></div>
+            </div>
+            <div id="choices-section" class="game-section">
+                <h3>Choices</h3>
+                <div id="choices-display"></div>
+                <div id="no-choices-message" style="display:none; color:#e50914;">No choices available. The story has ended.</div>
+            </div>
+            <div id="notifications-section" class="game-section">
+                <h3>Notifications</h3>
+                <div id="notifications"></div>
+            </div>
+        </div>
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" style="display:none;">
+            <h2>Game Over!</h2>
+            <div id="final-stats"></div>
+            <button id="restart-game-btn" class="primary-btn">Play Again?</button>
+        </div>
+    </div>
+    <script>
+        // Game state and DOM elements
+        const startGameBtn = document.getElementById('start-game-btn');
+        const gameSetupDiv = document.getElementById('game-setup');
+        const gameContentDiv = document.getElementById('game-content');
+        const gameOverScreenDiv = document.getElementById('game-over-screen');
+        const loadingMessageDiv = document.getElementById('loading-message');
+        const noChoicesMsg = document.getElementById('no-choices-message');
+        const choicesDisplay = document.getElementById('choices-display');
+
+        startGameBtn.addEventListener('click', async () => {
+            console.log("Start game button clicked.");
+            const playerName = document.getElementById('player-name').value;
+            const theme = document.getElementById('story-theme').value;
+            const depth = parseInt(document.getElementById('story-depth').value);
+            const choicesPerNode = parseInt(document.getElementById('choices-per-node').value);
+            if (!playerName || !theme) {
+                alert('Please enter a player name and theme.');
+                return;
+            }
+            if (isNaN(depth) || depth < 2 || depth > 12) {
+                alert('Please enter a valid depth (2-12).');
+                return;
+            }
+            if (isNaN(choicesPerNode) || choicesPerNode < 2 || choicesPerNode > 4) {
+                alert('Please enter valid choices per node (2-4).');
+                return;
+            }
+            gameSetupDiv.style.display = 'none';
+            loadingMessageDiv.style.display = 'block';
+            console.log("Fetching /start_game with:", { player_name: playerName, theme: theme, depth: depth, choices_per_node: choicesPerNode });
+            try {
+                const response = await fetch('/start_game', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player_name: playerName, theme: theme, depth: depth, choices_per_node: choicesPerNode }),
+                });
+                console.log("Received response from /start_game, status:", response.status);
+                const data = await response.json();
+                console.log("Data from /start_game:", data);
+
+                if (data.error) {
+                    console.error('Error from server starting game:', data.error);
+                    alert('Error starting game: ' + data.error);
+                    loadingMessageDiv.style.display = 'none';
+                    gameSetupDiv.style.display = 'block';
+                    return;
+                }
+                loadingMessageDiv.style.display = 'none';
+                gameContentDiv.style.display = 'block';
+                document.getElementById('game-header-info').style.display = 'block'; // Make sure header is visible
+                
+                updateGameDisplay(data);
+                // NO call to attachChoiceListeners() here - event delegation handles it.
+
+            } catch (error) {
+                console.error('Catch block: Error starting game:', error);
+                alert('Failed to start game. Check console for details.');
+                loadingMessageDiv.style.display = 'none';
+                gameSetupDiv.style.display = 'block';
+            }
+        });
+
+        // Event delegation for choice clicks
+        choicesDisplay.addEventListener('click', async function(event) {
+            if (event.target.classList.contains('choice-btn')) {
+                const choiceButton = event.target;
+                const choiceIndex = parseInt(choiceButton.getAttribute('data-choice'));
+                console.log("Choice button clicked, index:", choiceIndex);
+
+                if (isNaN(choiceIndex)) {
+                    console.error('Invalid choice index on button:', choiceButton);
+                    alert('Invalid choice selected.');
+                    return;
+                }
+
+                const allChoiceButtons = choicesDisplay.querySelectorAll('.choice-btn');
+                allChoiceButtons.forEach(btn => btn.disabled = true);
+                console.log("Fetching /make_choice with index:", choiceIndex);
+
+                try {
+                    const response = await fetch('/make_choice', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ choice_index: choiceIndex })
+                    });
+                    console.log("Received response from /make_choice, status:", response.status);
+                    const data = await response.json();
+                    console.log("Data from /make_choice:", data);
+
+                    if (data.error) {
+                        console.error('Error from server making choice:', data.error);
+                        alert('Error: ' + data.error);
+                        if (!data.is_end) {
+                           allChoiceButtons.forEach(btn => btn.disabled = false);
+                        }
+                        return;
+                    }
+                    updateGameDisplay(data);
+                    const newButtons = choicesDisplay.querySelectorAll('.choice-btn');
+                    newButtons.forEach(btn => btn.disabled = false);
+
+                } catch (error) {
+                    console.error('Catch block: Failed to make choice:', error);
+                    alert('Failed to make choice. Check console.');
+                    allChoiceButtons.forEach(btn => btn.disabled = false);
+                }
+            }
+        });
+
+        function updateGameDisplay(data) {
+            console.log("updateGameDisplay called with data:", data);
+            if (!data) {
+                console.error("updateGameDisplay called with no data or null data");
+                alert("Error: No game data to display. Please try restarting.");
+                // Potentially hide game content and show setup again
+                gameContentDiv.style.display = 'none';
+                gameSetupDiv.style.display = 'block';
+                return;
+            }
+            try {
+                document.getElementById('display-player-name').textContent = data.player_name || 'Adventurer';
+                document.getElementById('display-theme').textContent = data.theme || 'Adventure';
+                document.getElementById('display-path').textContent = data.choice_path ? data.choice_path.join(' → ') : 'Start';
+                
+                document.getElementById('scene-context').innerHTML = data.scene_html || '';
+                document.getElementById('story-display').innerHTML = data.story_html || '';
+                document.getElementById('dialogue-display').innerHTML = data.dialogue_html || '';
+                document.getElementById('consequence-display').innerHTML = data.consequence_html || '';
+                choicesDisplay.innerHTML = data.choices_html || '';
+                
+                if (data.choices_html && data.choices_html.trim() !== '') {
+                    noChoicesMsg.style.display = 'none';
+                } else {
+                    noChoicesMsg.style.display = 'block';
+                }
+                
+                const notificationsDiv = document.getElementById('notifications');
+                notificationsDiv.innerHTML = '';
+                if (data.notifications && Array.isArray(data.notifications) && data.notifications.length > 0) {
+                    data.notifications.forEach(notification => {
+                        const p = document.createElement('p');
+                        // Ensure notification is a string before setting innerHTML
+                        p.innerHTML = typeof notification === 'string' ? notification : JSON.stringify(notification);
+                        notificationsDiv.appendChild(p);
+                    });
+                } else if (data.notifications) {
+                    console.warn("Notifications data is not an array or is empty:", data.notifications);
+                }
+                
+                if (data.player_stats) {
+                    const playerStats = data.player_stats;
+                    document.getElementById('player-status').innerHTML = `
+                        <div class="player-info">
+                            <h4>YOUR STATUS</h4>
+                            <p>Health: 
+                                <div class="health-bar-container">
+                                    <div class="health-bar" style="width: ${playerStats.health}%"></div>
+                                </div>
+                                ${playerStats.health}/100
+                            </p>
+                            <p>Experience: ${playerStats.experience}</p>
+                            <p>🎒 Inventory: ${playerStats.inventory && playerStats.inventory.length > 0 ? playerStats.inventory.join(', ') : 'Empty'}</p>
+                            ${playerStats.abilities && playerStats.abilities.length > 0 ? `
+                                <div class="abilities-section">
+                                    <h4>YOUR ABILITIES</h4>
+                                    ${playerStats.abilities.map(ability => `
+                                        <div class="ability-card">
+                                            <p>✨ ${ability.name}: ${ability.description}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    console.warn("Player stats missing in data for updateGameDisplay");
+                    document.getElementById('player-status').innerHTML = '<p>Player stats not available at the moment.</p>';
+                }
+                
+                if (data.is_end) {
+                    console.log("Game end condition met. Displaying game over screen.");
+                    displayGameOver(data);
+                }
+            } catch (error) {
+                console.error("Error within updateGameDisplay:", error, "Data was:", data);
+                alert("An error occurred while updating the game display. Check console.");
+                 // Fallback: show setup screen to allow restart
+                loadingMessageDiv.style.display = 'none';
+                gameContentDiv.style.display = 'none';
+                gameSetupDiv.style.display = 'block';
+            }
+        }
+
+        function displayGameOver(data) {
+            console.log("displayGameOver called with data:", data);
+            gameContentDiv.style.display = 'none';
+            gameOverScreenDiv.style.display = 'block';
+            
+            const finalStatsPlayerName = data.player_name || "Player";
+            const finalPlayerStats = data.player_stats || { health: 0, experience: 0, abilities: [], inventory: [] };
+            const finalChoicePath = data.choice_path || ["N/A"];
+
+            let finalStatsHtml = `
+                <h2>Final Stats for ${finalStatsPlayerName}</h2>
+                <div class="stat-box">
+                    <h3>Health</h3>
+                    <div class="health-bar-container">
+                        <div class="health-bar" style="width: ${finalPlayerStats.health}%"></div>
+                    </div>
+                    <p>${finalPlayerStats.health}/100</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Experience</h3>
+                    <p>${finalPlayerStats.experience} points</p>
+                </div>
+            `;
+            if (finalPlayerStats.abilities && finalPlayerStats.abilities.length > 0) {
+                finalStatsHtml += `
+                    <div class="stat-box">
+                        <h3>Abilities Acquired</h3>
+                        <div class="abilities-list">
+                            ${finalPlayerStats.abilities.map(ability => `
+                                <div class="ability-card">
+                                    <h4>✨ ${ability.name}</h4>
+                                    <p>${ability.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            finalStatsHtml += `
+                <div class="stat-box">
+                    <h3>Items Collected</h3>
+                    ${finalPlayerStats.inventory && finalPlayerStats.inventory.length > 0 
+                        ? `<ul class="inventory-list">
+                            ${finalPlayerStats.inventory.map(item => `<li>🎒 ${item}</li>`).join('')}
+                           </ul>`
+                        : '<p>No items collected</p>'
+                    }
+                </div>
+                <div class="stat-box">
+                    <h3>Your Journey Path</h3>
+                    <p class="path-display">${finalChoicePath.join(' → ')}</p>
+                </div>
+            `;
+            document.getElementById('final-stats').innerHTML = finalStatsHtml;
+        }
+
+        document.getElementById('restart-game-btn').addEventListener('click', () => {
+            console.log("Restart game button clicked.");
+            gameOverScreenDiv.style.display = 'none';
+            gameSetupDiv.style.display = 'block';
+            document.getElementById('scene-context').innerHTML = '';
+            document.getElementById('player-status').innerHTML = '';
+            document.getElementById('story-display').innerHTML = '';
+            document.getElementById('dialogue-display').innerHTML = '';
+            document.getElementById('consequence-display').innerHTML = '';
+            choicesDisplay.innerHTML = '';
+            document.getElementById('notifications').innerHTML = '';
+            document.getElementById('game-header-info').style.display = 'none';
+
+            fetch('/', { method: 'GET' });
+        });
+    </script>
+</body>
+</html> 

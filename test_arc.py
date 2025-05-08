@@ -4,8 +4,14 @@ import os
 import time
 import hashlib
 from Graph_Classes.Structure import Node, Graph
+from dotenv import load_dotenv
 
-GOOGLE_API_KEY = ""
+# Load environment variables from keys.env
+load_dotenv('keys.env')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found in keys.env")
+
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 class StoryState:
