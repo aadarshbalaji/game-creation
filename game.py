@@ -1,3 +1,4 @@
+#SHOULD NOT BE USED, USE game_clean.py INSTEAD, THIS IS THE OLD VERSION AND A PLAYGROUND FOR THE NEW VERSION
 import time
 import json
 import os
