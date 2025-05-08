@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 #### CLI Version (Recommended)
 ```bash
-python3 game_clean.py
+python3 game.py
 ```
 
 #### Web Version (Beta)
