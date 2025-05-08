@@ -1,0 +1,1061 @@
+{
+  "story_state": {
+    "characters": {
+      "player": {
+        "health": 95,
+        "experience": 50,
+        "mood": "determined",
+        "status_effects": [],
+        "inventory": []
+      }
+    },
+    "current_scene": {
+      "story": "Investigate the Point of Entry: Scour the breached monastery wall and surrounding area for any lingering clues \u2013 footprints, dropped objects, or traces of elemental energy \u2013 that could reveal the attacker's escape route and identity.",
+      "is_end": true,
+      "dialogue": "A thorough search reveals faint scorch marks, suggesting the attacker wielded fire or destructive energy. You find a single, obsidian-like scale near the breach, clearly not belonging to any known creature in Ninjago. Examining it closely reveals faint traces of a powerful, corrupted elemental energy signature. The scale serves as a valuable clue, potentially leading you to the attacker's destination, but you now have an obsidian shard, a source of great power that could be used for good or evil.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_2_1",
+        "node_0_1_2_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ],
+      "visited": true
+    },
+    "inventory": [],
+    "visited_nodes": [
+      "0",
+      "1",
+      "2",
+      "2"
+    ],
+    "theme": "ninjago",
+    "max_depth": 4
+  },
+  "graph": {
+    "node_0": {
+      "story": "The Monastery of Spinjitzu buzzes with life. Banners depicting the Ninja \u2013 Kai, Jay, Zane, Cole, and Nya \u2013 flutter in the wind, celebrating their countless victories. You, a newly-trained initiate, stand on the periphery, heart pounding with a mixture of excitement and nervousness. Sensei Wu, his eyes twinkling with pride, begins his address, recounting the brave deeds of his students. Suddenly, the air crackles with dark energy. A shadowy figure, cloaked and masked, bursts into the courtyard, scattering the assembled crowd. In a flash of obsidian, the figure snatches the Dragon Eye, a gem radiating ancient power, from its pedestal. Sensei Wu lunges to intervene, but the attacker is too swift. A dark energy blast sends the Sensei crashing to the ground. Chaos erupts as the attacker vanishes into the swirling smoke. You rush to Sensei Wu's side. His breaths are shallow, and his voice raspy. \"The Dragon Eye\u2026 the Obsidian Dragon\u2026 you must\u2026 stop them\u2026\" He clutches your hand, his gaze intense. \"You are the sixth\u2026 the last hope\u2026 Find the thief\u2026 before Ninjago is consumed by darkness\u2026\"",
+      "is_end": false,
+      "dialogue": "[You]: You'll pay for hurting Sensei Wu, and for stealing the Dragon Eye!\n[Mysterious Adversary]: Foolish ninja, the Eye's power is beyond your comprehension; it will reshape Ninjago!\n[You]: Then I'll just have to reshape your face first!",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ancient Ruins",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "dark"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        },
+        "player": {
+          "health": 100,
+          "experience": 10,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1",
+        "node_0_2"
+      ],
+      "child_actions": [
+        "Rush to Sensei Wu's side and demand more information.",
+        "Give chase to the shadowy figure."
+      ]
+    },
+    "node_0_1": {
+      "story": "Rush to Sensei Wu's side and demand more information.",
+      "is_end": false,
+      "dialogue": "[You]: I saw Sensei Wu collapse just now; have you seen anyone suspicious fleeing these caves?\n[Local Inhabitant]: Outsiders meddling in affairs they don't understand rarely bring good tidings; I saw nothing.\n[You]: This \"meddling\" involves a stolen Dragon Eye, which threatens Ninjago itself; your silence endangers us all.",
+      "consequence_dialogue": "Sensei Wu struggles to speak, providing a cryptic clue about the thief's identity before slipping into unconsciousness. You notice a strange, obsidian shard clutched in his hand.",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        },
+        "player": {
+          "health": 100,
+          "experience": 40,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1",
+        "node_0_1_2"
+      ],
+      "child_actions": [
+        "Heal Sensei Wu: Focus your nascent elemental energy, attempting to mend his wounds, even though you're unsure of your abilities.",
+        "Examine the Scene: Ignore Sensei Wu's immediate distress and quickly search for clues about the attacker and the stolen Dragon Eye."
+      ],
+      "visited": true
+    },
+    "node_0_2": {
+      "story": "Give chase to the shadowy figure.",
+      "is_end": false,
+      "dialogue": "You sprint towards the retreating figure, but they disappear into a swirling vortex of smoke. You find a single, dark feather on the ground where they vanished.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1",
+        "node_0_2_2"
+      ],
+      "child_actions": [
+        "Leap Across the Courtyard: Use your newly learned agility to take a direct shortcut, potentially gaining ground but risking a fall.",
+        "Dash Through the Training Grounds: Take the slightly longer, but safer, route through the familiar obstacle course, utilizing your training to navigate quickly."
+      ]
+    },
+    "node_0_1_1": {
+      "story": "Heal Sensei Wu: Focus your nascent elemental energy, attempting to mend his wounds, even though you're unsure of your abilities.",
+      "is_end": false,
+      "dialogue": "You channel your energy, a visible aura surrounding your hands. Sensei Wu gasps, a flicker of pain crossing his face, but then a look of surprise replaces it. He seems slightly stronger, though still gravely injured. He manages a weak smile. 'Thank you, young one... a valiant effort. But time is short.'",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_1",
+        "node_0_1_1_2"
+      ],
+      "child_actions": [
+        "Focus all your energy into a concentrated burst of healing, channeling your elemental power directly into Sensei Wu's wounds, risking your own exhaustion.",
+        "Search the Monastery for a mystical artifact capable of healing Sensei Wu, venturing into the forbidden library despite the immediate danger of the partially resurrected dragon's attacks."
+      ]
+    },
+    "node_0_1_2": {
+      "story": "Examine the Scene: Ignore Sensei Wu's immediate distress and quickly search for clues about the attacker and the stolen Dragon Eye.",
+      "is_end": false,
+      "dialogue": "[You]: Obsidian Dragon scale... you won't get away with this.\n[Mysterious Adversary]: Foolish ninja, the Dragon Eye is already beyond your reach!\n[You]: Not if I can help it; tell me where you're taking it!",
+      "consequence_dialogue": "You push past the other Ninja and quickly scan the immediate area. You spot a faint trail of dark energy leading away from the Monastery, and a single, obsidian-like scale glinting under the moonlight, dropped by the attacker. This confirms the involvement of something related to the Obsidian Dragon, and it seems they fled toward the Mountains of Madness.",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        },
+        "player": {
+          "health": 95,
+          "experience": 50,
+          "mood": "determined",
+          "status_effects": [],
+          "inventory": []
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_1",
+        "node_0_1_2_2"
+      ],
+      "child_actions": [
+        "Focus on Sensei Wu: Use your basic healing techniques to stabilize Sensei Wu, hoping he can provide vital information about the attacker before it's too late.",
+        "Investigate the Point of Entry: Scour the breached monastery wall and surrounding area for any lingering clues \u2013 footprints, dropped objects, or traces of elemental energy \u2013 that could reveal the attacker's escape route and identity."
+      ],
+      "visited": true
+    },
+    "node_0_2_1": {
+      "story": "Leap Across the Courtyard: Use your newly learned agility to take a direct shortcut, potentially gaining ground but risking a fall.",
+      "is_end": false,
+      "dialogue": "A successful leap puts you closer to the fleeing figure, but a failed attempt results in a minor injury (slight stat debuff to speed) and a brief delay.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_1",
+        "node_0_2_1_2"
+      ],
+      "child_actions": [
+        "Leap Across the Courtyard: Use your newly learned agility to take a direct shortcut, potentially gaining ground but risking a fall.",
+        "Follow the Main Path: Stick to the known route, a longer but safer option, keeping an eye out for traps or ambushes."
+      ]
+    },
+    "node_0_2_2": {
+      "story": "Dash Through the Training Grounds: Take the slightly longer, but safer, route through the familiar obstacle course, utilizing your training to navigate quickly.",
+      "is_end": false,
+      "dialogue": "You maintain a steady pace, avoiding any immediate risks, but the thief gains a bit of distance. This allows you to carefully conserve stamina (slight stat buff to endurance).",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 1,
+        "experience_change": 10,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_1",
+        "node_0_2_2_2"
+      ],
+      "child_actions": [
+        "Leap Across the Chasm: Trust your Airjitzu training and take a shortcut, risking a fall but potentially gaining valuable time and outmaneuvering pursuers.",
+        "Engage the Shadow Assassins: Confront the pursuing Shadow Assassins guarding the grounds, clearing a path and potentially learning their tactics, but risking injuries and slowing your progress."
+      ]
+    },
+    "node_0_1_1_1": {
+      "story": "Focus all your energy into a concentrated burst of healing, channeling your elemental power directly into Sensei Wu's wounds, risking your own exhaustion.",
+      "is_end": true,
+      "dialogue": "You pour every ounce of your newfound energy into healing Sensei Wu. He gasps, a flicker of life returning to his eyes. Your vision blurs, and you collapse beside him, utterly drained. Sensei Wu is stabilized, but your maximum elemental energy is significantly reduced for the next stage. However, he manages to impart vital information about the Obsidian Dragon's weakness before falling unconscious again.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Hidden Valley",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        }
+      },
+      "outcome": {
+        "health_change": -7,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_1_1",
+        "node_0_1_1_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_1_2": {
+      "story": "Search the Monastery for a mystical artifact capable of healing Sensei Wu, venturing into the forbidden library despite the immediate danger of the partially resurrected dragon's attacks.",
+      "is_end": true,
+      "dialogue": "Ignoring the immediate need to heal Sensei Wu in the heat of the moment, the player goes into the forbidden library and finds the Stone of Healing. The Stone of Healing restores his health but alerts the dragon to your location. Prepare for battle.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_1_2_1",
+        "node_0_1_1_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_2_1": {
+      "story": "Focus on Sensei Wu: Use your basic healing techniques to stabilize Sensei Wu, hoping he can provide vital information about the attacker before it's too late.",
+      "is_end": true,
+      "dialogue": "Successfully stabilizing Sensei Wu buys you precious time. He weakly describes the attacker - a former student consumed by darkness - and mentions a symbol, a twisted dragon, that was etched onto the attacker's weapon. However, focusing on healing delays your pursuit, allowing the thief to gain significant ground. You gain some wisdom, but the trail grows colder.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": -2,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_1_1",
+        "node_0_1_2_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_2_2": {
+      "story": "Investigate the Point of Entry: Scour the breached monastery wall and surrounding area for any lingering clues \u2013 footprints, dropped objects, or traces of elemental energy \u2013 that could reveal the attacker's escape route and identity.",
+      "is_end": true,
+      "dialogue": "A thorough search reveals faint scorch marks, suggesting the attacker wielded fire or destructive energy. You find a single, obsidian-like scale near the breach, clearly not belonging to any known creature in Ninjago. Examining it closely reveals faint traces of a powerful, corrupted elemental energy signature. The scale serves as a valuable clue, potentially leading you to the attacker's destination, but you now have an obsidian shard, a source of great power that could be used for good or evil.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_1_2_2_1",
+        "node_0_1_2_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ],
+      "visited": true
+    },
+    "node_0_2_1_1": {
+      "story": "Leap Across the Courtyard: Use your newly learned agility to take a direct shortcut, potentially gaining ground but risking a fall.",
+      "is_end": true,
+      "dialogue": "A successful leap puts you ahead, saving precious time. A failed attempt results in a painful fall, a minor injury (small stat debuff), and forces you to take the longer route, potentially losing the thief.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        },
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_1_1",
+        "node_0_2_1_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_1_2": {
+      "story": "Follow the Main Path: Stick to the known route, a longer but safer option, keeping an eye out for traps or ambushes.",
+      "is_end": true,
+      "dialogue": "The main path is predictably straightforward, but takes more time. You spot a faint tripwire ahead - a basic trap. Disarming it grants a small experience bonus and avoids a minor setback.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ancient Ruins",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Quiet Observer": {
+          "type": "neutral",
+          "mood": "observant",
+          "description": "Someone is watching from a distance.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -2,
+        "experience_change": 30,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_1_2_1",
+        "node_0_2_1_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_2_1": {
+      "story": "Leap Across the Chasm: Trust your Airjitzu training and take a shortcut, risking a fall but potentially gaining valuable time and outmaneuvering pursuers.",
+      "is_end": true,
+      "dialogue": "A successful leap propels you ahead, granting a temporary speed boost and a clearer path. A failed jump leads to a painful fall, costing health and time, forcing you to climb back up.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": -1,
+        "experience_change": 0,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_1_1",
+        "node_0_2_2_1_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_2_2_2": {
+      "story": "Engage the Shadow Assassins: Confront the pursuing Shadow Assassins guarding the grounds, clearing a path and potentially learning their tactics, but risking injuries and slowing your progress.",
+      "is_end": true,
+      "dialogue": "A successful engagement eliminates the immediate threat, rewards you with an Obsidian Shard Fragment, and a brief understanding of their fighting style. Failure results in significant damage and the Shadow Assassins flanking you for future encounters.",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Hidden Valley",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 20,
+        "inventory_changes": []
+      },
+      "children": [
+        "node_0_2_2_2_1",
+        "node_0_2_2_2_2"
+      ],
+      "child_actions": [
+        "Pursue Ending Path 1",
+        "Pursue Ending Path 2"
+      ]
+    },
+    "node_0_1_1_1_1": {
+      "story": "The Obsidian Dragon's shadow still loomed, but with a final surge, the player focused their elemental power, every ounce of their being directed into healing Sensei Wu. He gasped, color returning to his face as the elixir, supplemented by the player's energy, worked its miracle. Though utterly drained and weakened by the exertion, the player watched as Sensei Wu rose, a renewed strength in his eyes, ready to guide the Ninja towards a final, decisive confrontation, his wisdom the key to vanquishing the ancient evil.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Hidden Valley",
+        "time_of_day": "day",
+        "weather": "rainy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_1_2": {
+      "story": "Despite the player's sacrifice, the Obsidian Dragon's dark influence was too pervasive. The player's concentrated healing bought Sensei Wu a few precious moments, enough for him to impart a final, cryptic instruction before succumbing to his injuries. With his last breath, he entrusted the fate of Ninjago to the player, leaving them burdened with the weight of leadership and the daunting task of facing the Obsidian Dragon alone, guided only by Wu's fading wisdom.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ship",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "dark"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_2_1": {
+      "story": "Within the forbidden library, amidst crumbling scrolls and dusty tomes, you discover the Scroll of Celestial Healing. Deciphering its ancient symbols, you race back to Sensei Wu, channeling the scroll's energy to mend his wounds just as the Obsidian Dragon's shadow falls upon the monastery. Sensei Wu, revitalized, joins you in a final stand, his wisdom and guidance proving crucial in vanquishing the dragon and restoring balance to Ninjago.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ancient Ruins",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_1_2_2": {
+      "story": "Desperate, you delve deeper into the forbidden library, finally locating the Tears of the First Spinjitzu Master, said to possess unparalleled healing properties. Returning to Sensei Wu, you administer the tears, but the Obsidian Dragon's assault on the monastery has taken its toll. Sensei Wu, though granted a moment of clarity, succumbs to his injuries, using his last breath to impart vital knowledge about the dragon's weakness, leaving you to face the final battle with the weight of his legacy upon your shoulders.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_1_1": {
+      "story": "Focusing your energy, you manage to stabilize Sensei Wu, his breathing becoming less ragged. With a weak but knowing smile, he rasps, \"The Dragon Eye... vulnerable to pure light... the Caves of Reflection...\" Before you can ask more, he slips into unconsciousness, but the path is clear: the Obsidian Caves of Reflection hold the key to the Dragon Eye's destruction, and Ninjago's only hope.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Cave",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_1_2": {
+      "story": "Despite your best efforts, Sensei Wu's life ebbs away. His last words, barely a whisper, echo in your mind: \"He was\u2026 once one of us\u2026 blinded by ambition\u2026 find balance...\" The weight of his loss crushes you, but his cryptic final guidance steels your resolve. Knowing the attacker's connection to the Ninja's past and the need to maintain balance will be crucial in the battles to come.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_2_1": {
+      "story": "Examining the shattered stone, the faint scent of shadow energy lingers. A barely perceptible trail leads away from the monastery, not towards Ninjago City, but deeper into the Whispering Woods. Knowing the danger, the player, driven by duty, makes the choice to follow, unaware they are walking directly into the lair of the one responsible for the attack, the corrupt monk Ronin, who awaits to ambush.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forest",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_1_2_2_2": {
+      "story": "A closer inspection of the breached wall reveals not only brute force, but subtle scorch marks indicative of Fire manipulation. Focusing, the player recognizes a unique elemental signature \u2013 one belonging to Pythor P. Chumsworth, resurrected and seeking revenge. Realizing the Serpentine's involvement, the player knows the quest for the Dragon Eye will lead through the perilous Serpentine tombs and towards a confrontation with a familiar foe, where they must outsmart Pythor to reclaim the Eye and prevent the Obsidian Dragon's rise.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Mysterious Adversary": {
+          "type": "enemy",
+          "mood": "hostile",
+          "description": "A shadowy figure with unclear motives.",
+          "health": 70
+        },
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_1_1": {
+      "story": "Taking the risky leap, you land perfectly on the other side, a surge of adrenaline fueling your resolve. You reach the heart of the monastery just as the Obsidian Dragon's shadow engulfs it. Sensei Wu, weakened but defiant, channels the last of his energy, granting you a final, devastating strike that shatters the Dragon's form and restores balance to Ninjago.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_1_2": {
+      "story": "The shortcut proves too treacherous. You stumble mid-leap, barely managing to grab onto a crumbling ledge. Though bruised and delayed, you regain your footing, arriving at the monastery to find it in ruins. Sensei Wu's final gift becomes a desperate gamble as you face the Obsidian Dragon, your resilience and determination the only thing standing between Ninjago and utter destruction.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Hidden Valley",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_2_1": {
+      "story": "Following the main path proved wise; though arduous, it allowed the Ninja to reach the Obsidian Dragon before it could fully regenerate its power. Using Sensei Wu's final gift, the player unleashed a focused burst of pure elemental energy, shattering the Dragon's physical form and banishing its spirit back to the void, at the cost of the Obsidian Shard's power. With Ninjago safe and Sensei Wu saved by the Elixir, the Ninja continued his legacy, stronger and united, ready to face any future threat.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_1_2_2": {
+      "story": "Choosing the main path offered a predictable, yet ultimately insufficient defense. The fully resurrected Obsidian Dragon, its power overwhelming, proved too strong despite Sensei Wu's final gift. Ninjago crumbled under its shadow. Though Sensei Wu was saved, a heavy weight fell on the ninja as they realized what was lost, vowing to learn from this defeat and prepare for the Dragon's inevitable return. ",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Misty Lake",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_1_1": {
+      "story": "With a surge of focus, you harness the power of Airjitzu, leaping across the chasm. You land gracefully on the other side, the wind swirling around you. Looking back, you see your pursuers struggle to find another path, giving you the precious moments needed to reach Sensei Wu. His life is saved, and Ninjago is safe once more.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Forgotten Sanctuary",
+        "time_of_day": "day",
+        "weather": "windy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_1_2": {
+      "story": "Confidence turns to terror as the Airjitzu falters mid-leap. You plummet into the chasm, the wind knocked from your lungs. Though battered and bruised, you manage to climb out, but the delay proves fatal. You arrive at the Monastery too late; Sensei Wu is gone, and Ninjago mourns the loss of its wise leader.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Ancient Ruins",
+        "time_of_day": "day",
+        "weather": "windy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Wandering Helper": {
+          "type": "ally",
+          "mood": "friendly",
+          "description": "A kind stranger offering assistance.",
+          "health": 60
+        }
+      },
+      "outcome": {
+        "health_change": 25,
+        "experience_change": 400,
+        "inventory_changes": [
+          {
+            "add": "Memento of the ninjago Conclusion"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_2_1": {
+      "story": "The clash with the Shadow Assassins was brutal, but ultimately successful. Wounded and weary, you press onward, their tactics now understood and somewhat incorporated into your own fighting style. However, the delay proves costly. You arrive at the final confrontation with the Obsidian Dragon weakened, leaving you at a significant disadvantage in the fight for Ninjago's survival.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Hidden Valley",
+        "time_of_day": "day",
+        "weather": "clear",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Guide": {
+          "type": "neutral",
+          "mood": "knowledgeable",
+          "description": "Someone who seems to know this area well.",
+          "health": 55
+        }
+      },
+      "outcome": {
+        "health_change": -10,
+        "experience_change": 250,
+        "inventory_changes": [
+          {
+            "add": "Scrap of ninjago Lore"
+          }
+        ]
+      },
+      "children": [],
+      "child_actions": []
+    },
+    "node_0_2_2_2_2": {
+      "story": "The shadow assassins underestimated your resolve. Cutting through them like a whirlwind, you gained valuable insight into their techniques while suffering minimal delays. Empowered by your victory, you arrived at the heart of the final battle, confident and ready to face the Obsidian Dragon, the power of your prior victories a blessing.",
+      "is_end": true,
+      "dialogue": "",
+      "consequence_dialogue": "",
+      "scene_state": {
+        "location": "Crystal Caves",
+        "time_of_day": "day",
+        "weather": "windy",
+        "ambient": "calm"
+      },
+      "characters": {
+        "Local Inhabitant": {
+          "type": "neutral",
+          "mood": "cautious",
+          "description": "A native of this area, wary of outsiders.",
+          "health": 50
+        }
+      },
+      "outcome": {
+        "health_change": 0,
+        "experience_change": 200,
+        "inventory_changes": []
+      },
+      "children": [],
+      "child_actions": []
+    }
+  }
+}
